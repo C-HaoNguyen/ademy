@@ -44,6 +44,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# --- Claude Code (local config) ---
+.claude/settings.local.json
+__pycache__/
+*.pyc
+
 # --- IDE / editor ---
 .vscode/*
 !.vscode/extensions.json

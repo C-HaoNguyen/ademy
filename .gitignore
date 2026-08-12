@@ -1,0 +1,59 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# --- Backend (academic-management-api) ---
+### IntelliJ IDEA ###
+academic-management-api/out/
+academic-management-api/target/
+!academic-management-api/**/src/main/**/out/
+!academic-management-api/**/src/test/**/out/
+
+### Eclipse ###
+academic-management-api/.apt_generated
+academic-management-api/.classpath
+academic-management-api/.factorypath
+academic-management-api/.project
+academic-management-api/.settings
+academic-management-api/.springBeans
+academic-management-api/.sts4-cache
+academic-management-api/bin/
+!academic-management-api/**/src/main/**/bin/
+!academic-management-api/**/src/test/**/bin/
+
+### NetBeans ###
+academic-management-api/nbproject/private/
+academic-management-api/nbbuild/
+academic-management-api/dist/
+academic-management-api/nbdist/
+academic-management-api/.nb-gradle/
+
+# --- Frontend (academic-management-website) ---
+academic-management-website/node_modules
+academic-management-website/dist
+academic-management-website/dist-ssr
+academic-management-website/*.local
+
+# Logs (any project)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- IDE / editor ---
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- OS ---
+.DS_Store
+Thumbs.db

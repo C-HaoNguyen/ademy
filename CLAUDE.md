@@ -1,0 +1,88 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository structure
+
+This is a monorepo (not a git repo at the root — each subproject has its own `.git`) with two independent projects:
+
+- `academic-management-api/` — Spring Boot 3.5 REST API (Java 24), port 8080
+- `academic-management-website/` — React 19 + TypeScript + Vite frontend, port 5173
+
+There is no root-level build; each project is built/run independently from its own directory.
+
+## Commands
+
+### Backend (`academic-management-api/`)
+
+```bash
+mvn spring-boot:run          # run dev server (port 8080, or $PORT)
+mvn clean package            # build jar
+mvn test                     # run all tests
+mvn test -Dtest=ClassName    # run a single test class
+java -jar target/academic-management-api-0.0.1-SNAPSHOT.jar
+```
+
+Database is PostgreSQL and **Flyway is not enabled** — the schema must be applied manually before running the API:
+
+```bash
+psql -U postgres -d AcademicManagement -f src/main/resources/db/migration/V0.0.1_03_Update_Version_All_Tables.sql
+```
+
+Only the latest file in `db/migration/` needs to be run (each file is a full schema snapshot, not an incremental migration). DB connection is configured via `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env vars or directly in `application.properties`.
+
+A default admin user (`admin` / `admin123`) is auto-seeded on startup by `AdminSeeder` if no user with role `ADMIN` exists yet.
+
+### Frontend (`academic-management-website/`)
+
+```bash
+npm install
+npm run dev        # dev server on :5173
+npm run build       # tsc -b && vite build
+npm run lint
+npm run preview
+```
+
+Requires `.env` with `VITE_API_URL` (and/or `VITE_API_BASE_URL`) pointing at the backend, e.g. `http://localhost:8080`.
+
+## Backend architecture
+
+Standard layered Spring Boot app under `com.example.academic_management_api`:
+
+- `controller/` — REST endpoints (`AuthController`, `UserController`, `CourseController`, `CategoryController`, `EnrollmentController`, `PaymentController`, `AdminController`)
+- `dto/` — request/response DTOs, some grouped in sub-packages (`dto/auth/`, `dto/course/`, `dto/user/`)
+- `entity/` — JPA entities (`Users`, `Courses`, `Categories`, `Enrollments`, `Lessons`, `LessonProgress` with composite key `LessonProgressId`, `Payments`)
+- `repository/` — Spring Data JPA repositories
+- `security/` — JWT auth: `JwtTokenUtil` (issue/parse tokens), `JwtAuthFilter` (per-request auth, registered before `UsernamePasswordAuthenticationFilter`), `CustomUserDetails`, `SecurityConfig` (route authorization + CORS), `WebConfig`
+- `seeder/AdminSeeder` — `CommandLineRunner` that creates the default admin on first boot
+
+Authorization is role-based and defined centrally in `SecurityConfig`:
+- `/auth/**`, `/courses/**` — public
+- `/admin/**` — requires `ROLE_ADMIN`
+- `/enrollments/**` — requires `ROLE_STUDENT`
+- everything else — requires authentication
+
+Auth is stateless (JWT bearer tokens, no sessions, CSRF disabled, `httpBasic`/`formLogin` disabled). CORS is locked to specific origins (`http://localhost:5173` and the deployed frontend) in `SecurityConfig` — add new frontend origins there when needed.
+
+`spring.jpa.hibernate.ddl-auto=none`: schema changes must be made by adding a new file to `db/migration/` and updating entities to match — Hibernate will not auto-migrate.
+
+## Frontend architecture
+
+Routing (`src/routes/AppRoutes.tsx`) is organized by audience, each behind its own layout:
+- Public routes wrapped in `PublicLayout` (home, courses, lecturer, contact; `/checkout` additionally requires auth)
+- `/student/*` wrapped in `StudentLayout`, gated by `ProtectedRoute` with `allowedRoles={[ROLES.STUDENT]}`
+- `/admin/*` wrapped in `AdminLayout`, gated by `ProtectedRoute` with `allowedRoles={[ROLES.ADMIN]}`
+
+`ProtectedRoute` (`src/routes/ProtectedRoute.tsx`) checks login state and role before rendering children, redirecting to `/login` otherwise.
+
+Auth/token handling lives in `src/utils/`:
+- `AuthUtils.ts` — reads/decodes the JWT from `localStorage` (`jwt-decode`), exposes `isLoggedIn`, `extractRole`, `isTokenExpired`, `logout`
+- `AuthFetch.ts` — `authFetch()` wraps `fetch`, attaches the bearer token, and force-logs-out on token expiry or a 401 response
+
+All cross-cutting config (API base URL, all API endpoint paths, role names, frontend route paths, localStorage keys, UI constants like debounce/pagination/layout sizing) is centralized in `src/config/constants.ts`, re-exported via `src/config/index.ts` as `@/config`. Prefer adding to `API_ENDPOINTS`/`ROUTES`/`ROLES` there rather than hardcoding paths in components.
+
+Path alias `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig*.json`) — use it for all internal imports instead of relative paths.
+
+Component/page organization mirrors the route audience: `components/{admin,student,public,checkout,common}/` and `pages/{admin,student,auth,public}/...` (admin/public pages are further split into per-feature subfolders, e.g. `pages/admin/courses/`, `pages/admin/categories/`).
+
+`teacher/` role and routes exist in `ROLES`/`ROUTES` config as forward-looking placeholders but have no implemented pages/routes yet.

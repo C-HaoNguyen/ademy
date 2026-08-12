@@ -1,0 +1,1 @@
+alter table courses add column thumbnail varchar(500);

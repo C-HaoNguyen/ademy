@@ -42,6 +42,7 @@ Tài liệu này định nghĩa từng page/screen ở cấp độ thiết kế 
 | Teacher xem tổng quan hoạt động của mình | **Teacher Dashboard** | PRD-009, PRD-015 |
 | Teacher quản lý danh sách khóa học của mình | **Teacher Courses List** | PRD-009, PRD-011 |
 | Admin mời Teacher | Bổ sung action trong AdminUsersList | PRD-002 |
+| Admin thu hồi quyền truy cập nội dung (tách biệt Force-unpublish) | Bổ sung action riêng trong AdminCourses | PRD-027 |
 | Admin quản lý coupon | **AdminCoupons** (mới) | PRD-023 |
 | Admin duyệt yêu cầu hoàn tiền | **AdminRefunds** (mới) | PRD-025, PRD-026 |
 | Admin tra cứu audit log | **AdminAuditLog** (mới) | PRD-033, PRD-034 |
@@ -255,7 +256,7 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 - **Information hierarchy**: Tóm tắt số tiền cuối cùng (rút gọn từ Bước 1) → danh sách 3 phương thức thanh toán → CTA xác nhận.
 - **Page structure / Main sections**: Tóm tắt đơn hàng thu gọn (1 dòng: tên khóa học + tổng tiền), danh sách lựa chọn gateway dạng radio-card (VNPay/Momo/Stripe — mỗi option có logo + tên), Button `cta` "Xác nhận thanh toán".
 - **Primary action**: Button `cta` "Xác nhận thanh toán" → redirect gateway. **Secondary**: link "Quay lại" về Bước 1.
-- **Component patterns**: radio-card selection (biến thể của Card `card-app` với trạng thái selected dùng `nav-selected-bg`/`border-brand`), Button cta.
+- **Component patterns**: radio-card selection (biến thể của Card `card-marketing` — Checkout thuộc khu vực Public theo Design System §2/§10.3, không dùng `card-app` — với trạng thái selected dùng `nav-selected-bg`/`border-brand`), Button cta.
 - **Loading state**: Button `loading` trong lúc hệ thống khởi tạo giao dịch (gọi `PaymentGatewayPort`) trước khi redirect.
 - **Empty state**: không áp dụng.
 - **Error state**: nếu khởi tạo giao dịch thất bại (gateway lỗi/timeout), Toast `status-danger-text` + cho phép thử lại hoặc chọn gateway khác — **không tự động tạo giao dịch trùng** (Idempotency-Key theo ADR-007 dùng lại cho retry cùng attempt).
@@ -314,9 +315,9 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 - **Target user**: Student.
 - **Entry points**: Sidebar "Khóa học của tôi", CTA "Vào học ngay" từ Header (mọi trang khi đã đăng nhập).
 - **Information hierarchy**: Danh sách khóa học đã mua, mỗi item hiện tiến độ, action chính "Vào học".
-- **Page structure / Main sections**: Lưới/danh sách `card-app` mỗi khóa học (thumbnail, tên, Teacher, progress bar, ngày mua), mỗi card có menu action phụ (···) chứa "Yêu cầu hoàn tiền" (mở Modal — §10.9 — thu thập lý do, submit tạo `RefundRequest` theo PRD-025, Idempotency-Key theo ADR-007).
-- **Primary action**: Button `primary` "Vào học" trên mỗi card → Lesson Player. **Secondary**: menu "···" → "Yêu cầu hoàn tiền".
-- **Component patterns**: Card app, Dropdown menu (biến thể Modal §10.9 cho form hoàn tiền), Progress bar.
+- **Page structure / Main sections**: Lưới/danh sách `card-app` mỗi khóa học (thumbnail, tên, Teacher, progress bar, ngày mua), mỗi card có menu action phụ (···, `DropdownMenu` — §10.9b) chứa "Yêu cầu hoàn tiền" (chọn item mở `Modal` — §10.9 — thu thập lý do, submit tạo `RefundRequest` theo PRD-025, Idempotency-Key theo ADR-007).
+- **Primary action**: Button `primary` "Vào học" trên mỗi card → Lesson Player. **Secondary**: menu "···" (`DropdownMenu`) → "Yêu cầu hoàn tiền" (mở `Modal`).
+- **Component patterns**: Card app, `DropdownMenu` (§10.9b) cho menu "···", `Modal` (§10.9) cho form hoàn tiền, Progress bar.
 - **Loading state**: skeleton lưới card.
 - **Empty state**: Empty State "Bạn chưa mua khóa học nào" + CTA "Khám phá khóa học" (illustration theo §9 — đây là 1 trong các vị trí được phép dùng illustration).
 - **Error state**: Toast lỗi khi fetch danh sách thất bại; Toast lỗi riêng khi submit yêu cầu hoàn tiền thất bại (giữ modal mở để Student thử lại, không mất dữ liệu đã nhập).
@@ -538,20 +539,20 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 
 **Classification**: Redesign trách nhiệm (thay đổi mục đích: từ "Admin CRUD trực tiếp" sang "Admin giám sát" — theo module boundary ADR-008/PRD-030, không phải feature mới mà là sửa sai lệch trách nhiệm)
 
-- **Purpose**: Admin xem toàn bộ khóa học trên nền tảng (mọi Teacher), can thiệp khi vi phạm (force-unpublish) — **không còn là nơi Admin tự tạo/sửa khóa học** (việc đó nay thuộc Course Editor của Teacher).
+- **Purpose**: Admin xem toàn bộ khóa học trên nền tảng (mọi Teacher), can thiệp khi vi phạm (force-unpublish, thu hồi quyền truy cập) — **không còn là nơi Admin tự tạo/sửa khóa học** (việc đó nay thuộc Course Editor của Teacher).
 - **Target user**: Admin.
 - **Entry points**: Sidebar "Courses".
 - **Information hierarchy**: Bảng toàn bộ khóa học (mọi Teacher) → action giám sát.
-- **Page structure / Main sections**: Table thật (Compact) — cột: Tên khóa học, Teacher sở hữu, Trạng thái, Số học viên, Ngày publish, Action ("Xem" → CourseDetailPage công khai để kiểm tra nội dung, "Force-unpublish" — button `danger`, có Modal xác nhận + lý do vi phạm, ghi audit log theo PRD-030).
-- **Primary action**: action "Force-unpublish" (khi cần). Không còn "Thêm khóa học" ở trang này.
-- **Component patterns**: Table, Badge trạng thái, Modal xác nhận (§10.9) cho force-unpublish.
+- **Page structure / Main sections**: Table thật (Compact) — cột: Tên khóa học, Teacher sở hữu, Trạng thái, Số học viên, Ngày publish, Action gồm 3 mục tách biệt: "Xem" (→ CourseDetailPage công khai để kiểm tra nội dung), "Force-unpublish" (button `danger`, Modal xác nhận + lý do vi phạm, ghi audit log theo PRD-030 — chỉ ẩn khỏi catalog, **không** thu hồi quyền truy cập người đã mua theo BR-005), "Thu hồi quyền truy cập" (button `danger`, Modal xác nhận **riêng biệt** yêu cầu nhập lý do — gọi `POST /admin/enrollments/{id}/revoke-access` cho từng học viên của khóa học, ghi audit log theo PRD-027/ADR-025).
+- **Primary action**: action "Force-unpublish" hoặc "Thu hồi quyền truy cập" (khi cần — 2 action độc lập, không được gộp chung 1 nút/1 Modal). Không còn "Thêm khóa học" ở trang này.
+- **Component patterns**: Table, Badge trạng thái, Modal xác nhận (§10.9) riêng cho từng action (force-unpublish và thu hồi quyền truy cập không dùng chung Modal).
 - **Loading state**: skeleton row.
 - **Empty state**: không thực sự xảy ra (luôn có khóa học nếu nền tảng đã vận hành) — nếu rỗng, Empty State "Chưa có khóa học nào trên nền tảng".
 - **Error state**: Toast lỗi fetch/action thất bại.
-- **Success state**: Toast `status-success-text` sau force-unpublish thành công.
+- **Success state**: Toast `status-success-text` sau force-unpublish hoặc thu hồi quyền truy cập thành công.
 - **Responsive**: desktop-first.
 - **Mobile behavior**: chấp nhận được.
-- **Accessibility**: hành động phá hủy/hạn chế (force-unpublish) luôn qua Modal xác nhận rõ hậu quả (theo Business Rule "thu hồi truy cập là hành động riêng").
+- **Accessibility**: mọi hành động phá hủy/hạn chế (force-unpublish, thu hồi quyền truy cập) luôn qua Modal xác nhận rõ hậu quả, tách biệt nhau (theo PRD-027 "thu hồi truy cập là hành động tường minh riêng").
 
 ### 5.4 AdminCategories — `/admin/categories`
 
@@ -637,16 +638,16 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 - **Target user**: Admin.
 - **Entry points**: Sidebar "Audit Log".
 - **Information hierarchy**: Filter (theo actor/loại hành động/khoảng thời gian) → bảng log theo thời gian giảm dần.
-- **Page structure / Main sections**: Filter (dropdown actor, dropdown loại hành động, date range picker), Table (Compact, mật độ cao vì log thường nhiều dòng) — cột: Thời gian, Người thực hiện, Hành động, Đối tượng, Chi tiết (click xem metadata đầy đủ trong Modal read-only).
+- **Page structure / Main sections**: Filter (dropdown actor, dropdown loại hành động, `DateRangeInput`), Table (Compact, mật độ cao vì log thường nhiều dòng) — cột: Thời gian, Người thực hiện, Hành động, Đối tượng, Chi tiết (click xem metadata đầy đủ trong Modal read-only).
 - **Primary action**: không có action ghi (read-only). **Secondary**: filter, xem chi tiết 1 dòng.
-- **Component patterns**: Table, Filter (date range mới trong Design System — biến thể Input filled), Modal chi tiết read-only.
+- **Component patterns**: Table, Filter (`DateRangeInput` — Design System §10.2), Modal chi tiết read-only.
 - **Loading state**: skeleton row.
 - **Empty state**: Empty State khi filter rỗng kết quả ("Không có log nào phù hợp bộ lọc").
 - **Error state**: Toast lỗi fetch.
 - **Success state**: không áp dụng.
 - **Responsive**: desktop-first — đây là công cụ điều tra chuyên sâu, không cần tối ưu mobile.
 - **Mobile behavior**: chấp nhận được, không thiết kế riêng.
-- **Accessibility**: date range picker điều hướng được bằng bàn phím, bảng log dài cần pagination rõ ràng (không infinite scroll để giữ khả năng tham chiếu vị trí khi điều tra).
+- **Accessibility**: `DateRangeInput` điều hướng được bằng bàn phím, bảng log dài cần pagination rõ ràng (không infinite scroll để giữ khả năng tham chiếu vị trí khi điều tra).
 
 ---
 

@@ -11,7 +11,7 @@ ademy/
 │       ├── java/.../controller|dto|entity|repository|security|seeder/
 │       └── resources/
 │           ├── application.properties
-│           └── db/migration/      # SQL schema (chạy thủ công)
+│           └── db/migration/      # Flyway migrations (tự apply khi khởi động)
 │
 └── academic-management-website/   # React frontend (port 5173)
     └── src/
@@ -34,24 +34,19 @@ ademy/
 
 ## 1. Cơ sở dữ liệu (PostgreSQL)
 
-Tạo database:
+Schema được quản lý bởi **Flyway** — tự động apply khi API khởi động, không cần chạy `psql` thủ công. Chỉ cần database tồn tại (có thể rỗng):
 
 ```sql
 CREATE DATABASE "AcademicManagement";
 ```
 
-Chạy script schema mới nhất (file cuối cùng trong thư mục migration):
-
-```bash
-psql -U postgres -d AcademicManagement -f academic-management-api/src/main/resources/db/migration/V0.0.1_03_Update_Version_All_Tables.sql
-```
-
-> **Lưu ý:** Flyway chưa được bật. Schema phải được apply thủ công trước khi chạy API.
+> **Lưu ý:** Flyway từ chối migrate nếu database không rỗng và chưa có bảng `flyway_schema_history` (ví dụ DB cũ từng seed thủ công trước khi có Flyway) — tạo database mới thay vì tái dùng DB kiểu đó.
 
 ## 2. Chạy Backend API
 
 ```bash
 cd academic-management-api
+cp .env.example .env    # rồi điền giá trị thật
 mvn spring-boot:run
 ```
 
@@ -59,13 +54,7 @@ API chạy tại: **http://localhost:8080**
 
 Tài khoản admin mặc định (tự seed khi khởi động): `admin` / `admin123`
 
-Cấu hình DB trong `src/main/resources/application.properties` (hoặc qua biến môi trường):
-
-```properties
-DB_URL=jdbc:postgresql://localhost:5432/AcademicManagement
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-```
+Cấu hình DB qua biến môi trường `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` (xem `.env.example`) — `application.properties` không còn giá trị mặc định hardcode. Spring Boot **không** tự đọc file `.env` khi chạy `mvn spring-boot:run`/từ IDE; cần export biến trước hoặc set trong run config. Chạy qua `docker-compose` (mục 6) thì `.env` được nạp tự động.
 
 ## 3. Chạy Frontend Website
 
@@ -77,7 +66,9 @@ npm run dev
 
 Website chạy tại: **http://localhost:5173**
 
-File `.env` (đã có sẵn):
+```bash
+cp .env.example .env    # đã đúng mặc định cho local, chỉnh nếu cần
+```
 
 ```env
 VITE_API_URL=http://localhost:8080
@@ -117,13 +108,11 @@ npm run preview
 
 ```bash
 cd academic-management-api
-docker build -t ademy-api .
-docker run -p 8080:8080 \
-  -e DB_URL=jdbc:postgresql://host.docker.internal:5432/AcademicManagement \
-  -e DB_USERNAME=postgres \
-  -e DB_PASSWORD=postgres \
-  ademy-api
+cp .env.example .env    # rồi điền giá trị thật (Docker tự nạp .env vào container)
+docker compose up --build
 ```
+
+`docker-compose.yml` dùng `env_file: .env` để inject `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` vào container — không cần truyền `-e` thủ công.
 
 ## Thay đổi cấu trúc (refactor)
 

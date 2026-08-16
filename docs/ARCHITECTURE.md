@@ -55,6 +55,8 @@ Một backend Spring Boot duy nhất (modular monolith), một frontend React SP
 
 ## 3. Module Boundaries
 
+> Cấu trúc chi tiết + rule bắt buộc đã chuyển sang `REFACTOR_PLAN.md` § **Target Project Structure & Organization Rules** — đó là nguồn duy nhất, cập nhật liên tục theo audit thực tế trong quá trình refactor (đã sửa vài thiếu sót so với bản dưới đây: thêm module `category`, thêm submodule `course/lesson`, bỏ `notification/` chưa dùng, `security/` là top-level thay vì nằm trong `common/`). Nội dung dưới đây là snapshot ban đầu, chỉ tham khảo.
+
 Backend tổ chức theo **feature package**, không theo layer như hiện tại:
 
 ```
@@ -200,8 +202,8 @@ Spring Boot 3.5, Java — giữ nguyên. Cấu trúc: `Controller → Service �
 > **Related PRD IDs**: PRD-031, NFR-007.
 
 > **ADR-017 — Flyway quản lý migration thật**
-> **Decision**: Bật Flyway, xóa các file migration trùng lặp hiện có (`V0.0.1_02`/`V0.0.1_03` giống hệt nhau), viết lại migration theo schema mới.
-> **Reason**: Audit: `ddl-auto=none` + áp SQL thủ công không đảm bảo migration chạy đúng; đã xác nhận build mới hoàn toàn, không cần migrate dữ liệu cũ — đây là thời điểm rẻ nhất để sửa.
+> **Decision**: Thêm Flyway (trước đây chưa có dependency), gộp `V0.0.1_01`/`V0.0.1_02`/`V0.0.1_03` (không phải bản trùng nhau — `_03` là full schema snapshot khác hẳn `_01`/`_02`, khớp entity hiện tại) thành 1 file baseline duy nhất `V1__baseline.sql`, sửa luôn constraint `users_role_check` bị khai trùng tên/đối nghịch giá trị (lowercase inline vs uppercase named) trong `_03` để baseline chạy sạch trên DB rỗng. Đi kèm: chuẩn hóa cách cấu hình kết nối DB — `.env.example` (commit, không secret) ở cả 2 project, `docker-compose.yml` cho backend dùng `env_file: .env` để chạy qua Docker mà không cần thêm dotenv-loader library.
+> **Reason**: Audit: `ddl-auto=none` + áp SQL thủ công không đảm bảo migration chạy đúng; đã xác nhận build mới hoàn toàn, không cần migrate dữ liệu cũ — đây là thời điểm rẻ nhất để sửa. Việc chuẩn hóa `.env`/Docker phát sinh khi review kết nối DB thật (kể cả DB hosted như Neon) — cùng mục tiêu "pipeline đáng tin cậy", gộp chung Phase 1 thay vì tách phase riêng.
 > **Trade-offs**: Không đáng kể trong bối cảnh build mới.
 > **Related PRD IDs**: Hỗ trợ toàn bộ Data Architecture, không map PRD-ID cụ thể.
 
@@ -223,6 +225,12 @@ Spring Boot 3.5, Java — giữ nguyên. Cấu trúc: `Controller → Service �
 > **Trade-offs**: Không đáng kể.
 > **Related PRD IDs**: NFR-005.
 
+> **ADR-025 — Access revocation: cột riêng trên `Enrollments`, tách biệt hoàn toàn khỏi course status**
+> **Decision**: Thêm `access_revoked_at`/`access_revoked_reason` (nullable) vào `Enrollments`; endpoint `POST /admin/enrollments/{id}/revoke-access` (Admin only) là **cách duy nhất** set 2 cột này. Không có luồng nào khác (archive, force-unpublish, refund tự động) được phép set giá trị này.
+> **Reason**: PRD-027 yêu cầu tường minh: thu hồi quyền truy cập chỉ xảy ra qua hành động rõ ràng của Admin, không tự động khi course chuyển Archived (đã xác nhận ở BR-005). Trước bản cập nhật này, kiến trúc chỉ có `course.status` (Draft/Published/Archived) — không đủ để biểu diễn "1 enrollment cụ thể bị thu hồi truy cập" vì course có thể vẫn Published trong khi 1 học viên cụ thể bị thu hồi do vi phạm/gian lận.
+> **Trade-offs**: Thêm 1 điểm kiểm tra nữa (ngoài enrollment tồn tại + course status) ở mọi nơi trả nội dung lesson — chấp nhận được vì đây là yêu cầu bảo mật/nghiệp vụ rõ ràng từ PRD, không thêm được nếu thiếu.
+> **Related PRD IDs**: PRD-027, NFR-004.
+
 ## 6. Data Architecture
 
 Bảng mới (theo PRD, không phát minh thêm):
@@ -241,6 +249,7 @@ Thay đổi trên bảng hiện có:
 - `payments`: enum `status` (ADR-005), `idempotency_key` liên kết bảng dedup (ADR-007), `amount` luôn tính server-side (ADR-006, PRD-021).
 - `courses`: `status` enum `DRAFT/PUBLISHED/ARCHIVED` (BR-004); `category_id` NOT NULL nếu nghiệp vụ luôn bắt buộc — đồng bộ DB/code (audit đã chỉ ra lệch nhau).
 - `lesson_progress`: surrogate key (ADR-019).
+- `enrollments`: thêm `access_revoked_at` (nullable timestamp), `access_revoked_reason` (nullable text) — ADR-025, PRD-027.
 - Mọi FK: thêm index (ADR-018).
 
 ## 7. API Architecture
@@ -298,6 +307,8 @@ Audit hiện tại: **0% test coverage** ở cả backend và frontend. Chiến 
 - Không đầu tư vào test coverage toàn diện 100% ở Phase 1 — ưu tiên các luồng có rủi ro tài chính/toàn vẹn dữ liệu (payment, refund, enrollment) trước.
 
 ## 13. Target Project Structure
+
+> Xem `REFACTOR_PLAN.md` § **Target Project Structure & Organization Rules** — bản đầy đủ, đã đối chiếu với code thật, là nguồn duy nhất từ đây trở đi. Bản dưới đây giữ lại làm snapshot ban đầu.
 
 ### Backend
 

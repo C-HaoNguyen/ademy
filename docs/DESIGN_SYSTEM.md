@@ -310,6 +310,8 @@ Quy tắc: **App/Workspace** (table, card admin, form) mặc định `shadow-non
 
 **Không được phép**: input không viền và không nền phân biệt (phải luôn tách biệt khỏi `surface` xung quanh qua `surface-muted`); label đặt bên trong input kiểu floating-label (không nằm trong scope đã chốt).
 
+**Biến thể `DateRangeInput`**: cùng appearance/token với `Input` filled (§10.2), nhưng hiển thị 2 giá trị ngày (từ–đến) trong 1 field, mở date picker khi click. Chỉ dùng cho filter theo khoảng thời gian ở khu vực Admin/Teacher (ví dụ AdminAuditLog) — không dùng cho nhập ngày đơn (dùng `Input type="date"` chuẩn cho trường hợp đó). Date picker mở ra tuân `z-dropdown` (§6), đóng khi chọn xong hoặc click ngoài, điều hướng được bằng bàn phím (mũi tên đổi ngày, Enter chọn).
+
 ### 10.3 Card
 
 **Khi nào dùng**: nhóm nội dung liên quan thành một khối độc lập (course card, stat card, form section).
@@ -377,6 +379,18 @@ Giữ nguyên tinh thần cấu trúc hiện tại (logo trái, tab giữa dạn
 **Behavior**: đóng bằng ESC, click ngoài overlay, hoặc nút đóng tường minh; focus trap trong modal khi mở; trả focus về phần tử đã mở modal khi đóng.
 
 **Không được phép**: modal lồng modal; modal không có cách đóng bằng bàn phím.
+
+### 10.9b DropdownMenu
+
+**Khi nào dùng**: menu hành động ngắn gắn với 1 phần tử cụ thể (ví dụ "···" trên course card ở MyCourses), không cần chặn toàn màn hình như `Modal`.
+
+**Appearance**: `surface`, `radius-md`, `shadow-elevated`, danh sách item ngắn (`text-body-sm`), item destructive dùng `status-danger-text`.
+
+**Behavior**: mở khi click trigger, đóng khi chọn item/click ngoài/ESC; tuân `z-dropdown` (§6) — **không** có overlay nền, **không** focus trap (khác biệt cốt lõi với `Modal`).
+
+**Không được phép**: dùng `DropdownMenu` cho form nhập liệu hoặc nội dung cần đọc dài (dùng `Modal`); lồng `DropdownMenu` trong `DropdownMenu`.
+
+**Accessibility**: `role="menu"`/`role="menuitem"`, điều hướng bằng phím mũi tên lên/xuống, trigger có `aria-expanded`/`aria-haspopup`.
 
 ### 10.10 Empty State
 

@@ -56,6 +56,8 @@ Tài liệu này xác định ranh giới component trước khi refactor fronte
 | `StatCard` | Chưa tồn tại — mỗi dashboard tự viết khối số liệu |
 | `ProgressBar` | Chưa tồn tại — HomePage hardcode `div` progress ngay trong page |
 | `RadioCardGroup` | Chưa tồn tại — cần cho chọn gateway (UI_SPEC §2.9) và chọn đáp án quiz (UI_SPEC §3.5) |
+| `DateRangeInput` | Chưa tồn tại — cần cho filter AdminAuditLog (UI_SPEC §5.8) |
+| `DropdownMenu` | Chưa tồn tại — cần cho menu "···" ở MyCourses (UI_SPEC §3.2) |
 
 ---
 
@@ -104,6 +106,8 @@ Tài liệu này xác định ranh giới component trước khi refactor fronte
 - **Accessibility**: `FormField` tự sinh `id` liên kết `label`+`htmlFor`+`aria-describedby` (trỏ tới error/helper) — đây là lý do tách `FormField` riêng thay vì để từng chỗ tự nối `aria-describedby` (đã từng bị bỏ sót ở `PaymentForm`/`CategoryOverlay` hiện tại).
 - **Khi nào dùng**: mọi input nhập liệu trong form.
 - **Khi nào không dùng**: hiển thị dữ liệu chỉ-đọc không cần chỉnh sửa (dùng text thường + `text-secondary`, không bọc trong `Input disabled` giả — đây chính là lỗi của `InfoItem` hiện tại khi `editable=false`).
+
+**Biến thể `DateRangeInput`** (Design System §10.2): dựng trên cùng token với `Input`, hiển thị khoảng ngày từ–đến trong 1 field, mở date picker khi click (`z-dropdown`). Props conceptual: `value: { from, to }`, `onChange`. Chỉ dùng cho filter Admin/Teacher (ví dụ AdminAuditLog) — không dùng cho nhập ngày đơn.
 
 ### 3.3 `Badge`
 
@@ -217,6 +221,17 @@ Tài liệu này xác định ranh giới component trước khi refactor fronte
 - **Accessibility**: `role="radiogroup"`, điều hướng phím mũi tên giữa các option (Design System §2.9/§3.5 rule).
 - **Khi nào dùng**: chọn đúng 1 trong nhiều lựa chọn hiển thị dạng card lớn (không phù hợp dropdown/checkbox nhỏ).
 - **Khi nào không dùng**: danh sách quá dài (>6-7 lựa chọn — dùng `Select` thay vì card list dài).
+
+### 4.9 `DropdownMenu`
+
+- **Responsibility**: popover menu hành động ngắn gắn với 1 trigger cụ thể (Design System §10.9b) — dùng đầu tiên cho menu "···" trên course card ở MyCourses (UI_SPEC §3.2). **Khác `Modal`**: không overlay nền, không focus trap, đóng ngay khi chọn item/click ngoài.
+- **Variants**: không có.
+- **States**: open/closed, item hover, item destructive (dùng `status-danger-text`).
+- **Props (conceptual)**: `trigger` (element mở menu), `items` (mảng `{ label, onClick, destructive? }`).
+- **Composition rules**: `DropdownMenu` không biết nội dung nghiệp vụ của từng item — Feature layer (ví dụ `MyCourses`) truyền `items` (bao gồm action mở `RefundRequestModal`).
+- **Accessibility**: `role="menu"`/`role="menuitem"`, điều hướng phím mũi tên, trigger có `aria-haspopup`/`aria-expanded`.
+- **Khi nào dùng**: menu hành động ngắn, không cần nhập liệu.
+- **Khi nào không dùng**: cần nhập liệu hoặc nội dung dài (dùng `Modal`).
 
 ---
 

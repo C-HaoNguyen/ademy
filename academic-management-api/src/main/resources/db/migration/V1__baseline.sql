@@ -7,7 +7,7 @@ create table USERS (
     password_hash text not null,
 
     role varchar(20) not null
-        check (role in ('admin', 'instructor', 'student')),
+        check (role in ('ADMIN', 'INSTRUCTOR', 'STUDENT')),
 
     is_active boolean default true,
 
@@ -122,7 +122,3 @@ create table PAYMENTS (
     foreign key (course_id)
         references COURSES(course_id)
 );
-
-ALTER TABLE users
-ADD CONSTRAINT users_role_check
-CHECK (role IN ('ADMIN', 'INSTRUCTOR', 'STUDENT'));

@@ -23,13 +23,9 @@ mvn test -Dtest=ClassName    # run a single test class
 java -jar target/academic-management-api-0.0.1-SNAPSHOT.jar
 ```
 
-Database is PostgreSQL and **Flyway is not enabled** — the schema must be applied manually before running the API:
+Database is PostgreSQL and schema is managed by **Flyway** (`spring.flyway.enabled=true`) — migrations in `src/main/resources/db/migration/` are applied automatically on startup against an existing (can be empty) database. Flyway refuses to run against a non-empty schema that lacks a `flyway_schema_history` table (e.g. a DB seeded manually before Flyway was introduced) — reset that DB rather than adding `baseline-on-migrate`.
 
-```bash
-psql -U postgres -d AcademicManagement -f src/main/resources/db/migration/V0.0.1_03_Update_Version_All_Tables.sql
-```
-
-Only the latest file in `db/migration/` needs to be run (each file is a full schema snapshot, not an incremental migration). DB connection is configured via `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env vars or directly in `application.properties`.
+DB connection comes from `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env vars (no defaults are baked into `application.properties`) — copy `.env.example` to `.env` and fill in real values, or run via `docker-compose up` which loads `.env` automatically (`env_file:` in `docker-compose.yml`). Spring Boot does **not** auto-load `.env` for non-Docker runs (`mvn spring-boot:run`, IDE run configs) — export the vars yourself or set them in your run configuration.
 
 A default admin user (`admin` / `admin123`) is auto-seeded on startup by `AdminSeeder` if no user with role `ADMIN` exists yet.
 
@@ -43,7 +39,7 @@ npm run lint
 npm run preview
 ```
 
-Requires `.env` with `VITE_API_URL` (and/or `VITE_API_BASE_URL`) pointing at the backend, e.g. `http://localhost:8080`.
+Requires `.env` with `VITE_API_URL` (and/or `VITE_API_BASE_URL`) pointing at the backend, e.g. `http://localhost:8080` — copy `.env.example` for the expected shape.
 
 ## Backend architecture
 

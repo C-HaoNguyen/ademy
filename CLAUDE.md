@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository structure
 
-This is a monorepo (not a git repo at the root — each subproject has its own `.git`) with two independent projects:
+This is a monorepo — a single git repo at the root containing two independent projects:
 
 - `academic-management-api/` — Spring Boot 3.5 REST API (Java 24), port 8080
 - `academic-management-website/` — React 19 + TypeScript + Vite frontend, port 5173
@@ -43,14 +43,19 @@ Requires `.env` with `VITE_API_URL` (and/or `VITE_API_BASE_URL`) pointing at the
 
 ## Backend architecture
 
-Standard layered Spring Boot app under `com.example.academic_management_api`:
+Modular monolith under `com.example.academic_management_api`, packaged by feature (not by technical layer) — each module owns its own `controller/service/repository/entity/dto`:
 
-- `controller/` — REST endpoints (`AuthController`, `UserController`, `CourseController`, `CategoryController`, `EnrollmentController`, `PaymentController`, `AdminController`)
-- `dto/` — request/response DTOs, some grouped in sub-packages (`dto/auth/`, `dto/course/`, `dto/user/`)
-- `entity/` — JPA entities (`Users`, `Courses`, `Categories`, `Enrollments`, `Lessons`, `LessonProgress` with composite key `LessonProgressId`, `Payments`)
-- `repository/` — Spring Data JPA repositories
-- `security/` — JWT auth: `JwtTokenUtil` (issue/parse tokens), `JwtAuthFilter` (per-request auth, registered before `UsernamePasswordAuthenticationFilter`), `CustomUserDetails`, `SecurityConfig` (route authorization + CORS), `WebConfig`
+- `auth/` — `AuthController`/`AuthService` (signup/login/me); no entity of its own, uses `user`'s `Users`
+- `user/` — `Users` entity; `UserController` (self-service `/users/me`) + `AdminController` (admin user management under `/admin/users/**`, `/admin/instructors`, `/admin/total-users`), both backed by `UserService`
+- `category/` — `Categories` entity; `CategoryController` (public `/categories`) + `AdminCategoryController` (`/admin/categories/**`), both backed by `CategoryService`
+- `course/` — `Courses` entity; `CourseController` (public `/courses/**`) + `AdminCourseController` (`/admin/courses/**`, `/admin/total-courses`, `/admin/deleted-course/{id}`), both backed by `CourseService`
+  - `course/lesson/` — submodule holding `Lessons`, `LessonProgress` (composite key `LessonProgressId`); no service/controller yet (not wired to any endpoint)
+- `enrollment/` — `Enrollments` entity; `EnrollmentController`/`EnrollmentService` (`/enrollments/**`); exposes `createEnrollment`/`isEnrolled` for `payment` to call
+- `payment/` — `Payments` entity; `PaymentController` (`/payments/checkout`) + `AdminPaymentController` (`/admin/payments`, `/admin/total-payments`), both backed by `PaymentService`. `payment` is the only module that writes `payments` and creates enrollments — it does so by calling `EnrollmentService`, never `EnrollmentRepository` directly
+- `security/` — JWT auth: `JwtTokenUtil` (issue/parse tokens), `JwtAuthFilter` (per-request auth, registered before `UsernamePasswordAuthenticationFilter`), `CustomUserDetails`, `SecurityConfig` (route authorization + CORS — the single source of CORS config)
 - `seeder/AdminSeeder` — `CommandLineRunner` that creates the default admin on first boot
+
+Cross-module access rules: a controller only calls services in its own module; cross-module reads/writes go through the other module's `service` public methods, never its `repository`/internal `entity` directly (a `@ManyToOne` FK reference to another module's entity, e.g. `Courses.instructor` → `Users`, is not a boundary violation).
 
 Authorization is role-based and defined centrally in `SecurityConfig`:
 - `/auth/**`, `/courses/**` — public

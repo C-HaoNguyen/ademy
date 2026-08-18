@@ -18,6 +18,7 @@ academic-management-api/.project
 academic-management-api/.settings
 academic-management-api/.springBeans
 academic-management-api/.sts4-cache
+academic-management-api/*.iml
 academic-management-api/bin/
 !academic-management-api/**/src/main/**/bin/
 !academic-management-api/**/src/test/**/bin/

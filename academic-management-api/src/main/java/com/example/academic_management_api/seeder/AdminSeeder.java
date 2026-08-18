@@ -1,7 +1,7 @@
 package com.example.academic_management_api.seeder;
 
-import com.example.academic_management_api.entity.Users;
-import com.example.academic_management_api.repository.UserRepository;
+import com.example.academic_management_api.user.entity.Users;
+import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

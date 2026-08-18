@@ -28,7 +28,8 @@ public class Payments {
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 
-    private String status; // pending | success | failed
+    @Convert(converter = PaymentStatusConverter.class)
+    private PaymentStatus status;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -58,7 +59,7 @@ public class Payments {
         return paymentMethod;
     }
 
-    public String getStatus() {
+    public PaymentStatus getStatus() {
         return status;
     }
 
@@ -86,7 +87,7 @@ public class Payments {
         this.paymentMethod = paymentMethod;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(PaymentStatus status) {
         this.status = status;
     }
 

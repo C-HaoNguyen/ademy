@@ -26,8 +26,9 @@ public class Users {
     @Column(name = "password_hash", nullable = false, columnDefinition = "text")
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String role;
+    private Role role;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -51,7 +52,7 @@ public class Users {
     public Users() {
     }
 
-    public Users(String username, String fullName, String email, String passwordHash, String role) {
+    public Users(String username, String fullName, String email, String passwordHash, Role role) {
         this.username = username;
         this.fullName = fullName;
         this.email = email;
@@ -99,11 +100,11 @@ public class Users {
         this.passwordHash = passwordHash;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

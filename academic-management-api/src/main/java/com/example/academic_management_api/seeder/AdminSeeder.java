@@ -1,5 +1,6 @@
 package com.example.academic_management_api.seeder;
 
+import com.example.academic_management_api.user.entity.Role;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +17,7 @@ public class AdminSeeder {
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
-            if (userRepository.existsByRole("ADMIN")) {
+            if (userRepository.existsByRole(Role.ADMIN)) {
                 return;
             }
 
@@ -25,7 +26,7 @@ public class AdminSeeder {
             admin.setFullName("System Administrator");
             admin.setEmail("admin@ademy.com");
             admin.setPasswordHash(passwordEncoder.encode("admin123"));
-            admin.setRole("ADMIN");
+            admin.setRole(Role.ADMIN);
             admin.setActive(true);
 
             userRepository.save(admin);

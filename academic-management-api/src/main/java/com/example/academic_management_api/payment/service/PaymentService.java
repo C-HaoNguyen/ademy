@@ -6,6 +6,7 @@ import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
+import com.example.academic_management_api.payment.entity.PaymentStatus;
 import com.example.academic_management_api.payment.entity.Payments;
 import com.example.academic_management_api.payment.repository.PaymentRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -55,7 +56,7 @@ public class PaymentService {
         payment.setCourse(course);
         payment.setAmount(request.getAmount());
         payment.setPaymentMethod(request.getPaymentMethod());
-        payment.setStatus("SUCCESS");
+        payment.setStatus(PaymentStatus.SUCCESS);
 
         paymentRepository.save(payment);
 

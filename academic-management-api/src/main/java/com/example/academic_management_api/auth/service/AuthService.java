@@ -5,6 +5,7 @@ import com.example.academic_management_api.auth.dto.LoginRequest;
 import com.example.academic_management_api.auth.dto.SignupRequest;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.security.JwtTokenUtil;
+import com.example.academic_management_api.user.entity.Role;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ public class AuthService {
         user.setFullName(request.getSignupFullName());
         user.setEmail(request.getSignupEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getSignupPassword()));
-        user.setRole("STUDENT");
+        user.setRole(Role.STUDENT);
         user.setActive(true);
 
         userRepository.save(user);
@@ -61,7 +62,7 @@ public class AuthService {
 
         String accessToken = jwtTokenUtil.generateAccessToken(
                 user.getUsername(),
-                user.getRole()
+                user.getRole().name()
         );
 
         String refreshToken = jwtTokenUtil.generateRefreshToken(user.getUsername());
@@ -69,7 +70,7 @@ public class AuthService {
         AuthResponse response = new AuthResponse(
                 user.getUserId(),
                 user.getUsername(),
-                user.getRole(),
+                user.getRole().name(),
                 accessToken,
                 refreshToken
         );

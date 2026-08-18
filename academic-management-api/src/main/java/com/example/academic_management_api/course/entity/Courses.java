@@ -36,9 +36,11 @@ public class Courses {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    private String level;
+    @Convert(converter = CourseLevelConverter.class)
+    private CourseLevel level;
 
-    private String status;
+    @Convert(converter = CourseStatusConverter.class)
+    private CourseStatus status;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -84,11 +86,11 @@ public class Courses {
         return category;
     }
 
-    public String getLevel() {
+    public CourseLevel getLevel() {
         return level;
     }
 
-    public String getStatus() {
+    public CourseStatus getStatus() {
         return status;
     }
 
@@ -128,11 +130,11 @@ public class Courses {
         this.price = price;
     }
 
-    public void setLevel(String level) {
+    public void setLevel(CourseLevel level) {
         this.level = level;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(CourseStatus status) {
         this.status = status;
     }
 

@@ -1,7 +1,9 @@
 package com.example.academic_management_api.user.dto;
 
+import com.example.academic_management_api.user.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class AdminCreateUserRequest {
     @NotBlank
@@ -17,8 +19,8 @@ public class AdminCreateUserRequest {
     @NotBlank
     private String password;
 
-    @NotBlank
-    private String role;
+    @NotNull
+    private Role role;
 
     private Boolean active;
 
@@ -38,7 +40,7 @@ public class AdminCreateUserRequest {
         return password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 

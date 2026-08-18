@@ -6,6 +6,7 @@ import com.example.academic_management_api.user.dto.AdminCreateUserRequest;
 import com.example.academic_management_api.user.dto.AdminUpdateUserRequest;
 import com.example.academic_management_api.user.dto.UpdateProfileRequest;
 import com.example.academic_management_api.user.dto.UserProfileResponse;
+import com.example.academic_management_api.user.entity.Role;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class UserService {
                 user.getUsername(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRole().toUpperCase(),
+                user.getRole().name(),
                 user.getActive() ? "ACTIVE" : "BLOCKED",
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -69,7 +70,7 @@ public class UserService {
                 savedUser.getUsername(),
                 savedUser.getFullName(),
                 savedUser.getEmail(),
-                savedUser.getRole().toUpperCase(),
+                savedUser.getRole().name(),
                 savedUser.getActive() ? "ACTIVE" : "INACTIVE",
                 savedUser.getCreatedAt(),
                 savedUser.getUpdatedAt()
@@ -152,7 +153,7 @@ public class UserService {
     }
 
     public List<Users> getAllInstructors() {
-        return userRepository.findByRole("INSTRUCTOR");
+        return userRepository.findByRole(Role.INSTRUCTOR);
     }
 
     public void deleteUser(Integer userId) {

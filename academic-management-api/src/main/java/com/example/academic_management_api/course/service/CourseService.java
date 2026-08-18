@@ -5,6 +5,7 @@ import com.example.academic_management_api.category.repository.CategoryRepositor
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.dto.CourseResponseDto;
 import com.example.academic_management_api.course.dto.CreateCourseRequest;
+import com.example.academic_management_api.course.entity.CourseStatus;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -106,7 +107,7 @@ public class CourseService {
         course.setPrice(request.getPrice());
         course.setLevel(request.getLevel());
         course.setStatus(
-                request.getStatus() != null ? request.getStatus() : "draft"
+                request.getStatus() != null ? request.getStatus() : CourseStatus.DRAFT
         );
 
         Courses savedCourse = courseRepository.save(course);

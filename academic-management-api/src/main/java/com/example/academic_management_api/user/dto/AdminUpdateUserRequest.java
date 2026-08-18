@@ -1,6 +1,8 @@
 package com.example.academic_management_api.user.dto;
 
+import com.example.academic_management_api.user.entity.Role;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class AdminUpdateUserRequest {
     @NotBlank
@@ -9,8 +11,8 @@ public class AdminUpdateUserRequest {
     @NotBlank
     private String email;
 
-    @NotBlank
-    private String role;
+    @NotNull
+    private Role role;
 
     public String getFullName() {
         return fullName;
@@ -20,7 +22,7 @@ public class AdminUpdateUserRequest {
         return email;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 }

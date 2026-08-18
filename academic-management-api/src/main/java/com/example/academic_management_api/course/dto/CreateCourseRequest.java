@@ -1,5 +1,7 @@
 package com.example.academic_management_api.course.dto;
 
+import com.example.academic_management_api.course.entity.CourseLevel;
+import com.example.academic_management_api.course.entity.CourseStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,9 +23,9 @@ public class CreateCourseRequest {
     @NotNull
     private BigDecimal price;
 
-    private String level;
+    private CourseLevel level;
 
-    private String status;
+    private CourseStatus status;
 
     public String getTitle() {
         return title;
@@ -49,11 +51,11 @@ public class CreateCourseRequest {
         return price;
     }
 
-    public String getLevel() {
+    public CourseLevel getLevel() {
         return level;
     }
 
-    public String getStatus() {
+    public CourseStatus getStatus() {
         return status;
     }
 }

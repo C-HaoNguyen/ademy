@@ -84,6 +84,6 @@ All cross-cutting config (API base URL, all API endpoint paths, role names, fron
 
 Path alias `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig*.json`) — use it for all internal imports instead of relative paths.
 
-Component/page organization mirrors the route audience: `components/{admin,student,public,checkout,common}/` and `pages/{admin,student,auth,public}/...` (admin/public pages are further split into per-feature subfolders, e.g. `pages/admin/courses/`, `pages/admin/categories/`).
+Organized by feature under `src/features/{auth,public,courses,student,admin,payment}/`, plus `src/shared/ui/` for cross-feature presentational components (`Badge`, `EmptyState`, `Skeleton`, `Toast`). Within each feature: pages live in per-domain subfolders (e.g. `features/admin/courses/AdminCourses.tsx`, `features/student/profile/Profile.tsx`; a feature with a single domain keeps its page flat, e.g. `features/auth/Login.tsx`, `features/payment/Checkout.tsx`), and components used only within that feature live in `features/<audience>/components/` (e.g. `features/admin/components/AdminLayout.tsx`).
 
-`teacher/` role and routes exist in `ROLES`/`ROUTES` config as forward-looking placeholders but have no implemented pages/routes yet.
+`teacher/` role and routes exist in `ROLES`/`ROUTES` config as forward-looking placeholders but have no implemented `features/teacher/` yet.

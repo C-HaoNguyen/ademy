@@ -110,6 +110,11 @@ academic-management-website/src/
 └── assets/
 ```
 
+**Cấu trúc bên trong mỗi `features/<audience>/`** (chốt ở Phase 6 — mục C gốc chỉ liệt kê phẳng, không đặc tả internal layout; quyết định khi implement Phase 6):
+- Giữ nguyên subfolder theo domain hiện có: `features/<audience>/<domain>/Page.tsx` (ví dụ `features/admin/courses/AdminCourses.tsx`, `features/student/profile/Profile.tsx`) — domain chỉ có 1 file thì để phẳng ngay dưới `features/<audience>/` (ví dụ `features/auth/Login.tsx`, `features/courses/CourseListPage.tsx`, `features/payment/Checkout.tsx`).
+- Component dùng chung trong nội bộ 1 audience (không phải `shared/ui`) đặt tại `features/<audience>/components/` (ví dụ `features/admin/components/AdminLayout.tsx`, `features/student/components/StudentSidebar.tsx`, `features/payment/components/PaymentForm.tsx`).
+- `CourseCard.tsx` (trước ở `components/public/`) → `features/courses/components/` (chỉ dùng bởi `CourseListPage`, thuộc domain `courses` chứ không phải `public`, dù nằm cùng thư mục `components/public/` cũ).
+
 **Naming convention**:
 - Component/page dùng `PascalCase.tsx`; hook dùng `useX.ts`; không trộn `.tsx` cho file không chứa JSX (`AuthUtils.ts` là `.ts` đúng, không phải `.tsx`).
 - Tên thư mục và tên file chính bên trong phải khớp nhau về domain naming (ví dụ thư mục `learning-profile/` chứa file `LearningProfile.tsx`, không phải `LearningProgress.tsx` — xem "Mâu thuẫn đã xử lý").
@@ -285,21 +290,32 @@ academic-management-website/src/
 
 ## Stage B — Frontend Foundation
 
-### Phase 6: Project restructure (frontend)
+### Phase 6: Project restructure (frontend) — ĐÃ HOÀN TẤT
 
 - **Goal**: Có cấu trúc thư mục theo feature trước khi thêm API client/state layer và Teacher area mới.
-- **Scope**: Di chuyển `components/{admin,student,public,checkout,common}` và `pages/{admin,student,auth,public}` sang `shared/{api,ui}` + `features/{auth,public,courses,student,teacher,admin,payment}` — **đúng theo [Target Project Structure & Organization Rules](#target-project-structure--organization-rules) mục C** (thêm `features/public/` so với bản kế hoạch gốc — bị thiếu trước đây dù Phase 26 đã giả định nó tồn tại). Chỉ di chuyển/đổi tên file, chưa đổi nội dung.
-- **Dependencies**: Không phụ thuộc Stage A — có thể chạy song song.
-- **Changes required**:
-  - Move file + cập nhật import path theo đúng mục C; cập nhật `AppRoutes.tsx` trỏ đúng vị trí mới.
-  - `components/checkout/*` (PaymentForm, OrderSummary, EnrollSuccessOverlay) + `pages/public/payment/Checkout.tsx` → gộp thẳng vào `features/payment/` trong lúc move (không tạo bước rename riêng — 2 tên "checkout"/"payment" hiện đang chỉ cùng 1 domain, thống nhất về `payment` ngay ở bước move này).
-  - `pages/student/learning-profile/LearningProgress.tsx` → đổi tên file thành `LearningProfile.tsx` khi move vào `features/student/` (tên file/thư mục đang lệch nhau, và UI_SPEC/Phase 28 đều gọi là "LearningProfile" — đổi tên file không phải đổi nội dung, vẫn trong phạm vi "chỉ move" của phase này).
-  - Xóa `pages/auth/AuthPage.tsx`, `pages/student/dashboard/MyCoursesOverview.tsx` (0 dòng, không nơi nào import — dead file xác nhận qua grep, xóa an toàn ngay trong lúc move thay vì chờ Phase 37).
-- **Modules/files**: Toàn bộ `academic-management-website/src/{components,pages}`.
-- **Existing behavior cần preserve**: Toàn bộ trang hiện có phải render và hoạt động y hệt trước/sau di chuyển.
-- **Migration concerns**: Risk lớn nhất là lẫn refactor nội dung component vào cùng lúc move — tách riêng commit move khỏi commit sửa nội dung (giống nguyên tắc Phase 2 backend).
-- **Tests/verification**: Chạy `npm run build` + `npm run lint` xác nhận không lỗi import; click-through thủ công mọi route hiện có.
-- **Exit criteria**: Build/lint sạch; mọi route hiện có hoạt động không đổi; cấu trúc thư mục khớp mục C (Target Project Structure); không còn `components/checkout/`; 2 dead file đã xóa.
+- **Scope thực tế đã làm**: Di chuyển toàn bộ `components/{admin,student,public,checkout,common}` (23 file) và `pages/{admin,student,auth,public}` (18 file, trừ 2 dead file) sang `shared/ui/` + `features/{auth,public,courses,student,admin,payment}/` bằng `git mv` (giữ lịch sử rename), đúng theo mục C — bao gồm cả phần bổ sung "Cấu trúc bên trong mỗi `features/<audience>/`" đã chốt và ghi vào mục C **trước khi** move (theo đúng rule dòng 11: bổ sung structure trước khi tạo file, không tự quyết tại chỗ). Chỉ move + sửa import path, không đổi logic/nội dung file nào (đã đối chiếu diff: mỗi file move chỉ đổi các dòng `import`, giữ nguyên phần còn lại — xác nhận qua `git diff --stat` similarity 98-100%).
+- **Quyết định phát sinh khi implement (đã hỏi trước khi làm, không tự quyết)**: Mục C gốc chỉ liệt kê `features/<audience>/` phẳng, không đặc tả cấu trúc bên trong — đã chốt: giữ subfolder theo domain hiện có (`features/<audience>/<domain>/Page.tsx`, domain 1-file thì để phẳng ngay dưới `features/<audience>/`), component dùng riêng trong 1 audience gom vào `features/<audience>/components/`. Đã ghi bổ sung vào mục C của REFACTOR_PLAN.md.
+- **Dependencies**: Không phụ thuộc Stage A — đã chạy độc lập, không đụng `academic-management-api/`.
+- **Changes đã thực hiện**:
+  - `shared/ui/`: `Badge.tsx`, `EmptyState.tsx`, `Skeleton.tsx`, `Toast.tsx` (từ `components/common/`).
+  - `features/public/`: pages `home/HomePage.tsx`, `lecturer/LecturerPage.tsx`, `about/ContactPage.tsx`; `components/{Header,Footer,PublicLayout,TeacherCard}.tsx`.
+  - `features/courses/`: `CourseListPage.tsx`, `CourseDetailPage.tsx`, `components/CourseCard.tsx` (trước ở `components/public/CourseCard.tsx` — đã xác định thuộc domain `courses` chứ không phải `public` vì chỉ được `CourseListPage` dùng, đúng như đã ghi ở mục C bổ sung).
+  - `features/auth/`: `Login.tsx`, `Signup.tsx`.
+  - `features/student/`: pages `dashboard/Dashboard.tsx`, `my-courses/MyCourses.tsx`, `learning-profile/LearningProfile.tsx` (đổi tên từ `LearningProgress.tsx`), `profile/Profile.tsx`, `test-practice/TestPractice.tsx`; `components/{InfoItem,StudentHeader,StudentLayout,StudentSidebar}.tsx`.
+  - `features/admin/`: pages `categories/AdminCategories.tsx`, `courses/AdminCourses.tsx`, `dashboard/AdminDashboard.tsx`, `orders/AdminOrders.tsx`, `users/AdminUsersList.tsx`; `components/{AddCourseOverlay,AddUserOverlay,AdminHeader,AdminLayout,AdminSidebar,CategoryOverlay,EditUserOverlay}.tsx`.
+  - `features/payment/`: `Checkout.tsx` (từ `pages/public/payment/Checkout.tsx`) + `components/{PaymentForm,OrderSummary,EnrollSuccessOverlay}.tsx` (từ `components/checkout/*`) — gộp đúng như plan gốc.
+  - Xóa `pages/auth/AuthPage.tsx`, `pages/student/dashboard/MyCoursesOverview.tsx` (đã xác nhận 0 dòng, 0 import trước khi xóa).
+  - `features/teacher/` **không tạo** — chưa có file/nội dung nào thuộc domain này (đúng nguyên tắc "không thêm abstraction chưa cần"; khác với liệt kê sơ bộ ban đầu trong Scope nhưng khớp đúng thực tế `teacher/` vẫn là placeholder chưa implement, ghi rõ ở CLAUDE.md).
+  - Sửa toàn bộ 19 import trong `routes/AppRoutes.tsx` trỏ đúng `features/*` mới; sửa 27 dòng relative import (`../`) và 21 dòng `@/components|@/pages` import trong các file vừa move — tính lại đúng số cấp `../` theo độ sâu thư mục mới của từng file (một số file sâu hơn 1 cấp do `components/<x>/File.tsx` → `features/<audience>/components/File.tsx`, một số nông hơn 1 cấp do `pages/public/<domain>/Page.tsx` → `features/<audience>/Page.tsx`).
+  - Cập nhật `CLAUDE.md` mục "Frontend architecture" khớp cấu trúc mới.
+- **Modules/files**: Toàn bộ `academic-management-website/src/{components,pages}` (đã xóa 2 thư mục này hoàn toàn) → `academic-management-website/src/{shared/ui,features}/`; `routes/AppRoutes.tsx`; `CLAUDE.md`; `docs/REFACTOR_PLAN.md` (mục C).
+- **Existing behavior cần preserve**: Đã verify — `npm run build` (`tsc -b && vite build`) pass sạch, 0 lỗi import; dev server (`npm run dev`) khởi động sạch, `GET /` trả 200. **Chưa verify được** bằng click-through trình duyệt thật (môi trường sandbox không có trình duyệt) — cần verify thủ công trước khi merge, đúng như risk đã ghi nhận ở bản kế hoạch gốc.
+- **Migration concerns**: Đã tách riêng — toàn bộ thay đổi trong phase này chỉ là move file + sửa import, không có dòng logic/JSX nào bị sửa (đối chiếu diff xác nhận).
+- **Tests/verification**:
+  - `npm run build` → PASS (0 lỗi TypeScript, build ra `dist/` thành công).
+  - `npm run lint` → **2 vấn đề pre-existing, không phải regression của phase này** (đối chiếu `git show HEAD:<đường dẫn cũ>` xác nhận y hệt trước khi move): `features/courses/CourseDetailPage.tsx:41` warning `react-hooks/exhaustive-deps`; `features/student/profile/Profile.tsx:86` error `@typescript-eslint/no-unused-vars` (biến `error` trong `catch`). Không sửa ở phase này (ngoài phạm vi "chỉ move", đúng nguyên tắc không mở rộng scope/không refactor unrelated code).
+  - Backend không bị đụng tới (`git diff --stat -- academic-management-api` rỗng).
+- **Exit criteria**: Build sạch; cấu trúc thư mục khớp mục C + phần bổ sung; không còn `components/`, `pages/` ở `src/` gốc; không còn `components/checkout/`; 2 dead file đã xóa; `LearningProgress.tsx` đã đổi tên. **Riêng "lint sạch"**: không đạt 100% do 2 lỗi lint pre-existing nêu trên — đã xác nhận không phải do phase này gây ra, chấp nhận là known issue thay vì tự ý sửa ngoài scope.
 - **Trace**: Architecture §4, §13; Target Project Structure mục C.
 
 ### Phase 7: API client layer

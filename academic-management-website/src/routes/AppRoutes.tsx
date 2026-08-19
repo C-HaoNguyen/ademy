@@ -2,30 +2,30 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import { ROLES } from "@/config/constants";
 
-import HomePage from "@/pages/public/home/HomePage";
-import LecturerPage from "@/pages/public/lecturer/LecturerPage";
-import ContactPage from "@/pages/public/about/ContactPage";
-import Login from "@/pages/auth/Login";
-import Signup from "@/pages/auth/Signup";
-import CourseList from "@/pages/public/courses/CourseListPage";
-import CourseDetail from "@/pages/public/courses/CourseDetailPage";
-import Checkout from "@/pages/public/payment/Checkout";
+import HomePage from "@/features/public/home/HomePage";
+import LecturerPage from "@/features/public/lecturer/LecturerPage";
+import ContactPage from "@/features/public/about/ContactPage";
+import Login from "@/features/auth/Login";
+import Signup from "@/features/auth/Signup";
+import CourseList from "@/features/courses/CourseListPage";
+import CourseDetail from "@/features/courses/CourseDetailPage";
+import Checkout from "@/features/payment/Checkout";
 
-import PublicLayout from "@/components/public/PublicLayout";
-import StudentLayout from "@/components/student/StudentLayout";
-import AdminLayout from "@/components/admin/AdminLayout";
+import PublicLayout from "@/features/public/components/PublicLayout";
+import StudentLayout from "@/features/student/components/StudentLayout";
+import AdminLayout from "@/features/admin/components/AdminLayout";
 
-import Dashboard from "@/pages/student/dashboard/Dashboard";
-import MyCourses from "@/pages/student/my-courses/MyCourses";
-import LearningProfile from "@/pages/student/learning-profile/LearningProgress";
-import TestPractice from "@/pages/student/test-practice/TestPractice";
-import Profile from "@/pages/student/profile/Profile";
+import Dashboard from "@/features/student/dashboard/Dashboard";
+import MyCourses from "@/features/student/my-courses/MyCourses";
+import LearningProfile from "@/features/student/learning-profile/LearningProfile";
+import TestPractice from "@/features/student/test-practice/TestPractice";
+import Profile from "@/features/student/profile/Profile";
 
-import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard";
-import AdminUsersList from "@/pages/admin/users/AdminUsersList";
-import AdminCourses from "@/pages/admin/courses/AdminCourses";
-import AdminCategories from "@/pages/admin/categories/AdminCategories";
-import AdminOrders from "@/pages/admin/orders/AdminOrders";
+import AdminDashboard from "@/features/admin/dashboard/AdminDashboard";
+import AdminUsersList from "@/features/admin/users/AdminUsersList";
+import AdminCourses from "@/features/admin/courses/AdminCourses";
+import AdminCategories from "@/features/admin/categories/AdminCategories";
+import AdminOrders from "@/features/admin/orders/AdminOrders";
 
 const AppRoutes = () => {
     return (

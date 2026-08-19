@@ -70,7 +70,7 @@ public class EnrollmentService {
                 .orElseThrow(() -> new NotFoundException("Student not found"));
 
         return enrollmentRepository
-                .findByStudent_UserId(student.getUserId())
+                .findByStudent_UserIdWithCourse(student.getUserId())
                 .stream()
                 .map(Enrollments::getCourse)
                 .toList();

@@ -8,6 +8,13 @@ import java.util.List;
 
 public interface CourseRepository extends JpaRepository<Courses, Integer> {
 
+    @Query("""
+        SELECT c FROM Courses c
+        JOIN FETCH c.instructor
+        LEFT JOIN FETCH c.category
+        """)
+    List<Courses> findAllWithDetails();
+
     @Query(
             value = """
         SELECT 

@@ -5,17 +5,22 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-@IdClass(LessonProgressId.class)
 @Entity
-@Table(name = "lesson_progress")
+@Table(
+    name = "lesson_progress",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "lesson_id"})
+)
 public class LessonProgress {
     @Id
-    @ManyToOne
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "progress_id")
+    private Integer progressId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private Users student;
 
-    @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id")
     private Lessons lesson;
 
@@ -23,6 +28,10 @@ public class LessonProgress {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    public Integer getProgressId() {
+        return progressId;
+    }
 
     public Users getStudent() {
         return student;

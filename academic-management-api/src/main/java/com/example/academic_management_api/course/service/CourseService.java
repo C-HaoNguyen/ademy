@@ -49,7 +49,7 @@ public class CourseService {
     }
 
     public List<CourseResponseDto> getAllCoursesDto() {
-        List<Courses> courses = courseRepository.findAll();
+        List<Courses> courses = courseRepository.findAllWithDetails();
         List<CourseResponseDto> response = new ArrayList<>();
 
         for (Courses course : courses) {
@@ -73,8 +73,7 @@ public class CourseService {
     // ---- Admin operations ----
 
     public List<Courses> getAllCourses() {
-        List<Courses> allCourses = courseRepository.findAll();
-        return allCourses;
+        return courseRepository.findAllWithDetails();
     }
 
     public long getTotalCourses() {

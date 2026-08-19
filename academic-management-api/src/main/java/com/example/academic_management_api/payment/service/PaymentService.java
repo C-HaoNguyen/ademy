@@ -68,7 +68,7 @@ public class PaymentService {
     }
 
     public List<Payments> getAllPayments() {
-        return paymentRepository.findAll();
+        return paymentRepository.findAllWithDetails();
     }
 
     public long getTotalPayments() {

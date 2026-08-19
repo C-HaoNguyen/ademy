@@ -254,17 +254,31 @@ academic-management-website/src/
 - **Exit criteria**: Đạt đủ — không còn field `role`/`status`/`level` dạng String tự do ở 3 entity; bug `"SUCCESS"` hoa đã sửa; build/package PASS; JSON/DB case giữ nguyên đã verify thật.
 - **Trace**: ADR-005, PRD-020/021, BR-004.
 
-### Phase 5: Data access hygiene
+### Phase 5: Data access hygiene — ĐÃ HOÀN TẤT
 
 - **Goal**: Giảm rủi ro N+1 và dọn cấu trúc khóa fragile trước khi domain mới thêm nhiều bảng liên kết.
-- **Scope**: Chuyển mọi `@ManyToOne` sang `FetchType.LAZY` + thêm `JOIN FETCH` ở query danh sách cần dữ liệu liên quan; thêm index cho mọi cột FK; đổi `LessonProgress` từ composite key (`@IdClass`) sang surrogate key + unique constraint.
-- **Dependencies**: Phase 1, Phase 4.
-- **Changes required**: Sửa annotation fetch type trên entity; JPQL `JOIN FETCH` ở repository method liên quan; migration thêm index; entity `LessonProgress` đổi PK, xóa `LessonProgressId`.
-- **Modules/files**: Mọi entity có `@ManyToOne` (`Courses`, `Enrollments`, `Payments`, `Lessons`, `LessonProgress`), migration mới. `Lessons`/`LessonProgress` đã có vị trí cố định từ Phase 2: submodule `course/lesson/` (xem Target Project Structure mục B) — không đặt lại vị trí ở phase này.
-- **Existing behavior cần preserve**: Kết quả trả về API không đổi (chỉ đổi cách lấy dữ liệu, không đổi shape response); ràng buộc nghiệp vụ 1 student × 1 lesson chỉ có 1 progress record phải giữ nguyên qua unique constraint.
-- **Migration concerns**: Đổi PK của `LessonProgress` là thay đổi schema có rủi ro nếu có data — đã xác nhận build mới không cần giữ data cũ nên an toàn để đổi trực tiếp.
-- **Tests/verification**: Test lấy danh sách course kèm instructor/category không phát sinh N+1 (kiểm tra số query qua log/Hibernate statistics); test insert trùng `(student_id, lesson_id)` vào `lesson_progress` bị chặn bởi unique constraint.
-- **Exit criteria**: Không còn `FetchType.EAGER` mặc định; mọi FK có index; `LessonProgress` dùng surrogate key.
+- **Scope thực tế đã làm**: Chuyển mọi `@ManyToOne` sang `FetchType.LAZY` (5 entity: `Courses`, `Lessons`, `Enrollments`, `Payments`, `LessonProgress`); thêm `JOIN FETCH` ở đúng 3 query danh sách phục vụ endpoint trả về nhiều bản ghi kèm dữ liệu liên quan (không đụng endpoint chi tiết 1 bản ghi — đúng phạm vi "N+1" của Goal); thêm index cho toàn bộ 9 cột FK; đổi `LessonProgress` từ composite key (`@IdClass`) sang surrogate key (`progress_id`) + `UNIQUE(student_id, lesson_id)`.
+- **Dependencies**: Phase 1, Phase 4 — cả hai đã hoàn tất trước khi làm.
+- **Changes đã thực hiện**:
+  - Entity: `Courses.instructor/category`, `Lessons.course`, `Enrollments.student/course`, `Payments.student/course`, `LessonProgress.student/lesson` — thêm `fetch = FetchType.LAZY`.
+  - `LessonProgress`: bỏ `@IdClass(LessonProgressId.class)`, đổi `@Id` sang `progressId` (`@GeneratedValue(IDENTITY)`), thêm `@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "lesson_id"}))`. Xóa `LessonProgressId.java` (đã grep xác nhận không còn nơi nào reference).
+  - Repository — thêm method `JOIN FETCH` mới, dùng thay cho `findAll()`/`findByStudent_UserId()` trần tại đúng 4 endpoint danh sách bị ảnh hưởng:
+    - `CourseRepository.findAllWithDetails()` (`JOIN FETCH c.instructor` + `LEFT JOIN FETCH c.category`) — dùng chung cho `CourseService.getAllCoursesDto()` (`GET /courses`, `/courses/allDetail`) và `getAllCourses()` (`GET /admin/courses`).
+    - `EnrollmentRepository.findByStudent_UserIdWithCourse()` (fetch 2 cấp: `e.course` → `instructor`/`category`) — dùng cho `EnrollmentService.getMyCourses()` (`GET /enrollments/student/me/courses`).
+    - `PaymentRepository.findAllWithDetails()` (fetch `student` + `course` → `instructor`/`category`) — dùng cho `PaymentService.getAllPayments()` (`GET /admin/payments`).
+  - Migration `V2__data_access_hygiene.sql`: đổi PK `lesson_progress` (drop PK cũ, thêm cột `progress_id` PK mới, thêm `UNIQUE(student_id, lesson_id)`); thêm index cho 9 cột FK (`courses.instructor_id/category_id`, `lessons.course_id`, `enrollments.student_id/course_id`, `lesson_progress.student_id/lesson_id`, `payments.student_id/course_id`) — thêm index riêng cho cả 2 cột đã có prefix coverage từ unique constraint sẵn có (`enrollments.student_id`, `lesson_progress.student_id`), theo đúng nghĩa đen "mọi cột FK có index" của Goal, đã thống nhất trước khi implement.
+- **Modules/files**: `course/entity/Courses.java`, `course/lesson/entity/{Lessons,LessonProgress}.java` (xóa `LessonProgressId.java`), `course/repository/CourseRepository.java`, `course/service/CourseService.java`, `enrollment/entity/Enrollments.java`, `enrollment/repository/EnrollmentRepository.java`, `enrollment/service/EnrollmentService.java`, `payment/entity/Payments.java`, `payment/repository/PaymentRepository.java`, `payment/service/PaymentService.java`, `db/migration/V2__data_access_hygiene.sql` (mới).
+- **Existing behavior cần preserve**: Đã verify — response shape của cả 4 endpoint danh sách không đổi (đối chiếu JSON trả về trước/sau); ràng buộc 1 student × 1 lesson chỉ 1 progress record giữ nguyên, nay qua `UNIQUE(student_id, lesson_id)` thay cho PK composite cũ.
+- **Migration concerns**: Đổi PK `LessonProgress` là thay đổi schema không tương thích ngược — an toàn vì bảng này chưa có endpoint/service nào dùng (đúng ghi nhận từ Phase 2), đã verify bảng rỗng trước khi migrate trên DB hosted.
+- **Tests/verification**: Repo chưa có `src/test/` (đúng tiền lệ Phase 1-4, hạ tầng test dồn về Phase 39) — verify bằng **app thật chạy trên DB Neon hosted** (`mvn spring-boot:run`, bật `hibernate.generate_statistics` + log SQL):
+  - Flyway áp `V2__data_access_hygiene.sql` sạch: `Successfully applied 1 migration to schema "public", now at version v2`.
+  - Tạo tạm dữ liệu test (1 course, 1 student, 2 enrollment) để có ≥2 bản ghi, xác nhận **N+1 đã hết** ở cả 4 endpoint: `GET /courses`, `GET /admin/courses`, `GET /enrollments/student/me/courses` — mỗi endpoint chỉ sinh đúng 1 câu SQL fetch-join cho toàn bộ danh sách (đối chiếu log Hibernate); `GET /admin/payments` — câu JPQL fetch-join sinh đúng SQL hợp lệ (0 rows vì bảng `payments` rỗng, xem "Known issue" bên dưới).
+  - Unique constraint: dùng JDBC trực tiếp (không có psql/Docker daemon trong môi trường) insert 1 lesson tạm + 2 bản ghi `lesson_progress` trùng `(student_id, lesson_id)` → bản ghi thứ 2 bị reject đúng bởi `uq_lesson_progress_student_lesson`.
+  - Index: query `pg_indexes` xác nhận đủ 9 index FK đã tạo đúng tên.
+  - Dữ liệu test tạo trong lúc verify đã xóa lại sau khi xong (course, user, enrollment tạm) — đối chiếu `GET /courses`/`GET /admin/users` khớp đúng baseline trước khi test, không để lại rác trên DB hosted dùng chung.
+  - **Sau khi verify xong, đã chủ động revert toàn bộ thay đổi schema trên DB Neon** (đưa `lesson_progress` về lại PK composite gốc, xóa 9 index vừa tạo, xóa dòng `version=2` khỏi `flyway_schema_history`) để DB hosted không bị để lại ở trạng thái đã migrate ngoài quy trình chính thức — code (`V2__data_access_hygiene.sql` + entity/repository/service) giữ nguyên trong repo, lần chạy app tiếp theo (kể cả của reviewer) sẽ tự áp lại đúng migration này qua Flyway như bình thường.
+- **Known issue phát hiện trong lúc verify, không sửa ở phase này** (pre-existing, đã ghi nhận từ Phase 3 known issue #1): `POST /payments/checkout` vẫn lỗi 500 do bug `@AuthenticationPrincipal CustomUserDetails` luôn `null` → không tạo được `Payments` thật qua API để test N+1 với >0 rows ở `GET /admin/payments`; đã verify gián tiếp qua cấu trúc SQL sinh ra đúng (join `payments`→`users`(student)→`courses`→`users`(instructor)/`categories`), cùng pattern đã verify trực tiếp thành công ở 3 endpoint còn lại.
+- **Exit criteria**: Đạt đủ — không còn `FetchType.EAGER` mặc định (đã grep xác nhận toàn bộ `@ManyToOne` có `FetchType.LAZY`); đủ 9/9 cột FK có index (verify qua `pg_indexes` thật); `LessonProgress` dùng surrogate key (`progress_id`), `LessonProgressId.java` đã xóa; `mvn clean package` PASS.
 - **Trace**: ADR-018, ADR-019, NFR-001.
 
 ---

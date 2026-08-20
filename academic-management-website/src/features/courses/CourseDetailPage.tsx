@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import EnrollSuccessOverlay from "../payment/components/EnrollSuccessOverlay";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
+import { useAuth } from "@/shared/auth/useAuth";
 import Skeleton, { SkeletonText } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
@@ -29,7 +30,7 @@ const CourseDetail = () => {
     const { courseId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const isLoggedIn = !!localStorage.getItem("accessToken");
+    const { isLoggedIn } = useAuth();
 
     const [course, setCourse] = useState<CourseDetailType | null>(null);
     const [loading, setLoading] = useState(true);

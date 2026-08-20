@@ -382,17 +382,40 @@ academic-management-website/src/
 - **Exit criteria**: Đạt đủ trong phạm vi đã chốt — `/courses`, `/categories`, `/admin/courses`, `/admin/categories` không còn bị gọi trùng lặp ở code (đã đối chiếu diff); 5 trang trong phạm vi đã chuyển hẳn sang React Query, không còn `useState`/`useEffect` fetch thủ công cho dữ liệu đó. Các trang GET đơn lẻ còn lại (Profile, MyCourses, Dashboard summary, AdminUsersList, AdminOrders, CourseDetailPage) **chưa** chuyển — ghi nhận rõ đây là quyết định phạm vi đã duyệt, không phải sót.
 - **Trace**: ADR-020.
 
-### Phase 9: Auth state + fix `isTokenExpired` bug
+### Phase 9: Auth state + fix `isTokenExpired` bug — ĐÃ HOÀN TẤT
 
 - **Goal**: Tập trung auth state, sửa bug bảo mật thật.
-- **Scope**: Tạo `AuthContext`; sửa `isTokenExpired` để token thiếu `exp` không còn bị coi là "không bao giờ hết hạn"; chuyển `Profile`/`Login`/`Header` sang đọc từ context thay vì tự đọc `localStorage` riêng.
-- **Dependencies**: Phase 7 (client xử lý 401 cần đồng bộ với context).
-- **Changes required**: `AuthContext` + provider ở root; sửa logic `isTokenExpired` trong `AuthUtils.ts`; cập nhật các component đọc auth state.
-- **Modules/files**: `shared/auth/AuthContext.tsx` (mới), `utils/AuthUtils.ts`, `Header.tsx`, `Profile.tsx`, `Login.tsx`.
-- **Existing behavior cần preserve**: Luồng đăng nhập/đăng xuất hiện có không đổi ngoài việc sửa đúng bug hết hạn token.
-- **Migration concerns**: Đây là bug bảo mật thật (session không hết hạn khi thiếu `exp`) — cần test riêng để xác nhận sửa đúng, tránh vô tình đổi hành vi cho token có `exp` hợp lệ.
-- **Tests/verification**: Test token có `exp` hết hạn → bị logout đúng; test token thiếu `exp` → **không còn** coi là hợp lệ vĩnh viễn (theo quyết định cần làm rõ: coi token thiếu `exp` là không hợp lệ ngay, vì đây là dữ liệu bất thường).
-- **Exit criteria**: Mọi nơi đọc auth state qua `AuthContext`, không tự đọc `localStorage` rải rác; bug `isTokenExpired` đã sửa và có test.
+- **Scope thực tế đã làm**: Tạo `AuthContext`/`AuthProvider`; sửa `isTokenExpired` để token thiếu `exp` không còn bị coi là "không bao giờ hết hạn"; chuyển toàn bộ nơi đọc/ghi auth state trực tiếp (`localStorage`/`AuthUtils`) sang qua context.
+- **Điều chỉnh phạm vi so với bản kế hoạch gốc (đã audit code thật trước khi implement, đã duyệt trước khi code — xem trao đổi trước khi implement)**:
+  - **`Profile.tsx` bị loại khỏi scope**: audit lại cho thấy file này không hề đọc `localStorage`/gọi `AuthUtils` trực tiếp (chỉ gọi `apiClient(USERS.ME)` lấy profile từ backend) — assumption gốc của plan sai, không có gì để sửa ở đây.
+  - **Thêm 4 file vào scope** (đúng tinh thần Goal "tập trung auth state", audit phát hiện ngoài 3 file gốc còn đọc/ghi auth state trực tiếp):
+    - `CourseDetailPage.tsx` — trước đó tự tính `isLoggedIn` bằng `!!localStorage.getItem("accessToken")` (string literal cứng, bỏ qua cả `STORAGE_KEYS` lẫn kiểm tra hết hạn) → đổi sang `useAuth().isLoggedIn`. Đây là thay đổi hành vi có chủ đích: trước đây token hết hạn vẫn hiện nút "Đăng ký" hoạt động được tới khi `apiClient` trả 401 mới bị đá ra; nay bị chặn sớm hơn ngay từ client — đúng mục tiêu bảo mật của phase.
+    - `ProtectedRoute.tsx` — đổi `isLoggedIn()`/`extractRole()` gọi trực tiếp từ `AuthUtils` sang đọc từ `useAuth()`.
+    - `StudentHeader.tsx`, `AdminHeader.tsx` — đổi gọi `logout()` import thẳng từ `AuthUtils` sang `useAuth().logout()` (hành vi runtime không đổi vì context chỉ pass-through gọi lại đúng hàm cũ).
+- **Deviation kỹ thuật phát sinh khi implement (không phải quyết định phạm vi, mà là fix lint error thật)**: `AuthContext.tsx` ban đầu gộp cả `AuthProvider` component lẫn `useAuth` hook lẫn `createContext(...)` trong 1 file → vi phạm rule `react-refresh/only-export-components` (cấu hình mặc định `error`, không phải `warn`, trong `eslint.config.js` có sẵn từ trước, không phải rule mới thêm). Đã tách thành 3 file theo đúng convention `useX.ts` đã có trong Target Structure mục C:
+  - `shared/auth/authContextObject.ts` — `createContext(...)` + types (`AuthState`, `AuthContextValue`, `LoginData`).
+  - `shared/auth/AuthContext.tsx` — chỉ còn `AuthProvider` component.
+  - `shared/auth/useAuth.ts` — hook `useAuth()`.
+  (Tên file `authContextObject.ts` thay vì `authContext.ts` vì Windows filesystem không phân biệt hoa/thường — trùng tên với `AuthContext.tsx` gây lỗi biên dịch `TS1149`.)
+- **Dependencies**: Phase 7 (đã xong trước đó) — xác nhận không có xung đột: `apiClient.logout()` dùng `window.location.href` (hard reload) nên tự nhiên remount `AuthProvider` với state mới từ `localStorage`, không cần cầu nối 2 chiều giữa `apiClient` và context.
+- **Changes đã thực hiện**:
+  - `utils/AuthUtils.ts` — `isTokenExpired()`: `if (!decoded.exp) return false` → `return true` (token thiếu `exp` = dữ liệu bất thường = coi là hết hạn).
+  - `shared/auth/authContextObject.ts`, `shared/auth/AuthContext.tsx`, `shared/auth/useAuth.ts` (cả 3 mới) — state `{isLoggedIn, role, username}` khởi tạo từ `AuthUtils` lúc mount; `login(data)` ghi 4 key `localStorage` (dùng `STORAGE_KEYS`, giữ đúng hành vi ghi cũ) rồi cập nhật state ngay (đồng bộ, không cần chờ `location` đổi); `logout()` pass-through gọi `AuthUtils.logout()`; lắng nghe `storage` event để sync cross-tab.
+  - `main.tsx` — bọc `<AuthProvider>` trong `<QueryClientProvider>`, ngoài `<App />`.
+  - `Header.tsx` — đọc `{isLoggedIn, logout}` từ `useAuth()`; xóa 2 `useEffect` cũ (re-check theo `location` + `storage` listener thủ công) vì context đã cover cả 2 concern này.
+  - `Login.tsx` — thay 4 dòng `localStorage.setItem(...)` bằng `useAuth().login(data)`.
+  - `ProtectedRoute.tsx`, `CourseDetailPage.tsx`, `StudentHeader.tsx`, `AdminHeader.tsx` — như mô tả ở mục "Điều chỉnh phạm vi" trên.
+- **Modules/files**: `utils/AuthUtils.ts`; `shared/auth/{authContextObject.ts, AuthContext.tsx, useAuth.ts}` (mới); `main.tsx`; `features/public/components/Header.tsx`; `features/auth/Login.tsx`; `routes/ProtectedRoute.tsx`; `features/courses/CourseDetailPage.tsx`; `features/student/components/StudentHeader.tsx`; `features/admin/components/AdminHeader.tsx`. **Không đổi**: `features/student/profile/Profile.tsx` (không cần, xem lý do trên); `shared/api/client.ts` (giữ nguyên gọi thẳng `AuthUtils` — chạy ngoài React tree, không phải nơi cần context).
+- **Existing behavior cần preserve**: Đã giữ — luồng login (role `ADMIN` → `/admin/dashboard`; có `from` → quay lại; mặc định → `/student/dashboard`) không đổi; luồng logout (hard redirect `/login`, xóa đủ 4 key) không đổi; `ProtectedRoute` (chưa login → `/login` kèm `state.from`; sai role → `/`) không đổi logic, chỉ đổi nguồn đọc. Token có `exp` hợp lệ (chưa hết hạn) hành vi y hệt trước — đã verify riêng để không vô tình đổi hành vi case này.
+- **Migration concerns**: Bug bảo mật thật (session không hết hạn khi thiếu `exp`) — đã verify bằng script throwaway trước khi động tới bất kỳ component nào (đúng thứ tự: fix bug trong `AuthUtils.ts` → verify độc lập → mới build `AuthContext` lên trên).
+- **Tests/verification**: Repo chưa có hạ tầng test frontend (tiền lệ đã lặp lại từ Phase 6/7/8 — dồn về Phase 39) → **không cài `vitest`**, verify bằng script Node throwaway (chạy tay, không commit vào repo) mô phỏng lại đúng logic `isTokenExpired` đã sửa, chạy `jwt-decode@4.0.0` thật (đúng version đang dùng trong `package.json`) với 4 case:
+  - Token có `exp` trong quá khứ → `isTokenExpired()` = `true` — PASS.
+  - Token **thiếu** `exp` → `isTokenExpired()` = `true` (case bug, trước đây là `false`) — PASS.
+  - Token có `exp` trong tương lai → `isTokenExpired()` = `false` (đảm bảo không đổi hành vi case hợp lệ) — PASS.
+  - Token rác/không parse được → `isTokenExpired()` = `true` — PASS.
+  - `npx tsc -b` PASS (0 lỗi); `npm run lint` — chỉ còn đúng 2 lỗi pre-existing đã biết từ Phase 6 (`CourseDetailPage.tsx` warning `react-hooks/exhaustive-deps`, `Profile.tsx` error `no-unused-vars`), không phát sinh lỗi mới; `npm run build` PASS (`tsc -b && vite build` ra `dist/` thành công).
+  - **Chưa verify được** bằng click-through trình duyệt thật (môi trường sandbox không có trình duyệt) — cần verify thủ công trước khi merge: (1) login → `Header`/`StudentHeader`/`AdminHeader` cập nhật trạng thái ngay không cần điều hướng thêm lần nữa; (2) logout từ cả 3 header đều redirect `/login` đúng; (3) sửa tay `accessToken` trong `localStorage` thành token không có `exp` (hoặc token rác) → gọi lại trang cần auth (`/student/profile`) → phải bị coi là chưa login/bị auto-logout; (4) `CourseDetailPage` ẩn danh bấm "Đăng ký" → redirect `/login` đúng `from`; (5) multi-tab — logout ở tab A → tab B (đang mở `Header`) tự cập nhật UI qua `storage` event.
+- **Exit criteria**: Đạt đủ trong phạm vi đã audit lại — đã grep xác nhận không còn nơi nào trong `src/features/`, `src/routes/` gọi trực tiếp `isLoggedIn()`/`extractRole()`/`getUsername()`/đọc `localStorage` key auth ngoài `shared/auth/*` và `shared/api/client.ts` (boundary đã biết, giữ nguyên có chủ đích); bug `isTokenExpired` đã sửa, verify bằng 4 test case (không phải automated test do quyết định phạm vi test infra đã duyệt).
 - **Trace**: Architecture §9; audit finding (bug bảo mật).
 
 ---

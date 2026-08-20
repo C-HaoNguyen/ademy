@@ -61,7 +61,7 @@ export function isTokenExpired() {
 
     try {
         const decoded = jwtDecode<JwtPayload>(token);
-        if (!decoded.exp) return false;
+        if (!decoded.exp) return true;
 
         return decoded.exp * 1000 < Date.now();
     } catch {

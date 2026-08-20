@@ -8,12 +8,13 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../../../utils/AuthUtils";
+import { useAuth } from "@/shared/auth/useAuth";
 
 const AdminHeader = () => {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     // Close dropdown when clicking outside
     useEffect(() => {

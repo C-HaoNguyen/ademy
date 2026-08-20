@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { isLoggedIn, logout } from "../../../utils/AuthUtils";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "@/shared/auth/useAuth";
 import logo from "../../../assets/logo.svg"
 
 type Tab = {
@@ -12,9 +12,8 @@ type Tab = {
 
 function Header() {
     const navigate = useNavigate();
-    const location = useLocation();
+    const { isLoggedIn: loggedIn, logout } = useAuth();
     const [open, setOpen] = useState(false);
-    const [loggedIn, setLoggedIn] = useState(isLoggedIn());
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const tabs: Tab[] = [
@@ -36,14 +35,6 @@ function Header() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    // Re-check auth state on navigation and cross-tab storage changes
-    useEffect(() => {
-        setLoggedIn(isLoggedIn());
-        const handleStorage = () => setLoggedIn(isLoggedIn());
-        window.addEventListener("storage", handleStorage);
-        return () => window.removeEventListener("storage", handleStorage);
-    }, [location]);
 
     return (
         <header className="w-full bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50">

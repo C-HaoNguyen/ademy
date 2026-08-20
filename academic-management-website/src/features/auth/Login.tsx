@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg"
-import { API_ENDPOINTS, ROLES, ROUTES, STORAGE_KEYS } from "@/config/constants";
+import { API_ENDPOINTS, ROLES, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
+import { useAuth } from "@/shared/auth/useAuth";
 
 const Login = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const { login } = useAuth();
     const from = location.state?.from?.pathname as string | undefined;
     const [username, setUserName] = useState("");
     const [password, setPassword] = useState("");
@@ -35,10 +37,12 @@ const Login = () => {
 
             const data = await response.json();
 
-            localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
-            localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
-            localStorage.setItem(STORAGE_KEYS.USER_ROLE, data.role);
-            localStorage.setItem(STORAGE_KEYS.USERNAME, data.username);
+            login({
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
+                role: data.role,
+                username: data.username,
+            });
 
             if (data.role === ROLES.ADMIN) {
                 navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });

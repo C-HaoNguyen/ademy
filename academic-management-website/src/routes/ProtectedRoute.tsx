@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
-import { extractRole, isLoggedIn } from "@/utils/AuthUtils";
+import { useAuth } from "@/shared/auth/useAuth";
 
 type ProtectedRouteProps = {
     children: ReactNode;
@@ -9,13 +9,14 @@ type ProtectedRouteProps = {
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     const location = useLocation();
+    const { isLoggedIn, role } = useAuth();
 
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
         return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
     if (allowedRoles?.length) {
-        const currentRole = extractRole()?.toUpperCase();
+        const currentRole = role?.toUpperCase();
         const isAllowed = currentRole && allowedRoles.includes(currentRole);
 
         if (!isAllowed) {

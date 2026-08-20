@@ -47,6 +47,7 @@ lerna-debug.log*
 
 # --- Claude Code (local config) ---
 .claude/settings.local.json
+.claude/skills/
 __pycache__/
 *.pyc
 

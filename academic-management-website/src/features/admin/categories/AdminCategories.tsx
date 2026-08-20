@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { FolderKanban, Pencil, Trash2, Plus, FolderX } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
@@ -6,17 +7,27 @@ import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
 import CategoryOverlay, { type CategoryPayload } from "@/features/admin/components/CategoryOverlay";
-
-type Category = {
-    categoryId: number;
-    categoryName: string;
-    description: string | null;
-};
+import { useAdminCategoriesQuery, adminCategoriesQueryKey, type AdminCategory as Category } from "@/shared/api/queries/useAdminCategoriesQuery";
+import { useAdminCoursesQuery } from "@/shared/api/queries/useAdminCoursesQuery";
 
 const AdminCategories = () => {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [courseCountByCategory, setCourseCountByCategory] = useState<Record<number, number>>({});
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+
+    const categoriesQuery = useAdminCategoriesQuery();
+    const categories = categoriesQuery.data ?? [];
+    const loading = categoriesQuery.isLoading;
+
+    const coursesQuery = useAdminCoursesQuery();
+    const courseCountByCategory = useMemo<Record<number, number>>(() => {
+        const counts: Record<number, number> = {};
+        (coursesQuery.data ?? []).forEach((course) => {
+            const id = course.category?.categoryId;
+            if (id != null) {
+                counts[id] = (counts[id] ?? 0) + 1;
+            }
+        });
+        return counts;
+    }, [coursesQuery.data]);
 
     const [showAddOverlay, setShowAddOverlay] = useState(false);
     const [showEditOverlay, setShowEditOverlay] = useState(false);
@@ -33,50 +44,6 @@ const AdminCategories = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    useEffect(() => {
-        refreshCategories();
-        fetchCourseCounts();
-    }, []);
-
-    async function refreshCategories() {
-        setLoading(true);
-        try {
-            const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADMIN_LIST);
-
-            if (!res.ok) {
-                console.error("API error:", res.status);
-                return;
-            }
-
-            const data = await res.json();
-            setCategories(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function fetchCourseCounts() {
-        try {
-            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_LIST);
-
-            if (!res.ok) return;
-
-            const data: { category?: { categoryId: number } | null }[] = await res.json();
-            const counts: Record<number, number> = {};
-            data.forEach((course) => {
-                const id = course.category?.categoryId;
-                if (id != null) {
-                    counts[id] = (counts[id] ?? 0) + 1;
-                }
-            });
-            setCourseCountByCategory(counts);
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
     const handleCreate = async (form: CategoryPayload) => {
         try {
             const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADD, {
@@ -92,7 +59,7 @@ const AdminCategories = () => {
 
             showToast("success", "Đã thêm danh mục mới");
             setShowAddOverlay(false);
-            refreshCategories();
+            queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Lỗi kết nối server");
@@ -122,7 +89,7 @@ const AdminCategories = () => {
             showToast("success", "Đã cập nhật danh mục");
             setShowEditOverlay(false);
             setEditingCategory(null);
-            refreshCategories();
+            queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Lỗi kết nối server");
@@ -145,7 +112,7 @@ const AdminCategories = () => {
             showToast("success", "Đã xóa danh mục");
             setShowDeleteOverlay(false);
             setDeletedCategory(null);
-            refreshCategories();
+            queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Xóa danh mục thất bại");

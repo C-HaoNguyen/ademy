@@ -92,6 +92,8 @@ com.example.academic_management_api/
 academic-management-website/src/
 ├── shared/
 │   ├── api/                       # client.ts (Phase 7), API_ENDPOINTS usage
+│   │   ├── queryClient.ts         # QueryClient instance dùng chung (Phase 8)
+│   │   └── queries/                # query hook (useCoursesQuery, useCategoriesQuery...) dùng chung nhiều audience (Phase 8) — chỉ đặt ở đây khi hook được >1 feature dùng, nếu chỉ 1 feature dùng thì co-locate trong feature đó
 │   ├── ui/                        # Button, Badge, Input, FormField, Card, Modal, ToastProvider, Table, Tabs, SidebarNav... (Stage C)
 │   ├── layout/                    # AppShellLayout, AppHeader (Phase 15) — dùng chung Admin/Student/Teacher (sidebar layout)
 │   └── auth/                      # AuthContext (Phase 9)
@@ -350,17 +352,34 @@ academic-management-website/src/
 - **File/doc liên quan đã cập nhật**: `CLAUDE.md` (mục "Backend architecture" — bổ sung `RestAuthenticationEntryPoint`/`RestAccessDeniedHandler`; mục "Frontend architecture" — thay mô tả `AuthFetch.ts` đã xóa bằng `shared/api/client.ts`), `docs/REFACTOR_PLAN.md` (mục Phase 7 này).
 - **Trace**: ADR-021.
 
-### Phase 8: Server state (TanStack Query)
+### Phase 8: Server state (TanStack Query) — ĐÃ HOÀN TẤT
 
 - **Goal**: Loại bỏ duplication fetch/cache tự phát.
-- **Scope**: Cài TanStack Query; chuyển các trang có fetch trùng lặp rõ rệt (categories/course-count đang fetch độc lập ở nhiều nơi) sang dùng query hook chung trước, sau đó áp dụng dần cho các trang còn lại.
+- **Scope thực tế đã làm**: Cài `@tanstack/react-query`; chuyển đúng 5 trang có fetch trùng lặp thật (đã audit code trước khi làm, khớp nguyên nhân nêu ở ADR-020): `CourseListPage`/`HomePage` (cùng gọi `/courses`), `AdminCourses`/`AdminCategories` (cùng gọi `/admin/courses` và `/admin/categories`), `AdminDashboard` (gộp cùng nhóm vì cùng khái niệm "course-count", tuy dùng endpoint `/admin/total-courses`/`/admin/total-users` riêng).
+- **Điều chỉnh phạm vi (đã thảo luận + duyệt trước khi code)**: Các trang GET khác (Profile, MyCourses, Dashboard summary sinh viên, AdminUsersList, AdminOrders, CourseDetailPage) mỗi trang chỉ có đúng 1 call site, không trùng lặp — **không** chuyển ở phase này (dời sang phase kế tiếp áp dụng dần), tránh phình phạm vi ra ngoài đúng nghĩa "loại bỏ duplication" của Goal.
+- **Điều chỉnh Target Structure (đã làm trước khi tạo file, đúng rule dòng 11)**: Mục C chưa có vị trí cho query hook — đã bổ sung `shared/api/queryClient.ts` + `shared/api/queries/` vào cây thư mục mục C trước khi tạo file.
 - **Dependencies**: Phase 7.
-- **Changes required**: `QueryClientProvider` ở root; hook `useCoursesQuery`, `useCategoriesQuery`... theo nhu cầu từng trang; xóa `useState`/`useEffect` fetch thủ công tương ứng.
-- **Modules/files**: `src/main.tsx` (provider), từng feature cần data fetching.
-- **Existing behavior cần preserve**: Dữ liệu hiển thị không đổi; loading/error state hiển thị hành vi tương đương (chưa cần đổi UI ở phase này, chỉ đổi cơ chế lấy dữ liệu).
-- **Migration concerns**: Làm dần từng trang, không chuyển toàn bộ 1 lần — mỗi trang là 1 commit độc lập để dễ review/rollback riêng lẻ.
-- **Tests/verification**: Xác nhận cache hoạt động (không fetch lại khi điều hướng qua lại); xác nhận invalidate đúng sau mutation (ví dụ sau khi Admin sửa category, danh sách course liên quan cập nhật).
-- **Exit criteria**: Categories/course-count không còn fetch trùng lặp; các trang chính đã chuyển sang React Query.
+- **Changes đã thực hiện**:
+  - `shared/api/queryClient.ts` (mới) — `QueryClient` dùng chung, `defaultOptions.queries.retry: 1` (không dùng mặc định 3 lần — `apiClient` tự `logout()` khi request có token bị 401, retry mặc định sẽ gọi lại API thừa nhiều lần sau khi đã logout).
+  - `main.tsx` — bọc `QueryClientProvider`.
+  - `shared/api/queries/useCoursesQuery.ts`, `useCategoriesQuery.ts` (public `/courses`, `/categories`) — dùng ở `CourseListPage`, `HomePage`.
+  - `shared/api/queries/useAdminCoursesQuery.ts`, `useAdminCategoriesQuery.ts` (`/admin/courses`, `/admin/categories`) — dùng ở `AdminCourses`, `AdminCategories`; cùng 1 `queryKey` hằng số export từ hook để 2 trang chia sẻ đúng 1 cache entry.
+  - `shared/api/queries/useAdminStatsQuery.ts` (`/admin/total-users`, `/admin/total-courses`) — dùng ở `AdminDashboard`; giữ 2 `useQuery` độc lập (không gộp làm 1 queryFn) để giữ đúng hành vi cũ: 1 request lỗi không kéo request kia lỗi theo.
+  - `CourseListPage.tsx` — thay `fetchCategories`/`refreshCourseList`/`useState(allCourses/loading/loadError/categoryOptions/levelOptions)` bằng 2 hook trên + `useMemo` derive (giữ nguyên logic map/sort/filter, chỉ đổi nguồn dữ liệu); nút "Thử lại" gọi `coursesQuery.refetch()`.
+  - `HomePage.tsx` — thay fetch `totalCourses` bằng `useCoursesQuery().data?.length`.
+  - `AdminCourses.tsx` — thay `fetchCategories`/`refreshCoursesList` bằng 2 hook trên; 3 mutation (add/edit/delete course) gọi `queryClient.invalidateQueries({queryKey: adminCoursesQueryKey})` thay vì tự refetch. `fetchInstructors`/`INSTRUCTORS.LIST` giữ nguyên `useState`+fetch thủ công (ngoài phạm vi đã chốt, chỉ 1 call site).
+  - `AdminCategories.tsx` — thay `refreshCategories`/`fetchCourseCounts` bằng `useAdminCategoriesQuery` + `useMemo` derive count từ `useAdminCoursesQuery` (cùng cache key với `AdminCourses` → điều hướng qua lại không fetch lại); 3 mutation category gọi `queryClient.invalidateQueries({queryKey: adminCategoriesQueryKey})`.
+  - `AdminDashboard.tsx` — thay 2 fetch độc lập bằng `useAdminStatsQuery()`.
+- **Modules/files**: `src/main.tsx`, `src/shared/api/queryClient.ts` (mới), `src/shared/api/queries/{useCoursesQuery,useCategoriesQuery,useAdminCoursesQuery,useAdminCategoriesQuery,useAdminStatsQuery}.ts` (mới), `src/features/courses/CourseListPage.tsx`, `src/features/public/home/HomePage.tsx`, `src/features/admin/courses/AdminCourses.tsx`, `src/features/admin/categories/AdminCategories.tsx`, `src/features/admin/dashboard/AdminDashboard.tsx`, `package.json`.
+- **Existing behavior cần preserve**: Đã giữ — dữ liệu hiển thị, thứ tự sort, logic filter/pagination ở `CourseListPage` không đổi; loading/error UI (`SkeletonCardGrid`/`SkeletonTable`/`EmptyState`) giữ nguyên, chỉ đổi nguồn state (`isLoading`/`isError` của React Query thay cho `useState` thủ công); mutation vẫn cập nhật danh sách ngay sau khi thao tác (qua `invalidateQueries` thay vì tự refetch).
+- **Migration concerns**: Làm theo từng trang tuần tự đúng plan (courses public → admin courses/categories → admin dashboard), không đổi 1 lần toàn bộ.
+- **Tests/verification**: Repo chưa có hạ tầng test frontend (`package.json` không có `vitest`/`jest`, dựng test suite dồn về Phase 39 theo đúng tiền lệ Phase 6/7) — không thêm automated test ở phase này. Đã verify:
+  - `npx tsc -b` PASS (0 lỗi).
+  - `npm run build` PASS (`tsc -b && vite build` build ra `dist/` thành công).
+  - `npm run lint` — chỉ còn đúng 2 lỗi pre-existing đã biết từ Phase 6 (`CourseDetailPage.tsx:41` warning `react-hooks/exhaustive-deps`, `Profile.tsx:79` error `no-unused-vars`), không phát sinh lỗi lint mới.
+  - `git diff --stat -- academic-management-api` rỗng — backend không bị đụng.
+  - **Chưa verify được** bằng click-through trình duyệt thật (môi trường sandbox không có trình duyệt) — cần verify thủ công: điều hướng qua lại `CourseListPage`⇄`HomePage` và `AdminCourses`⇄`AdminCategories` xác nhận không fetch lại (Network tab); admin sửa/xoá category/course xác nhận danh sách + course-count cập nhật ngay không cần reload.
+- **Exit criteria**: Đạt đủ trong phạm vi đã chốt — `/courses`, `/categories`, `/admin/courses`, `/admin/categories` không còn bị gọi trùng lặp ở code (đã đối chiếu diff); 5 trang trong phạm vi đã chuyển hẳn sang React Query, không còn `useState`/`useEffect` fetch thủ công cho dữ liệu đó. Các trang GET đơn lẻ còn lại (Profile, MyCourses, Dashboard summary, AdminUsersList, AdminOrders, CourseDetailPage) **chưa** chuyển — ghi nhận rõ đây là quyết định phạm vi đã duyệt, không phải sót.
 - **Trace**: ADR-020.
 
 ### Phase 9: Auth state + fix `isTokenExpired` bug

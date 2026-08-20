@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Notebook, Pencil, Trash2, Plus, BookX } from "lucide-react";
 import AddCourseOverlay, { type CreateCoursePayload } from "../components/AddCourseOverlay";
 import Toast from "../../../shared/ui/Toast";
@@ -6,31 +7,11 @@ import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
-
-type AdminCourse = {
-    courseId: number;
-    title: string;
-    description: string | null;
-    thumbnail: string | null;
-    price: number;
-    level: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-
-    instructor: {
-        userId: number;
-        username: string;
-        fullName: string;
-    };
-
-    category: {
-        categoryId: number;
-        categoryName: string;
-    } | null;
-};
+import { useAdminCoursesQuery, adminCoursesQueryKey, type AdminCourse } from "@/shared/api/queries/useAdminCoursesQuery";
+import { useAdminCategoriesQuery } from "@/shared/api/queries/useAdminCategoriesQuery";
 
 const AdminCourses = () => {
+    const queryClient = useQueryClient();
     const [showAddCourseOverlay, setShowAddCourseOverlay] = useState(false);
     const [showEditCourseOverlay, setShowEditCourseOverlay] = useState(false);
     const [showDeleteCourseOverlay, setShowDeleteCourseOverlay] = useState(false);
@@ -48,21 +29,19 @@ const AdminCourses = () => {
 
     const [editingCourse, setEditingCourse] = useState<AdminCourse | null>(null);
 
-    const [courses, setCourses] = useState<AdminCourse[]>([]);
-    const [loading, setLoading] = useState(true);
+    const coursesQuery = useAdminCoursesQuery();
+    const courses = coursesQuery.data ?? [];
+    const loading = coursesQuery.isLoading;
+
+    const categoriesQuery = useAdminCategoriesQuery();
+    const categories = categoriesQuery.data ?? [];
 
     const [instructors, setInstructors] = useState<
         { userId: number; fullName: string }[]
     >([]);
 
-    const [categories, setCategories] = useState<
-        { categoryId: number; categoryName: string }[]
-    >([]);
-
     useEffect(() => {
         fetchInstructors();
-        fetchCategories();
-        refreshCoursesList();
     }, []);
 
     async function fetchInstructors() {
@@ -72,34 +51,6 @@ const AdminCourses = () => {
 
         const data = await res.json();
         setInstructors(data);
-    }
-
-    async function fetchCategories() {
-        const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADMIN_LIST);
-
-        if (!res.ok) return;
-
-        const data = await res.json();
-        setCategories(data);
-    }
-
-    async function refreshCoursesList() {
-        setLoading(true);
-        try {
-            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_LIST);
-
-            if (!res.ok) {
-                console.error("API error:", res.status);
-                return;
-            }
-
-            const data = await res.json();
-            setCourses(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
     }
 
     const showToast = (type: ToastType, message: string) => {
@@ -123,7 +74,7 @@ const AdminCourses = () => {
 
             showToast("success", "Thêm khóa học thành công!");
             setShowAddCourseOverlay(false);
-            refreshCoursesList();
+            queryClient.invalidateQueries({ queryKey: adminCoursesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Lỗi kết nối server");
@@ -154,7 +105,7 @@ const AdminCourses = () => {
             showToast("success", "Đã cập nhật khóa học");
             setShowEditCourseOverlay(false);
             setEditingCourse(null);
-            refreshCoursesList();
+            queryClient.invalidateQueries({ queryKey: adminCoursesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Lỗi kết nối server");
@@ -179,7 +130,7 @@ const AdminCourses = () => {
             setShowDeleteCourseOverlay(false);
             setDeletedCourse(null);
             showToast("success", "Đã xóa khóa học");
-            refreshCoursesList();
+            queryClient.invalidateQueries({ queryKey: adminCoursesQueryKey });
         } catch (err) {
             console.error(err);
             showToast("error", "Xóa khóa học thất bại");

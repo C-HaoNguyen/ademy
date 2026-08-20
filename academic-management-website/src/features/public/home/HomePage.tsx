@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Sparkles, Users, GraduationCap, Star } from "lucide-react";
-import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { useCoursesQuery } from "@/shared/api/queries/useCoursesQuery";
 
 const HomePage = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [totalCourses, setTotalCourses] = useState<number | null>(null);
+    const coursesQuery = useCoursesQuery();
+    const totalCourses = coursesQuery.isLoading ? null : (coursesQuery.data?.length ?? 0);
 
     const scroll = (direction: "left" | "right") => {
         if (!scrollRef.current) return;
@@ -19,18 +19,6 @@ const HomePage = () => {
             behavior: "smooth",
         });
     };
-
-    useEffect(() => {
-        apiClient(API_ENDPOINTS.COURSES.LIST)
-            .then((res) => res.json())
-            .then((data) => {
-                setTotalCourses(Array.isArray(data) ? data.length : 0);
-            })
-            .catch((err) => {
-                console.error("Failed to load total courses", err);
-                setTotalCourses(0);
-            });
-    }, []);
 
     return (
         <div className="bg-surface">

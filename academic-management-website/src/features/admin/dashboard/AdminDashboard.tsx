@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
     Users,
     GraduationCap,
@@ -10,8 +9,7 @@ import {
     Zap,
     BarChart3,
 } from "lucide-react";
-import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { useAdminStatsQuery } from "@/shared/api/queries/useAdminStatsQuery";
 
 const StatCard = ({
     icon,
@@ -39,30 +37,9 @@ const StatCard = ({
 
 const AdminDashboard = () => {
 
-    const [totalUsers, setTotalUsers] = useState<number>(0);
-    const [totalCourses, setTotalCourses] = useState<number>(0);
-
-    useEffect(() => {
-        apiClient(API_ENDPOINTS.ADMIN.TOTAL_USERS)
-            .then((res) => res.json())
-            .then((data) => {
-                setTotalUsers(data.totalUsers);
-            })
-            .catch((err) => {
-                console.error("Failed to load total users", err);
-            });
-    }, []);
-
-    useEffect(() => {
-        apiClient(API_ENDPOINTS.ADMIN.TOTAL_COURSES)
-            .then((res) => res.json())
-            .then((data) => {
-                setTotalCourses(data.totalCourses);
-            })
-            .catch((err) => {
-                console.error("Failed to load total courses", err);
-            });
-    }, []);
+    const { totalUsersQuery, totalCoursesQuery } = useAdminStatsQuery();
+    const totalUsers = totalUsersQuery.data ?? 0;
+    const totalCourses = totalCoursesQuery.data ?? 0;
 
     return (
         <div className="space-y-8">

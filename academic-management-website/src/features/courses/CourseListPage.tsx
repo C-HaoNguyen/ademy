@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import CourseCard from "./components/CourseCard";
-import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { useCoursesQuery, type RawCourse } from "@/shared/api/queries/useCoursesQuery";
+import { useCategoriesQuery } from "@/shared/api/queries/useCategoriesQuery";
 import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, SearchX } from "lucide-react";
@@ -36,30 +36,62 @@ type Course = {
     };
 };
 
-type RawCourse = {
-    courseId: number;
-    title: string;
-    description?: string;
-    price?: number;
-    thumbnail?: string;
-    level?: string;
-    instructor?: {
-        username?: string;
-        fullName?: string;
+function mapCourse(item: RawCourse): Course {
+    return {
+        courseId: item.courseId,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        thumbnail: item.thumbnail,
+        level: item.level,
+        instructor: {
+            username: item.instructor?.username,
+            fullName: item.instructor?.fullName,
+        },
+        category: item.category
+            ? {
+                categoryId: item.category.categoryId,
+                categoryName: item.category.categoryName?.toLowerCase(),
+            }
+            : undefined,
     };
-    category?: {
-        categoryId: number;
-        categoryName?: string;
-    };
-};
+}
 
 const CourseList = () => {
 
-    const [allCourses, setAllCourses] = useState<Course[]>([]);
+    const coursesQuery = useCoursesQuery();
+    const categoriesQuery = useCategoriesQuery();
+
+    const allCourses = useMemo<Course[]>(() => {
+        const data = coursesQuery.data ?? [];
+        return [...data.map(mapCourse)].sort((a, b) => a.title.localeCompare(b.title));
+    }, [coursesQuery.data]);
+
+    const categoryOptions = useMemo<string[]>(() => {
+        const fromCategoriesEndpoint = (categoriesQuery.data ?? [])
+            .map((item) => item.categoryName?.toLowerCase())
+            .filter((name): name is string => typeof name === "string");
+        const derivedFromCourses = allCourses
+            .map((c) => c.category?.categoryName)
+            .filter((name): name is string => typeof name === "string");
+        return Array.from(new Set([...fromCategoriesEndpoint, ...derivedFromCourses]));
+    }, [categoriesQuery.data, allCourses]);
+
+    const levelOptions = useMemo<string[]>(() => {
+        return Array.from(
+            new Set(
+                allCourses
+                    .map((c) => c.level)
+                    .filter((level): level is string => typeof level === "string")
+            )
+        );
+    }, [allCourses]);
+
+    const loading = coursesQuery.isLoading;
+    const loadError = coursesQuery.isError;
+
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [filterValue, setFilterValue] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState(false);
 
     const ITEMS_PER_PAGE = 9;
     const [currentPage, setCurrentPage] = useState(1);
@@ -69,18 +101,11 @@ const CourseList = () => {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
-    const [levelOptions, setLevelOptions] = useState<string[]>([]);
     type DropdownType = "category" | "level" | null;
     const [activeDropdown, setActiveDropdown] = useState<DropdownType>(null);
     const [categories, setCategories] = useState<string[]>([]);
     const [levels, setLevels] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<"popular" | "newest" | "price-asc" | "price-desc">("popular");
-
-    useEffect(() => {
-        fetchCategories();
-        refreshCourseList();
-    }, []);
 
     useEffect(() => {
         let result = [...allCourses];
@@ -125,82 +150,6 @@ const CourseList = () => {
         setFilteredCourses(result);
         setCurrentPage(1);
     }, [filterValue, categories, levels, allCourses, sortBy]);
-
-    async function fetchCategories() {
-        try {
-            const res = await apiClient(API_ENDPOINTS.CATEGORIES.LIST);
-
-            if (!res.ok) return;
-
-            const data: { categoryName?: string }[] = await res.json();
-            const names: string[] = data
-                .map((item) => item.categoryName?.toLowerCase())
-                .filter((name): name is string => typeof name === "string");
-
-            setCategoryOptions((prev) => Array.from(new Set([...prev, ...names])));
-        } catch (err) {
-            console.error("Failed to load categories", err);
-        }
-    }
-
-    async function refreshCourseList() {
-        setLoading(true);
-        setLoadError(false);
-        try {
-            const response = await apiClient(API_ENDPOINTS.COURSES.LIST);
-
-            if (!response.ok) {
-                setLoadError(true);
-                return;
-            }
-
-            const data: RawCourse[] = await response.json();
-            const mappedCourses: Course[] = data.map((item) => ({
-                courseId: item.courseId,
-                title: item.title,
-                description: item.description,
-                price: item.price,
-                thumbnail: item.thumbnail,
-                level: item.level,
-                instructor: {
-                    username: item.instructor?.username,
-                    fullName: item.instructor?.fullName,
-                },
-                category: item.category
-                    ? {
-                        categoryId: item.category.categoryId,
-                        categoryName: item.category.categoryName?.toLowerCase(),
-                    }
-                    : undefined,
-            }));
-            const sortedCourses = [...mappedCourses].sort((a, b) =>
-                a.title.localeCompare(b.title)
-            );
-            const derivedCategories = Array.from(
-                new Set(
-                    mappedCourses
-                        .map((c) => c.category?.categoryName)
-                        .filter((name): name is string => typeof name === "string")
-                )
-            );
-            const derivedLevels = Array.from(
-                new Set(
-                    mappedCourses
-                        .map((c) => c.level)
-                        .filter((level): level is string => typeof level === "string")
-                )
-            );
-            setAllCourses(sortedCourses);
-            setFilteredCourses(sortedCourses);
-            setCategoryOptions((prev) => Array.from(new Set([...prev, ...derivedCategories])));
-            setLevelOptions(derivedLevels);
-        } catch (err) {
-            console.error("Failed to load courses", err);
-            setLoadError(true);
-        } finally {
-            setLoading(false);
-        }
-    }
 
     const clearFilters = () => {
         setFilterValue("");
@@ -404,7 +353,7 @@ const CourseList = () => {
                         action={
                             <button
                                 type="button"
-                                onClick={refreshCourseList}
+                                onClick={() => coursesQuery.refetch()}
                                 className="cursor-pointer px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors duration-200"
                             >
                                 Thử lại

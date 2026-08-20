@@ -3,7 +3,8 @@ import { type UserProfile } from "../../../types/User";
 import InfoItem from "../components/InfoItem";
 import Badge from "../../../shared/ui/Badge";
 import Toast from "../../../shared/ui/Toast";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 
 const Profile = () => {
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -20,11 +21,7 @@ const Profile = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch(`${API_URL}/users/me`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    },
-                });
+                const res = await apiClient(API_ENDPOINTS.USERS.ME);
 
                 if (!res.ok) throw new Error("Fetch failed");
 
@@ -48,12 +45,8 @@ const Profile = () => {
         if (!user) return;
 
         try {
-            const res = await fetch(`${API_URL}/users/me/update`, {
+            const res = await apiClient(API_ENDPOINTS.USERS.UPDATE_ME, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                },
                 body: JSON.stringify({
                     username: user.username,
                     fullName: user.fullName,

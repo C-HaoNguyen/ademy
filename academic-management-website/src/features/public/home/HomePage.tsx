@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { NavLink } from "react-router-dom";
-import { getAccessToken } from "../../../utils/AuthUtils";
 import { ArrowLeft, ArrowRight, Sparkles, Users, GraduationCap, Star } from "lucide-react";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 
 const HomePage = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -21,14 +21,10 @@ const HomePage = () => {
     };
 
     useEffect(() => {
-        fetch(`${API_URL}/admin/total-courses`, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`,
-            },
-        })
+        apiClient(API_ENDPOINTS.COURSES.LIST)
             .then((res) => res.json())
             .then((data) => {
-                setTotalCourses(data.totalCourses);
+                setTotalCourses(Array.isArray(data) ? data.length : 0);
             })
             .catch((err) => {
                 console.error("Failed to load total courses", err);

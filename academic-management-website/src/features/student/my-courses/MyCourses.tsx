@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAccessToken } from "../../../utils/AuthUtils";
-import { API_URL, ROUTES } from "@/config/constants";
+import { API_ENDPOINTS, ROUTES } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import { BookOpen } from "lucide-react";
@@ -24,15 +24,7 @@ const MyCourses = () => {
     async function fetchMyCourses() {
         setLoading(true);
         try {
-            const res = await fetch(
-                `${API_URL}/enrollments/student/me/courses`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${getAccessToken()}`,
-                    },
-                }
-            );
+            const res = await apiClient(API_ENDPOINTS.ENROLLMENTS.MY_COURSES);
             const data = await res.json();
             setCourses(data);
         } catch (err) {

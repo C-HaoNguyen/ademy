@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { FolderKanban, Pencil, Trash2, Plus, FolderX } from "lucide-react";
-import { getAccessToken } from "../../../utils/AuthUtils";
-import { authFetch } from "../../../utils/AuthFetch";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
@@ -42,10 +41,7 @@ const AdminCategories = () => {
     async function refreshCategories() {
         setLoading(true);
         try {
-            const token = getAccessToken();
-            const res = await fetch(`${API_URL}/admin/categories`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADMIN_LIST);
 
             if (!res.ok) {
                 console.error("API error:", res.status);
@@ -63,10 +59,7 @@ const AdminCategories = () => {
 
     async function fetchCourseCounts() {
         try {
-            const token = getAccessToken();
-            const res = await fetch(`${API_URL}/admin/courses`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_LIST);
 
             if (!res.ok) return;
 
@@ -86,13 +79,8 @@ const AdminCategories = () => {
 
     const handleCreate = async (form: CategoryPayload) => {
         try {
-            const token = getAccessToken();
-            const res = await authFetch(`${API_URL}/admin/categories/add`, {
+            const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADD, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
                 body: JSON.stringify(form),
             });
 
@@ -120,13 +108,8 @@ const AdminCategories = () => {
         if (!editingCategory) return;
 
         try {
-            const token = getAccessToken();
-            const res = await authFetch(`${API_URL}/admin/categories/${editingCategory.categoryId}`, {
+            const res = await apiClient(API_ENDPOINTS.CATEGORIES.DETAIL(editingCategory.categoryId), {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
                 body: JSON.stringify(form),
             });
 
@@ -150,10 +133,8 @@ const AdminCategories = () => {
         if (!deletedCategory) return;
 
         try {
-            const token = getAccessToken();
-            const res = await authFetch(`${API_URL}/admin/categories/${deletedCategory.categoryId}`, {
+            const res = await apiClient(API_ENDPOINTS.CATEGORIES.DETAIL(deletedCategory.categoryId), {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) {

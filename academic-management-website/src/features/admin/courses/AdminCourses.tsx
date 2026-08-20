@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { getAccessToken } from "../../../utils/AuthUtils";
 import { Notebook, Pencil, Trash2, Plus, BookX } from "lucide-react";
-import { authFetch } from "../../../utils/AuthFetch";
 import AddCourseOverlay, { type CreateCoursePayload } from "../components/AddCourseOverlay";
 import Toast from "../../../shared/ui/Toast";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 
@@ -67,13 +66,7 @@ const AdminCourses = () => {
     }, []);
 
     async function fetchInstructors() {
-        const token = getAccessToken();
-
-        const res = await fetch(`${API_URL}/admin/instructors`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const res = await apiClient(API_ENDPOINTS.INSTRUCTORS.LIST);
 
         if (!res.ok) return;
 
@@ -82,13 +75,7 @@ const AdminCourses = () => {
     }
 
     async function fetchCategories() {
-        const token = getAccessToken();
-
-        const res = await fetch(`${API_URL}/admin/categories`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADMIN_LIST);
 
         if (!res.ok) return;
 
@@ -99,13 +86,7 @@ const AdminCourses = () => {
     async function refreshCoursesList() {
         setLoading(true);
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(`${API_URL}/admin/courses`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_LIST);
 
             if (!res.ok) {
                 console.error("API error:", res.status);
@@ -128,19 +109,10 @@ const AdminCourses = () => {
 
     const handleCreateCourse = async (formData: CreateCoursePayload) => {
         try {
-            const token = getAccessToken();
-
-            const res = await authFetch(
-                `${API_URL}/admin/courses/add`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(formData),
-                }
-            );
+            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_ADD, {
+                method: "POST",
+                body: JSON.stringify(formData),
+            });
 
             const data = await res.json().catch(() => null);
 
@@ -167,19 +139,10 @@ const AdminCourses = () => {
         if (!editingCourse) return;
 
         try {
-            const token = getAccessToken();
-
-            const res = await authFetch(
-                `${API_URL}/admin/courses/${editingCourse.courseId}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(formData),
-                }
-            );
+            const res = await apiClient(API_ENDPOINTS.COURSES.ADMIN_DETAIL(editingCourse.courseId), {
+                method: "PUT",
+                body: JSON.stringify(formData),
+            });
 
             const data = await res.json().catch(() => null);
 
@@ -202,16 +165,9 @@ const AdminCourses = () => {
         if (!deletedCourse) return;
 
         try {
-            const token = getAccessToken();
-
-            const res = await authFetch(
-                `${API_URL}/admin/deleted-course/${deletedCourse.courseId}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+            const res = await apiClient(
+                `${API_ENDPOINTS.COURSES.ADMIN_DELETE}/${deletedCourse.courseId}`,
+                { method: "DELETE" }
             );
 
             if (!res.ok) {

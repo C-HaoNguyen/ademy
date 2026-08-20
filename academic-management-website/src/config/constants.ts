@@ -15,6 +15,10 @@ export const API_ENDPOINTS = {
         ME: "/users/me",
         UPDATE_ME: "/users/me/update",
         LIST: "/admin/users",
+        ADD: "/admin/users/add",
+        DETAIL: (id: number | string) => `/admin/users/${id}`,
+        LOCK: (id: number | string) => `/admin/users/${id}/lock`,
+        UNLOCK: (id: number | string) => `/admin/users/${id}/unlock`,
         DELETE: "/admin/deleted-user",
     },
 
@@ -24,8 +28,17 @@ export const API_ENDPOINTS = {
         DETAIL: (id: string) => `/courses/${id}`,
         ADMIN_LIST: "/admin/courses",
         ADMIN_ADD: "/admin/courses/add",
+        ADMIN_DETAIL: (id: number | string) => `/admin/courses/${id}`,
         ADMIN_DELETE: "/admin/deleted-course",
         TOTAL: "/admin/total-courses",
+    },
+
+    // Categories
+    CATEGORIES: {
+        LIST: "/categories",
+        ADMIN_LIST: "/admin/categories",
+        ADD: "/admin/categories/add",
+        DETAIL: (id: number | string) => `/admin/categories/${id}`,
     },
 
     // Instructors
@@ -44,6 +57,7 @@ export const API_ENDPOINTS = {
     ADMIN: {
         TOTAL_USERS: "/admin/total-users",
         TOTAL_COURSES: "/admin/total-courses",
+        PAYMENTS: "/admin/payments",
     },
 } as const;
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import CourseCard from "./components/CourseCard";
-import { getAccessToken } from "../../utils/AuthUtils";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, SearchX } from "lucide-react";
@@ -128,13 +128,7 @@ const CourseList = () => {
 
     async function fetchCategories() {
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(`${API_URL}/admin/categories`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const res = await apiClient(API_ENDPOINTS.CATEGORIES.LIST);
 
             if (!res.ok) return;
 
@@ -153,11 +147,7 @@ const CourseList = () => {
         setLoading(true);
         setLoadError(false);
         try {
-            const response = await fetch(`${API_URL}/courses`, {
-                headers: {
-                    Authorization: `Bearer ${getAccessToken()}`,
-                },
-            });
+            const response = await apiClient(API_ENDPOINTS.COURSES.LIST);
 
             if (!response.ok) {
                 setLoadError(true);

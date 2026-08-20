@@ -1,9 +1,9 @@
 import { User, Pencil, Plus, UserX, UserCheck, Users as UsersIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "../../../utils/AuthUtils";
 import CreateUser from "../components/AddUserOverlay";
 import EditUserOverlay from "../components/EditUserOverlay";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
@@ -62,13 +62,7 @@ const AdminUsersList = () => {
     async function refreshUsersList() {
         setLoading(true);
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(`${API_URL}/admin/users`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const res = await apiClient(API_ENDPOINTS.USERS.LIST);
 
             if (!res.ok) {
                 console.error("API error:", res.status);
@@ -85,19 +79,12 @@ const AdminUsersList = () => {
     }
 
     async function handleToggleUser(user: AdminUser) {
-        const token = getAccessToken();
-
         const url = user.active
-            ? `/admin/users/${user.userId}/lock`
-            : `/admin/users/${user.userId}/unlock`;
+            ? API_ENDPOINTS.USERS.LOCK(user.userId)
+            : API_ENDPOINTS.USERS.UNLOCK(user.userId);
 
         try {
-            const res = await fetch(`${API_URL}${url}`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const res = await apiClient(url, { method: "PUT" });
 
             if (!res.ok) {
                 const message = await res.text();
@@ -116,21 +103,12 @@ const AdminUsersList = () => {
         if (!deletedUser) return;
 
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(
-                `${API_URL}/admin/deleted-user`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        userId: deletedUser.userId,
-                    }),
-                }
-            );
+            const res = await apiClient(API_ENDPOINTS.USERS.DELETE, {
+                method: "DELETE",
+                body: JSON.stringify({
+                    userId: deletedUser.userId,
+                }),
+            });
 
             if (!res.ok) {
                 console.error("Delete failed:", res.status);
@@ -151,14 +129,8 @@ const AdminUsersList = () => {
 
     const handleCreateUser = async () => {
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(`${API_URL}/admin/users/add`, {
+            const res = await apiClient(API_ENDPOINTS.USERS.ADD, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
                 body: JSON.stringify(newUser),
             });
 
@@ -199,14 +171,8 @@ const AdminUsersList = () => {
         if (!editUserId) return;
 
         try {
-            const token = getAccessToken();
-
-            const res = await fetch(`${API_URL}/admin/users/${editUserId}`, {
+            const res = await apiClient(API_ENDPOINTS.USERS.DETAIL(editUserId), {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
                 body: JSON.stringify(editUser),
             });
 

@@ -52,18 +52,18 @@ Modular monolith under `com.example.academic_management_api`, packaged by featur
   - `course/lesson/` — submodule holding `Lessons`, `LessonProgress` (surrogate key `progressId`, unique constraint on `(student_id, lesson_id)`); no service/controller yet (not wired to any endpoint)
 - `enrollment/` — `Enrollments` entity; `EnrollmentController`/`EnrollmentService` (`/enrollments/**`); exposes `createEnrollment`/`isEnrolled` for `payment` to call
 - `payment/` — `Payments` entity; `PaymentController` (`/payments/checkout`) + `AdminPaymentController` (`/admin/payments`, `/admin/total-payments`), both backed by `PaymentService`. `payment` is the only module that writes `payments` and creates enrollments — it does so by calling `EnrollmentService`, never `EnrollmentRepository` directly
-- `security/` — JWT auth: `JwtTokenUtil` (issue/parse tokens), `JwtAuthFilter` (per-request auth, registered before `UsernamePasswordAuthenticationFilter`), `CustomUserDetails`, `SecurityConfig` (route authorization + CORS — the single source of CORS config)
+- `security/` — JWT auth: `JwtTokenUtil` (issue/parse tokens), `JwtAuthFilter` (per-request auth, registered before `UsernamePasswordAuthenticationFilter`), `CustomUserDetails`, `SecurityConfig` (route authorization + CORS — the single source of CORS config), `RestAuthenticationEntryPoint` (401 — missing/invalid credentials) + `RestAccessDeniedHandler` (403 — authenticated but wrong role), both writing the same `ErrorResponse` JSON shape as `GlobalExceptionHandler`
 - `seeder/AdminSeeder` — `CommandLineRunner` that creates the default admin on first boot
 
 Cross-module access rules: a controller only calls services in its own module; cross-module reads/writes go through the other module's `service` public methods, never its `repository`/internal `entity` directly (a `@ManyToOne` FK reference to another module's entity, e.g. `Courses.instructor` → `Users`, is not a boundary violation).
 
 Authorization is role-based and defined centrally in `SecurityConfig`:
-- `/auth/**`, `/courses/**` — public
+- `/auth/**`, `/courses/**`, `/categories` (exact — the only endpoint `CategoryController` exposes) — public
 - `/admin/**` — requires `ROLE_ADMIN`
 - `/enrollments/**` — requires `ROLE_STUDENT`
 - everything else — requires authentication
 
-Auth is stateless (JWT bearer tokens, no sessions, CSRF disabled, `httpBasic`/`formLogin` disabled). CORS is locked to specific origins (`http://localhost:5173` and the deployed frontend) in `SecurityConfig` — add new frontend origins there when needed.
+Auth is stateless (JWT bearer tokens, no sessions, CSRF disabled, `httpBasic`/`formLogin` disabled). CORS is locked to specific origins (`http://localhost:5173` and the deployed frontend) in `SecurityConfig` — add new frontend origins there when needed. `SecurityConfig.exceptionHandling()` wires `RestAuthenticationEntryPoint`/`RestAccessDeniedHandler` so a request with no/invalid token gets **401** and an authenticated request with the wrong role gets **403** — these run inside the Spring Security filter chain (before `DispatcherServlet`), so they are a separate mechanism from `GlobalExceptionHandler` (which only catches exceptions thrown inside controller/service code), not a duplicate of it.
 
 `spring.jpa.hibernate.ddl-auto=none`: schema changes must be made by adding a new file to `db/migration/` and updating entities to match — Hibernate will not auto-migrate.
 
@@ -76,9 +76,9 @@ Routing (`src/routes/AppRoutes.tsx`) is organized by audience, each behind its o
 
 `ProtectedRoute` (`src/routes/ProtectedRoute.tsx`) checks login state and role before rendering children, redirecting to `/login` otherwise.
 
-Auth/token handling lives in `src/utils/`:
-- `AuthUtils.ts` — reads/decodes the JWT from `localStorage` (`jwt-decode`), exposes `isLoggedIn`, `extractRole`, `isTokenExpired`, `logout`
-- `AuthFetch.ts` — `authFetch()` wraps `fetch`, attaches the bearer token, and force-logs-out on token expiry or a 401 response
+`src/utils/AuthUtils.ts` reads/decodes the JWT from `localStorage` (`jwt-decode`), exposes `isLoggedIn`, `extractRole`, `getUsername`, `isTokenExpired`, `logout` — all 3 decode-based helpers swallow `jwt-decode` failures (malformed/tampered token) and fail safe (`null`/`true`) instead of throwing, since an uncaught throw here happens during render (e.g. `Header`, `ProtectedRoute`) and would crash the whole tree.
+
+`src/shared/api/client.ts` (`apiClient`) is the single fetch wrapper — every page/feature must call it instead of `fetch()` directly. It attaches the bearer token only when one exists (an anonymous request to a route that happens to require auth should surface as a normal error, not force a logout that was never there), and auto-logs-out only when a request that *did* carry a token gets rejected (proactively via `isTokenExpired()`, or reactively on a **401** response) — a 401 reliably means "not authenticated" because the backend's `RestAuthenticationEntryPoint`/`RestAccessDeniedHandler` (see `security/` in the backend) keep 401 (unauthenticated) and 403 (authenticated, wrong role) distinct; treating 403 the same as 401 here would wrongly log out a legitimately-logged-in user who merely hit a resource their role can't access.
 
 All cross-cutting config (API base URL, all API endpoint paths, role names, frontend route paths, localStorage keys, UI constants like debounce/pagination/layout sizing) is centralized in `src/config/constants.ts`, re-exported via `src/config/index.ts` as `@/config`. Prefer adding to `API_ENDPOINTS`/`ROUTES`/`ROLES` there rather than hardcoding paths in components.
 

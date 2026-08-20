@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getAccessToken } from "../../utils/AuthUtils";
 import EnrollSuccessOverlay from "../payment/components/EnrollSuccessOverlay";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import Skeleton, { SkeletonText } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
@@ -49,14 +49,7 @@ const CourseDetail = () => {
     async function fetchCourseDetail() {
         setLoading(true);
         try {
-            const res = await fetch(
-                `${API_URL}/courses/${courseId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${getAccessToken()}`,
-                    },
-                }
-            );
+            const res = await apiClient(API_ENDPOINTS.COURSES.DETAIL(courseId as string));
 
             if (!res.ok) {
                 setCourse(null);
@@ -85,12 +78,8 @@ const CourseDetail = () => {
         }
 
         try {
-            const res = await fetch(`${API_URL}/enrollments`, {
+            const res = await apiClient(API_ENDPOINTS.ENROLLMENTS.CREATE, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${getAccessToken()}`,
-                },
                 body: JSON.stringify({
                     courseId: course?.courseId,
                 }),

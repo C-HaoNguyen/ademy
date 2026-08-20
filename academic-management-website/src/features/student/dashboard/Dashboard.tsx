@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAccessToken } from "../../../utils/AuthUtils";
-import { API_URL, ROUTES } from "@/config/constants";
+import { API_ENDPOINTS, ROUTES } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 
 const StatCard = ({
     icon,
@@ -54,11 +54,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${API_URL}/enrollments/student/me/summary`, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`,
-            },
-        })
+        apiClient(API_ENDPOINTS.ENROLLMENTS.MY_SUMMARY)
             .then((res) => res.json())
             .then((data) => {
                 setTotalCourses(data.totalCourses);

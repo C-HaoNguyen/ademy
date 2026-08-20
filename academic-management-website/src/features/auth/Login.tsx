@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg"
-import { API_URL } from "@/config/constants";
-import { ROLES, ROUTES, STORAGE_KEYS } from "../../config/constants";
+import { API_ENDPOINTS, ROLES, ROUTES, STORAGE_KEYS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 
 const Login = () => {
 
@@ -19,11 +19,8 @@ const Login = () => {
         try {
             setError(null);
 
-            const response = await fetch(`${API_URL}/auth/login`, {
+            const response = await apiClient(API_ENDPOINTS.AUTH.LOGIN, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
                 body: JSON.stringify({
                     username,
                     password,

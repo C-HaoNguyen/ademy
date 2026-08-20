@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import PaymentForm from "./components/PaymentForm";
 import OrderSummary from "./components/OrderSummary";
 import PaymentSuccessOverlay from "./components/EnrollSuccessOverlay";
-import { getAccessToken } from "../../utils/AuthUtils";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import Skeleton from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Toast from "@/shared/ui/Toast";
@@ -40,11 +40,7 @@ const Checkout = () => {
         }
 
         setLoading(true);
-        fetch(`${API_URL}/courses/${courseId}`, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`
-            }
-        })
+        apiClient(API_ENDPOINTS.COURSES.DETAIL(courseId))
             .then(res => {
                 if (!res.ok) throw new Error("Course not found");
                 return res.json();
@@ -81,12 +77,8 @@ const Checkout = () => {
         if (!course) return;
 
         try {
-            const res = await fetch(`${API_URL}/enrollments`, {
+            const res = await apiClient(API_ENDPOINTS.ENROLLMENTS.CREATE, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${getAccessToken()}`
-                },
                 body: JSON.stringify({
                     courseId: course.courseId,
                     pricePaid: Math.max(course.price - discount, 0),

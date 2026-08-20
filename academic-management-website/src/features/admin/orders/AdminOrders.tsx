@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Receipt, ReceiptText } from "lucide-react";
-import { getAccessToken } from "../../../utils/AuthUtils";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 import { SkeletonTable } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 
@@ -51,10 +51,7 @@ const AdminOrders = () => {
     async function refreshPayments() {
         setLoading(true);
         try {
-            const token = getAccessToken();
-            const res = await fetch(`${API_URL}/admin/payments`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiClient(API_ENDPOINTS.ADMIN.PAYMENTS);
 
             if (!res.ok) {
                 console.error("API error:", res.status);

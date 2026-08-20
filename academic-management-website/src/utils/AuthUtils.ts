@@ -24,37 +24,49 @@ export function getUsername() {
     const token = getAccessToken();
     if (!token) return null;
 
-    const decoded = jwtDecode<JwtPayload>(token);
-    return decoded.sub;
+    try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        return decoded.sub;
+    } catch {
+        return null;
+    }
 }
 
 export function extractRole(): string | null {
     const token = getAccessToken();
     if (!token) return null;
 
-    const decoded = jwtDecode<JwtPayload>(token);
+    try {
+        const decoded = jwtDecode<JwtPayload>(token);
 
-    if (decoded.role) return decoded.role;
+        if (decoded.role) return decoded.role;
 
-    if (decoded.roles?.length) {
-        return decoded.roles[0].toUpperCase().replace("ROLE_", "");
+        if (decoded.roles?.length) {
+            return decoded.roles[0].toUpperCase().replace("ROLE_", "");
+        }
+
+        if (decoded.authorities?.length) {
+            return decoded.authorities[0].toUpperCase().replace("ROLE_", "");
+        }
+
+        return null;
+    } catch {
+        return null;
     }
-
-    if (decoded.authorities?.length) {
-        return decoded.authorities[0].toUpperCase().replace("ROLE_", "");
-    }
-
-    return null;
 }
 
 export function isTokenExpired() {
     const token = getAccessToken();
     if (!token) return true;
 
-    const decoded = jwtDecode<JwtPayload>(token);
-    if (!decoded.exp) return false;
+    try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        if (!decoded.exp) return false;
 
-    return decoded.exp * 1000 < Date.now();
+        return decoded.exp * 1000 < Date.now();
+    } catch {
+        return true;
+    }
 }
 
 export function logout() {

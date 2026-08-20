@@ -8,7 +8,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ===== RUN STAGE =====
-FROM eclipse-temurin:24-jdk-alpine
+# Không dùng bản -alpine: musl libc (Alpine) có lỗi resolve DNS cho hostname
+# nhiều bản ghi CNAME/A/AAAA (pooler hostname của Neon) -> UnknownHostException.
+FROM eclipse-temurin:24-jdk
 
 WORKDIR /app
 

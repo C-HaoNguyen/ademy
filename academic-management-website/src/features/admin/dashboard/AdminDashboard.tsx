@@ -10,8 +10,8 @@ import {
     Zap,
     BarChart3,
 } from "lucide-react";
-import { getAccessToken } from "@/utils/AuthUtils";
-import { API_URL } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/constants";
+import { apiClient } from "@/shared/api/client";
 
 const StatCard = ({
     icon,
@@ -43,11 +43,7 @@ const AdminDashboard = () => {
     const [totalCourses, setTotalCourses] = useState<number>(0);
 
     useEffect(() => {
-        fetch(`${API_URL}/admin/total-users`, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`,
-            },
-        })
+        apiClient(API_ENDPOINTS.ADMIN.TOTAL_USERS)
             .then((res) => res.json())
             .then((data) => {
                 setTotalUsers(data.totalUsers);
@@ -58,11 +54,7 @@ const AdminDashboard = () => {
     }, []);
 
     useEffect(() => {
-        fetch(`${API_URL}/admin/total-courses`, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`,
-            },
-        })
+        apiClient(API_ENDPOINTS.ADMIN.TOTAL_COURSES)
             .then((res) => res.json())
             .then((data) => {
                 setTotalCourses(data.totalCourses);

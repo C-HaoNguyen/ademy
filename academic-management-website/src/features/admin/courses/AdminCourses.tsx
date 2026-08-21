@@ -139,7 +139,7 @@ const AdminCourses = () => {
 
     return (
         <div>
-            <h2 className="flex items-center text-2xl text-primary font-semibold mb-4 gap-3">
+            <h2 className="flex items-center text-2xl text-legacy-primary font-semibold mb-4 gap-3">
                 <Notebook size={24} aria-hidden="true" />
                 Quản lý khóa học
             </h2>
@@ -182,8 +182,8 @@ const AdminCourses = () => {
                 <button
                     type="button"
                     onClick={() => setShowAddCourseOverlay(true)}
-                    className="cursor-pointer group flex items-center gap-2 px-3 py-2 rounded-xl bg-cta
-                                text-white text-sm font-semibold shadow-sm hover:bg-cta-dark hover:shadow-md
+                    className="cursor-pointer group flex items-center gap-2 px-3 py-2 rounded-xl bg-legacy-cta
+                                text-white text-sm font-semibold shadow-sm hover:bg-legacy-cta-dark hover:shadow-md
                                 transition-all duration-200"
                 >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-200">
@@ -199,14 +199,14 @@ const AdminCourses = () => {
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
                         <div className="bg-white rounded-card shadow-xl w-[440px] p-6 animate-fadeIn">
                             {/* Header */}
-                            <h2 className="text-2xl font-semibold text-danger mb-3">
+                            <h2 className="text-2xl font-semibold text-legacy-danger mb-3">
                                 Xóa khóa học
                             </h2>
 
                             {/* Content */}
                             <p className="text-slate-700 leading-relaxed mb-6">
                                 Bạn sắp xóa khóa học{" "}
-                                <span className="font-semibold text-danger">
+                                <span className="font-semibold text-legacy-danger">
                                     {deletedCourse.title}
                                 </span>
                                 .
@@ -229,7 +229,7 @@ const AdminCourses = () => {
                                 <button
                                     type="button"
                                     onClick={handleDeleteCourse}
-                                    className="cursor-pointer px-5 py-2.5 rounded-lg bg-danger text-white hover:bg-red-700 transition-colors duration-200"
+                                    className="cursor-pointer px-5 py-2.5 rounded-lg bg-legacy-danger text-white hover:bg-red-700 transition-colors duration-200"
                                 >
                                     Xóa
                                 </button>
@@ -287,7 +287,7 @@ const AdminCourses = () => {
                                         <td className="text-center px-4 py-3">{course.courseId}</td>
                                         <td className="px-4 py-3 align-middle">
                                             <div className="flex items-center justify-center h-full">
-                                                <p className="line-clamp-2 font-medium text-ink text-center">
+                                                <p className="line-clamp-2 font-medium text-legacy-ink text-center">
                                                     {course.title}
                                                 </p>
                                             </div>
@@ -314,16 +314,16 @@ const AdminCourses = () => {
                                                 {course.level}
                                             </span>
                                         </td>
-                                        <td className="text-center px-4 py-3 font-medium text-ink">
+                                        <td className="text-center px-4 py-3 font-medium text-legacy-ink">
                                             {course.price.toLocaleString()} đ
                                         </td>
                                         <td className="text-center px-4 py-3">
                                             <span
                                                 className={`px-2 py-1 rounded-full text-xs font-medium ${course.status === "published"
-                                                    ? "bg-success-light text-success"
+                                                    ? "bg-legacy-success-light text-legacy-success"
                                                     : course.status === "draft"
-                                                        ? "bg-warning-light text-warning"
-                                                        : "bg-danger-light text-danger"
+                                                        ? "bg-legacy-warning-light text-legacy-warning"
+                                                        : "bg-legacy-danger-light text-legacy-danger"
                                                     }`}
                                             >
                                                 {course.status === "published"
@@ -335,7 +335,7 @@ const AdminCourses = () => {
                                         </td>
                                         <td className="px-4 py-3 text-xs text-center text-slate-500">
                                             <div>{course.createdAt}</div>
-                                            <div className="mt-1 text-primary">{course.updatedAt}</div>
+                                            <div className="mt-1 text-legacy-primary">{course.updatedAt}</div>
                                         </td>
 
                                         {/* Action */}
@@ -344,7 +344,7 @@ const AdminCourses = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleEditCourse(course)}
-                                                    className="cursor-pointer p-2 rounded-lg text-primary hover:bg-primary/10 transition-colors duration-200"
+                                                    className="cursor-pointer p-2 rounded-lg text-legacy-primary hover:bg-legacy-primary/10 transition-colors duration-200"
                                                     title="Edit"
                                                     aria-label="Sửa khóa học"
                                                 >
@@ -356,7 +356,7 @@ const AdminCourses = () => {
                                                         setDeletedCourse(course);
                                                         setShowDeleteCourseOverlay(true);
                                                     }}
-                                                    className="cursor-pointer p-2 rounded-lg text-danger hover:bg-danger-light transition-colors duration-200"
+                                                    className="cursor-pointer p-2 rounded-lg text-legacy-danger hover:bg-legacy-danger-light transition-colors duration-200"
                                                     title="Delete"
                                                     aria-label="Xóa khóa học"
                                                 >

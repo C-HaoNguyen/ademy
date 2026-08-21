@@ -30,10 +30,10 @@ const StudentHeader = () => {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => navigate("/")}
             >
-                <div className="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold">
+                <div className="w-8 h-8 bg-legacy-primary text-white rounded-lg flex items-center justify-center font-bold">
                     A
                 </div>
-                <span className="font-semibold text-ink text-xl">
+                <span className="font-semibold text-legacy-ink text-xl">
                     Ademy
                 </span>
             </div>

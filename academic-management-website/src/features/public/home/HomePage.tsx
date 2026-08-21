@@ -21,13 +21,13 @@ const HomePage = () => {
     };
 
     return (
-        <div className="bg-surface">
+        <div className="bg-legacy-surface">
             {/* HERO SECTION */}
             <section className="relative overflow-hidden bg-white">
 
                 {/* background glow */}
-                <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-primary-light/10 rounded-full blur-3xl opacity-60" />
-                <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-cta/10 rounded-full blur-3xl opacity-60" />
+                <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-legacy-primary-light/10 rounded-full blur-3xl opacity-60" />
+                <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-legacy-cta/10 rounded-full blur-3xl opacity-60" />
 
                 <div className="relative mx-auto max-w-7xl px-6 py-24 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
 
@@ -39,15 +39,15 @@ const HomePage = () => {
                     >
 
                         {/* badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-legacy-primary/10 text-legacy-primary text-sm font-medium mb-6">
                             <Sparkles size={16} aria-hidden="true" />
                             Nền tảng học tập thế hệ mới
                         </div>
 
                         {/* heading */}
-                        <h1 className="text-4xl md:text-6xl font-bold text-ink leading-tight">
+                        <h1 className="text-4xl md:text-6xl font-bold text-legacy-ink leading-tight">
                             Học tập & quản lý <br />
-                            <span className="text-primary">
+                            <span className="text-legacy-primary">
                                 trực tuyến toàn diện
                             </span>
                         </h1>
@@ -64,15 +64,15 @@ const HomePage = () => {
 
                             <NavLink
                                 to="/courses"
-                                className="cursor-pointer px-7 py-3 rounded-xl bg-cta text-white font-medium
-                     hover:bg-cta-dark hover:shadow-lg transition-colors duration-200"
+                                className="cursor-pointer px-7 py-3 rounded-xl bg-legacy-cta text-white font-medium
+                     hover:bg-legacy-cta-dark hover:shadow-lg transition-colors duration-200"
                             >
                                 Khám phá khóa học
                             </NavLink>
 
                             <NavLink
                                 to="/signup"
-                                className="cursor-pointer px-7 py-3 rounded-xl border border-slate-300 text-ink
+                                className="cursor-pointer px-7 py-3 rounded-xl border border-slate-300 text-legacy-ink
                      hover:bg-slate-50 transition-colors duration-200"
                             >
                                 Bắt đầu miễn phí
@@ -82,7 +82,7 @@ const HomePage = () => {
 
                         {/* social proof */}
                         <div className="mt-10 flex items-center gap-2 text-sm text-slate-500">
-                            <Users size={18} className="text-primary" aria-hidden="true" />
+                            <Users size={18} className="text-legacy-primary" aria-hidden="true" />
                             <span>2,100+ học viên đã tham gia</span>
                         </div>
 
@@ -101,29 +101,29 @@ const HomePage = () => {
                         <div className="rounded-card bg-white shadow-2xl p-6 border border-slate-100">
 
                             <div className="flex justify-between items-center mb-6">
-                                <div className="text-lg font-semibold text-ink">Tiến trình học</div>
-                                <div className="text-sm text-success font-medium">+12%</div>
+                                <div className="text-lg font-semibold text-legacy-ink">Tiến trình học</div>
+                                <div className="text-sm text-legacy-success font-medium">+12%</div>
                             </div>
 
                             <div className="space-y-4">
 
                                 <div>
-                                    <div className="flex justify-between text-sm mb-1 text-ink">
+                                    <div className="flex justify-between text-sm mb-1 text-legacy-ink">
                                         <span>React Mastery</span>
                                         <span>75%</span>
                                     </div>
                                     <div className="h-2 bg-slate-100 rounded-full">
-                                        <div className="h-2 bg-primary rounded-full w-3/4" />
+                                        <div className="h-2 bg-legacy-primary rounded-full w-3/4" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div className="flex justify-between text-sm mb-1 text-ink">
+                                    <div className="flex justify-between text-sm mb-1 text-legacy-ink">
                                         <span>UI Design</span>
                                         <span>50%</span>
                                     </div>
                                     <div className="h-2 bg-slate-100 rounded-full">
-                                        <div className="h-2 bg-primary-light rounded-full w-1/2" />
+                                        <div className="h-2 bg-legacy-primary-light rounded-full w-1/2" />
                                     </div>
                                 </div>
 
@@ -133,7 +133,7 @@ const HomePage = () => {
                         {/* floating mini card */}
                         <div className="absolute -bottom-6 -left-6 bg-white shadow-xl rounded-2xl px-5 py-4 border border-slate-100">
                             <div className="text-sm text-slate-500">Khóa học hoàn thành</div>
-                            <div className="text-2xl font-bold text-ink">24</div>
+                            <div className="text-2xl font-bold text-legacy-ink">24</div>
                         </div>
 
                     </motion.div>
@@ -151,7 +151,7 @@ const HomePage = () => {
                     className="cursor-pointer absolute -left-4 top-1/2 -translate-y-1/2 z-10
                    bg-white shadow-md rounded-full w-10 h-10
                    flex items-center justify-center hover:bg-slate-100 transition-colors duration-200
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-legacy-primary"
                 >
                     <ArrowLeft className="w-5 h-5 text-slate-600" aria-hidden="true" />
                 </button>
@@ -164,7 +164,7 @@ const HomePage = () => {
                     className="cursor-pointer absolute -right-4 top-1/2 -translate-y-1/2 z-10
                    bg-white shadow-md rounded-full w-10 h-10
                    flex items-center justify-center hover:bg-slate-100 transition-colors duration-200
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-legacy-primary"
                 >
                     <ArrowRight className="w-5 h-5 text-slate-600" aria-hidden="true" />
                 </button>
@@ -254,7 +254,7 @@ const HomePage = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
-                        className="text-3xl font-bold text-center text-ink"
+                        className="text-3xl font-bold text-center text-legacy-ink"
                     >
                         Vì sao chọn Ademy?
                     </motion.h2>
@@ -286,10 +286,10 @@ const HomePage = () => {
                                 className="bg-white p-6 rounded-card shadow-sm border border-slate-100
                                            hover:shadow-md transition-shadow duration-200"
                             >
-                                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                                <div className="w-11 h-11 rounded-xl bg-legacy-primary/10 text-legacy-primary flex items-center justify-center mb-4">
                                     <item.icon size={22} aria-hidden="true" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-ink">
+                                <h3 className="text-lg font-semibold text-legacy-ink">
                                     {item.title}
                                 </h3>
                                 <p className="mt-3 text-slate-600">
@@ -302,7 +302,7 @@ const HomePage = () => {
             </section>
 
             {/* STATS */}
-            <section className="bg-primary py-16">
+            <section className="bg-legacy-primary py-16">
                 <div className="mx-auto max-w-7xl px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
                     {[
                         { value: "2,000+", label: "Học viên" },
@@ -324,7 +324,7 @@ const HomePage = () => {
                                     {stat.value}
                                 </div>
                             )}
-                            <div className="mt-2 text-primary-light/90">
+                            <div className="mt-2 text-legacy-primary-light/90">
                                 {stat.label}
                             </div>
                         </motion.div>
@@ -341,7 +341,7 @@ const HomePage = () => {
                     transition={{ duration: 0.5 }}
                     className="mx-auto max-w-3xl px-6 text-center"
                 >
-                    <h2 className="text-3xl font-bold text-ink">
+                    <h2 className="text-3xl font-bold text-legacy-ink">
                         Sẵn sàng bắt đầu hành trình học tập?
                     </h2>
                     <p className="mt-4 text-slate-600">
@@ -350,8 +350,8 @@ const HomePage = () => {
                     <NavLink
                         to="/signup"
                         className="cursor-pointer inline-block mt-8 px-8 py-3 rounded-xl
-                                   bg-cta text-white font-medium
-                                   hover:bg-cta-dark transition-colors duration-200 shadow-sm"
+                                   bg-legacy-cta text-white font-medium
+                                   hover:bg-legacy-cta-dark transition-colors duration-200 shadow-sm"
                     >
                         Đăng ký miễn phí
                     </NavLink>

@@ -79,8 +79,8 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
             className="rounded-card bg-white p-6 shadow-sm border border-slate-100"
             noValidate
         >
-            <h2 className="mb-6 text-xl font-semibold text-ink flex items-center gap-2">
-                <CreditCard size={20} className="text-primary" aria-hidden="true" />
+            <h2 className="mb-6 text-xl font-semibold text-legacy-ink flex items-center gap-2">
+                <CreditCard size={20} className="text-legacy-primary" aria-hidden="true" />
                 Thông tin thanh toán
             </h2>
 
@@ -98,9 +98,9 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                         inputMode="numeric"
                         className={`w-full rounded-xl border px-4 py-3
                                    focus:outline-none focus:ring-2 transition-colors duration-200
-                                   ${errors.cardNumber ? "border-danger focus:ring-danger/30" : "border-slate-300 focus:ring-primary/30 focus:border-primary"}`}
+                                   ${errors.cardNumber ? "border-legacy-danger focus:ring-legacy-danger/30" : "border-slate-300 focus:ring-legacy-primary/30 focus:border-legacy-primary"}`}
                     />
-                    {errors.cardNumber && <p className="mt-1 text-xs text-danger">{errors.cardNumber}</p>}
+                    {errors.cardNumber && <p className="mt-1 text-xs text-legacy-danger">{errors.cardNumber}</p>}
                 </div>
 
                 {/* Expiry + CVC */}
@@ -116,9 +116,9 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                             onChange={(e) => setExpiry(formatExpiry(e.target.value))}
                             inputMode="numeric"
                             className={`w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-colors duration-200
-                                   ${errors.expiry ? "border-danger focus:ring-danger/30" : "border-slate-300 focus:ring-primary/30 focus:border-primary"}`}
+                                   ${errors.expiry ? "border-legacy-danger focus:ring-legacy-danger/30" : "border-slate-300 focus:ring-legacy-primary/30 focus:border-legacy-primary"}`}
                         />
-                        {errors.expiry && <p className="mt-1 text-xs text-danger">{errors.expiry}</p>}
+                        {errors.expiry && <p className="mt-1 text-xs text-legacy-danger">{errors.expiry}</p>}
                     </div>
 
                     <div>
@@ -132,9 +132,9 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                             onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
                             inputMode="numeric"
                             className={`w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-colors duration-200
-                                   ${errors.cvc ? "border-danger focus:ring-danger/30" : "border-slate-300 focus:ring-primary/30 focus:border-primary"}`}
+                                   ${errors.cvc ? "border-legacy-danger focus:ring-legacy-danger/30" : "border-slate-300 focus:ring-legacy-primary/30 focus:border-legacy-primary"}`}
                         />
-                        {errors.cvc && <p className="mt-1 text-xs text-danger">{errors.cvc}</p>}
+                        {errors.cvc && <p className="mt-1 text-xs text-legacy-danger">{errors.cvc}</p>}
                     </div>
                 </div>
 
@@ -149,9 +149,9 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className={`w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-colors duration-200
-                                   ${errors.name ? "border-danger focus:ring-danger/30" : "border-slate-300 focus:ring-primary/30 focus:border-primary"}`}
+                                   ${errors.name ? "border-legacy-danger focus:ring-legacy-danger/30" : "border-slate-300 focus:ring-legacy-primary/30 focus:border-legacy-primary"}`}
                     />
-                    {errors.name && <p className="mt-1 text-xs text-danger">{errors.name}</p>}
+                    {errors.name && <p className="mt-1 text-xs text-legacy-danger">{errors.name}</p>}
                 </div>
 
                 {/* Save card */}
@@ -160,7 +160,7 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                         type="checkbox"
                         checked={saveCard}
                         onChange={(e) => setSaveCard(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/30"
+                        className="h-4 w-4 rounded border-slate-300 text-legacy-primary focus:ring-legacy-primary/30"
                     />
                     Lưu thẻ cho lần thanh toán sau
                 </label>
@@ -169,8 +169,8 @@ const PaymentForm = ({ onSubmit }: PaymentFormProps) => {
                 <button
                     type="submit"
                     disabled={submitting}
-                    className="cursor-pointer mt-4 w-full rounded-xl bg-cta py-3
-                               font-semibold text-white hover:bg-cta-dark transition-colors duration-200
+                    className="cursor-pointer mt-4 w-full rounded-xl bg-legacy-cta py-3
+                               font-semibold text-white hover:bg-legacy-cta-dark transition-colors duration-200
                                disabled:opacity-60 disabled:cursor-not-allowed
                                flex items-center justify-center gap-2"
                 >

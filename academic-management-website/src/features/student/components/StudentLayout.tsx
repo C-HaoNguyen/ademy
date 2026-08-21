@@ -16,7 +16,7 @@ const StudentLayout = () => {
                     <Sidebar />
                 </aside>
 
-                <main className="ml-64 h-[calc(100vh-64px)] overflow-y-auto p-6 bg-surface">
+                <main className="ml-64 h-[calc(100vh-64px)] overflow-y-auto p-6 bg-legacy-surface">
                     <Outlet />
                 </main>
             </div>

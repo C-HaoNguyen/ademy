@@ -4,7 +4,7 @@ import AdminSidebar from "./AdminSidebar";
 
 const AdminLayout = () => {
     return (
-        <div className="min-h-screen bg-surface">
+        <div className="min-h-screen bg-legacy-surface">
             <div className="fixed top-0 left-0 right-0 h-16 z-50">
                 <AdminHeader />
             </div>
@@ -14,7 +14,7 @@ const AdminLayout = () => {
                     <AdminSidebar />
                 </aside>
 
-                <main className="ml-48 flex-1 p-6 bg-surface min-h-[calc(100vh-48px)]">
+                <main className="ml-48 flex-1 p-6 bg-legacy-surface min-h-[calc(100vh-48px)]">
                     <Outlet />
                 </main>
             </div>

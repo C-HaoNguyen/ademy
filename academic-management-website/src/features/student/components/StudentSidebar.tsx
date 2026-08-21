@@ -16,8 +16,8 @@ const Sidebar = () => {
         text-base font-medium
         transition-colors duration-200 cursor-pointer
         ${isActive
-            ? "bg-surface text-primary"
-            : "text-slate-600 hover:bg-surface hover:text-primary"
+            ? "bg-legacy-surface text-legacy-primary"
+            : "text-slate-600 hover:bg-legacy-surface hover:text-legacy-primary"
         }
     `;
 
@@ -59,7 +59,7 @@ const Sidebar = () => {
                         group w-full flex items-center gap-3
                         px-4 py-2 rounded-lg text-base font-medium
                         text-slate-600 cursor-pointer
-                        hover:bg-surface hover:text-primary
+                        hover:bg-legacy-surface hover:text-legacy-primary
                         transition-colors duration-200
                         active:scale-[0.97]
                     "

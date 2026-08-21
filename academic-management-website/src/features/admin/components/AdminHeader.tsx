@@ -38,10 +38,10 @@ const AdminHeader = () => {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => navigate("/admin/dashboard")}
             >
-                <div className="w-9 h-9 bg-primary text-white rounded-lg flex items-center justify-center">
+                <div className="w-9 h-9 bg-legacy-primary text-white rounded-lg flex items-center justify-center">
                     <ShieldCheck size={20} />
                 </div>
-                <span className="font-semibold text-ink text-xl">
+                <span className="font-semibold text-legacy-ink text-xl">
                     Ademy Admin
                 </span>
             </div>

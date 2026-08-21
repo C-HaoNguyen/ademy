@@ -100,7 +100,7 @@ const CourseDetail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface px-6 py-12">
+            <div className="min-h-screen bg-legacy-surface px-6 py-12">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
                     <div className="lg:col-span-2 space-y-6">
                         <Skeleton className="h-10 w-3/4" />
@@ -121,7 +121,7 @@ const CourseDetail = () => {
 
     if (!course) {
         return (
-            <div className="min-h-screen bg-surface px-6 py-20">
+            <div className="min-h-screen bg-legacy-surface px-6 py-20">
                 <div className="max-w-md mx-auto">
                     <EmptyState
                         icon={FileQuestion}
@@ -131,7 +131,7 @@ const CourseDetail = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/courses")}
-                                className="cursor-pointer px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors duration-200"
+                                className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
                             >
                                 Xem tất cả khóa học
                             </button>
@@ -144,7 +144,7 @@ const CourseDetail = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-surface px-6 py-12">
+            <div className="min-h-screen bg-legacy-surface px-6 py-12">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
                     {/* ===== LEFT ===== */}
                     <motion.div
@@ -153,7 +153,7 @@ const CourseDetail = () => {
                         transition={{ duration: 0.5 }}
                         className="lg:col-span-2"
                     >
-                        <h1 className="text-4xl font-bold text-ink mb-4">
+                        <h1 className="text-4xl font-bold text-legacy-ink mb-4">
                             {course.title}
                         </h1>
 
@@ -167,12 +167,12 @@ const CourseDetail = () => {
                                 Giảng viên: {course.instructor.fullName}
                             </span>
                             {course.category && (
-                                <span className="px-3 py-1 text-xs bg-primary/10 text-primary rounded-full">{course.category?.categoryName}</span>
+                                <span className="px-3 py-1 text-xs bg-legacy-primary/10 text-legacy-primary rounded-full">{course.category?.categoryName}</span>
                             )}
                         </div>
 
                         <div className="rounded-card bg-white p-6 shadow-sm border border-slate-100">
-                            <h2 className="text-xl font-semibold text-ink mb-4">
+                            <h2 className="text-xl font-semibold text-legacy-ink mb-4">
                                 Bạn sẽ học được gì?
                             </h2>
 
@@ -184,7 +184,7 @@ const CourseDetail = () => {
                                     "Chuẩn bị đi làm",
                                 ].map((item) => (
                                     <li key={item} className="flex items-start gap-2">
-                                        <CheckCircle2 size={18} className="text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                        <CheckCircle2 size={18} className="text-legacy-success shrink-0 mt-0.5" aria-hidden="true" />
                                         {item}
                                     </li>
                                 ))}
@@ -206,7 +206,7 @@ const CourseDetail = () => {
                         />
 
                         <div className="p-6">
-                            <div className="mb-4 text-3xl font-bold text-ink">
+                            <div className="mb-4 text-3xl font-bold text-legacy-ink">
                                 {course.price
                                     ? `${course.price.toLocaleString()}₫`
                                     : "Miễn phí"}
@@ -215,8 +215,8 @@ const CourseDetail = () => {
                             <button
                                 type="button"
                                 onClick={handleRegister}
-                                className="cursor-pointer w-full rounded-xl bg-cta px-6 py-3
-                                       font-semibold text-white hover:bg-cta-dark transition-colors duration-200"
+                                className="cursor-pointer w-full rounded-xl bg-legacy-cta px-6 py-3
+                                       font-semibold text-white hover:bg-legacy-cta-dark transition-colors duration-200"
                             >
                                 Đăng ký khóa học
                             </button>

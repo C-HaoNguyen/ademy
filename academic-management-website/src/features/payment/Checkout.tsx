@@ -99,7 +99,7 @@ const Checkout = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface px-6 py-12">
+            <div className="min-h-screen bg-legacy-surface px-6 py-12">
                 <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 rounded-card bg-white p-6 shadow-sm border border-slate-100 space-y-4">
                         <Skeleton className="h-6 w-1/3" />
@@ -123,7 +123,7 @@ const Checkout = () => {
 
     if (!courseId || !course) {
         return (
-            <div className="min-h-screen bg-surface px-6 py-20">
+            <div className="min-h-screen bg-legacy-surface px-6 py-20">
                 <div className="max-w-md mx-auto">
                     <EmptyState
                         icon={ShoppingCart}
@@ -133,7 +133,7 @@ const Checkout = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/courses")}
-                                className="cursor-pointer px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors duration-200"
+                                className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
                             >
                                 Xem danh sách khóa học
                             </button>
@@ -145,7 +145,7 @@ const Checkout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface px-6 py-12">
+        <div className="min-h-screen bg-legacy-surface px-6 py-12">
             <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
                 <div className="lg:col-span-2">
                     <PaymentForm onSubmit={handlePayment} />

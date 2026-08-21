@@ -160,7 +160,7 @@ const CourseList = () => {
     const hasActiveFilters = filterValue.trim() !== "" || categories.length > 0 || levels.length > 0;
 
     return (
-        <div className="min-h-screen bg-surface px-6 py-12">
+        <div className="min-h-screen bg-legacy-surface px-6 py-12">
             {/* ===== Hero Section ===== */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -168,7 +168,7 @@ const CourseList = () => {
                 transition={{ duration: 0.6 }}
                 className="max-w-6xl mx-auto mb-10"
             >
-                <h1 className="text-4xl font-bold text-primary mb-3">
+                <h1 className="text-4xl font-bold text-legacy-primary mb-3">
                     Khám phá khóa học của chúng tôi!
                 </h1>
                 <p className="text-slate-600 text-lg">
@@ -192,7 +192,7 @@ const CourseList = () => {
                         value={filterValue}
                         onChange={(e) => setFilterValue(e.target.value)}
                         className="w-full rounded-xl border border-slate-300 pl-11 pr-5 py-3
-                                    focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors duration-200"
+                                    focus:outline-none focus:ring-2 focus:ring-legacy-primary/40 focus:border-legacy-primary transition-colors duration-200"
                     />
                 </div>
 
@@ -222,8 +222,8 @@ const CourseList = () => {
                                 categories.map((item) => (
                                     <span
                                         key={item}
-                                        className="rounded-lg bg-primary/10 px-2 py-1
-                                   text-xs text-primary"
+                                        className="rounded-lg bg-legacy-primary/10 px-2 py-1
+                                   text-xs text-legacy-primary"
                                     >
                                         {item}
                                     </span>
@@ -248,7 +248,7 @@ const CourseList = () => {
                                                 className={`flex cursor-pointer items-center justify-between
                                         px-4 py-2 text-sm transition-colors duration-200
                                         ${active
-                                                        ? "bg-primary/10 text-primary"
+                                                        ? "bg-legacy-primary/10 text-legacy-primary"
                                                         : "text-slate-700 hover:bg-slate-50"
                                                     }`}
                                             >
@@ -282,8 +282,8 @@ const CourseList = () => {
                                 levels.map((item) => (
                                     <span
                                         key={item}
-                                        className="rounded-lg bg-primary-light/10 px-2 py-1
-                                   text-xs text-primary-dark"
+                                        className="rounded-lg bg-legacy-primary-light/10 px-2 py-1
+                                   text-xs text-legacy-primary-dark"
                                     >
                                         {item}
                                     </span>
@@ -308,7 +308,7 @@ const CourseList = () => {
                                                 className={`flex cursor-pointer items-center justify-between
                                         px-4 py-2 text-sm transition-colors duration-200
                                         ${active
-                                                        ? "bg-primary-light/10 text-primary-dark"
+                                                        ? "bg-legacy-primary-light/10 text-legacy-primary-dark"
                                                         : "text-slate-700 hover:bg-slate-50"
                                                     }`}
                                             >
@@ -328,7 +328,7 @@ const CourseList = () => {
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                             className="appearance-none cursor-pointer rounded-xl border border-slate-200 bg-white
-                                        px-3 py-2 pr-10 text-sm text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                        px-3 py-2 pr-10 text-sm text-slate-700 focus:border-legacy-primary focus:ring-2 focus:ring-legacy-primary/20
                                         hover:bg-slate-50 transition-colors duration-200"
                         >
                             <option value="popular">Phổ biến nhất</option>
@@ -354,7 +354,7 @@ const CourseList = () => {
                             <button
                                 type="button"
                                 onClick={() => coursesQuery.refetch()}
-                                className="cursor-pointer px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors duration-200"
+                                className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
                             >
                                 Thử lại
                             </button>
@@ -370,7 +370,7 @@ const CourseList = () => {
                                 <button
                                     type="button"
                                     onClick={clearFilters}
-                                    className="cursor-pointer px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors duration-200"
+                                    className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
                                 >
                                     Xóa bộ lọc
                                 </button>
@@ -420,7 +420,7 @@ const CourseList = () => {
                                 onClick={() => setCurrentPage(page)}
                                 className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200
                     ${active
-                                        ? "bg-primary text-white"
+                                        ? "bg-legacy-primary text-white"
                                         : "bg-white border border-slate-300 hover:bg-slate-50"
                                     }`}
                             >

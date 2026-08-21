@@ -42,7 +42,7 @@ const AddUserOverlay = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <h2 className="text-2xl font-semibold text-primary mb-6">
+                <h2 className="text-2xl font-semibold text-legacy-primary mb-6">
                     Thêm người dùng
                 </h2>
 
@@ -60,7 +60,7 @@ const AddUserOverlay = ({
                                 setNewUser({ ...newUser, username: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             placeholder="VD: nguyenvana"
                         />
                     </div>
@@ -77,7 +77,7 @@ const AddUserOverlay = ({
                                 setNewUser({ ...newUser, fullName: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             placeholder="VD: Nguyễn Văn A"
                         />
                     </div>
@@ -94,7 +94,7 @@ const AddUserOverlay = ({
                                 setNewUser({ ...newUser, email: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             placeholder="email@example.com"
                         />
                     </div>
@@ -111,7 +111,7 @@ const AddUserOverlay = ({
                                 setNewUser({ ...newUser, password: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             placeholder="••••••••"
                         />
                     </div>
@@ -128,7 +128,7 @@ const AddUserOverlay = ({
                                     setNewUser({ ...newUser, role: e.target.value })
                                 }
                                 className="w-full px-4 py-2.5 rounded-lg border bg-white
-                                           focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                           focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             >
                                 <option value="STUDENT">STUDENT</option>
                                 <option value="INSTRUCTOR">INSTRUCTOR</option>
@@ -149,7 +149,7 @@ const AddUserOverlay = ({
                                     })
                                 }
                                 className="w-full px-4 py-2.5 rounded-lg border bg-white
-                                           focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                           focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                             >
                                 <option value="true">Hoạt động</option>
                                 <option value="false">Bị khóa</option>
@@ -171,8 +171,8 @@ const AddUserOverlay = ({
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="cursor-pointer px-5 py-2.5 rounded-lg bg-primary text-white
-                                   hover:bg-primary-dark transition-colors duration-200"
+                        className="cursor-pointer px-5 py-2.5 rounded-lg bg-legacy-primary text-white
+                                   hover:bg-legacy-primary-dark transition-colors duration-200"
                     >
                         Tạo người dùng
                     </button>

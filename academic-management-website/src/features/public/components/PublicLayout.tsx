@@ -9,7 +9,7 @@ const PublicLayout = () => {
             <Header />
 
             {/* Body */}
-            <main className="flex-1 bg-surface p-6">
+            <main className="flex-1 bg-legacy-surface p-6">
                 <Outlet />
             </main>
 

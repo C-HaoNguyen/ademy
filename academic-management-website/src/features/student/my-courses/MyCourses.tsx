@@ -48,7 +48,7 @@ const MyCourses = () => {
                     <button
                         type="button"
                         onClick={() => navigate(ROUTES.COURSES)}
-                        className="cursor-pointer px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors duration-200"
+                        className="cursor-pointer px-6 py-2 bg-legacy-primary text-white rounded-xl hover:bg-legacy-primary-dark transition-colors duration-200"
                     >
                         Khám phá khóa học
                     </button>
@@ -69,7 +69,7 @@ const MyCourses = () => {
                         alt={course.title}
                         className="h-40 w-full object-cover rounded-xl"
                     />
-                    <h3 className="mt-3 font-semibold text-ink">
+                    <h3 className="mt-3 font-semibold text-legacy-ink">
                         {course.title}
                     </h3>
                 </div>

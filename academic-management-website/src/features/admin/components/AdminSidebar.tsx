@@ -11,13 +11,13 @@ const AdminSidebar = () => {
     const linkClass = ({ isActive }: { isActive: boolean }) =>
         `px-3 py-2 rounded-xl flex items-center gap-2 transition-colors duration-200 cursor-pointer font-medium
         ${isActive
-            ? "bg-surface text-primary"
-            : "text-slate-600 hover:bg-surface hover:text-primary"
+            ? "bg-legacy-surface text-legacy-primary"
+            : "text-slate-600 hover:bg-legacy-surface hover:text-legacy-primary"
         }`;
 
     return (
         <aside className="w-48 bg-white border-r min-h-screen">
-            <div className="p-4 text-lg font-bold text-ink">
+            <div className="p-4 text-lg font-bold text-legacy-ink">
                 Trang quản lý
             </div>
 

@@ -61,7 +61,7 @@ const CategoryOverlay = ({
                         transition={{ duration: 0.25, ease: "easeOut" }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h2 className="text-2xl font-semibold text-primary mb-1">
+                        <h2 className="text-2xl font-semibold text-legacy-primary mb-1">
                             {isEdit ? "Sửa danh mục" : "Thêm danh mục"}
                         </h2>
                         <p className="text-sm text-slate-500 mb-6">
@@ -73,13 +73,13 @@ const CategoryOverlay = ({
                         <div className="space-y-4">
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-slate-700">
-                                    Tên danh mục <span className="text-danger">*</span>
+                                    Tên danh mục <span className="text-legacy-danger">*</span>
                                 </label>
                                 <input
                                     value={form.categoryName}
                                     onChange={(e) => setForm({ ...form, categoryName: e.target.value })}
                                     className="w-full border border-slate-300 rounded-lg px-4 py-2
-                                               focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                               focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                                     placeholder="VD: Lập trình Web"
                                 />
                             </div>
@@ -93,12 +93,12 @@ const CategoryOverlay = ({
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                                     rows={3}
                                     className="w-full border border-slate-300 rounded-lg px-4 py-2 resize-none
-                                               focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                               focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                                     placeholder="Mô tả ngắn gọn về danh mục"
                                 />
                             </div>
 
-                            {error && <p className="text-sm text-danger">{error}</p>}
+                            {error && <p className="text-sm text-legacy-danger">{error}</p>}
                         </div>
 
                         <div className="flex justify-end gap-3 pt-5 mt-6 border-t border-slate-100">
@@ -112,7 +112,7 @@ const CategoryOverlay = ({
                             <button
                                 type="button"
                                 onClick={handleSubmit}
-                                className="cursor-pointer px-5 py-2.5 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors duration-200"
+                                className="cursor-pointer px-5 py-2.5 rounded-lg bg-legacy-primary text-white hover:bg-legacy-primary-dark transition-colors duration-200"
                             >
                                 {isEdit ? "Lưu thay đổi" : "Thêm danh mục"}
                             </button>

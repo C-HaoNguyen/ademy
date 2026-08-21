@@ -35,7 +35,7 @@ const EditUserOverlay = ({
                 className="bg-white rounded-card shadow-xl w-[500px] p-6 animate-modalPop"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 className="text-2xl font-semibold text-primary mb-6">
+                <h2 className="text-2xl font-semibold text-legacy-primary mb-6">
                     Sửa người dùng
                 </h2>
 
@@ -51,7 +51,7 @@ const EditUserOverlay = ({
                                 setEditUser({ ...editUser, fullName: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border border-slate-300
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                         />
                     </div>
 
@@ -66,7 +66,7 @@ const EditUserOverlay = ({
                                 setEditUser({ ...editUser, email: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border border-slate-300
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                         />
                     </div>
 
@@ -80,7 +80,7 @@ const EditUserOverlay = ({
                                 setEditUser({ ...editUser, role: e.target.value })
                             }
                             className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white
-                                       focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200"
+                                       focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                         >
                             <option value="STUDENT">STUDENT</option>
                             <option value="INSTRUCTOR">INSTRUCTOR</option>
@@ -101,8 +101,8 @@ const EditUserOverlay = ({
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="cursor-pointer px-5 py-2.5 rounded-lg bg-primary text-white
-                                   hover:bg-primary-dark transition-colors duration-200"
+                        className="cursor-pointer px-5 py-2.5 rounded-lg bg-legacy-primary text-white
+                                   hover:bg-legacy-primary-dark transition-colors duration-200"
                     >
                         Lưu thay đổi
                     </button>

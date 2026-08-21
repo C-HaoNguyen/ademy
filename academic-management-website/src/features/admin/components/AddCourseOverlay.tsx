@@ -15,7 +15,7 @@ const Field = ({
     <div className="space-y-1">
         <label className="text-sm font-medium text-slate-700">
             {label}
-            {required && <span className="text-danger ml-1">*</span>}
+            {required && <span className="text-legacy-danger ml-1">*</span>}
         </label>
         {children}
         {hint && (
@@ -24,7 +24,7 @@ const Field = ({
     </div>
 );
 
-const inputClass = "w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors duration-200";
+const inputClass = "w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200";
 
 interface AddCourseOverlayProps {
     open: boolean;
@@ -120,7 +120,7 @@ const AddCourseOverlay = ({
                     >
                         {/* Header */}
                         <div className="px-6 pt-6">
-                            <h2 className="text-2xl font-semibold text-primary mb-1">
+                            <h2 className="text-2xl font-semibold text-legacy-primary mb-1">
                                 {isEdit ? "Sửa khóa học" : "Thêm khóa học"}
                             </h2>
                             <p className="text-sm text-slate-500">
@@ -235,7 +235,7 @@ const AddCourseOverlay = ({
                                     </Field>
                                 </div>
 
-                                {error && <p className="text-sm text-danger">{error}</p>}
+                                {error && <p className="text-sm text-legacy-danger">{error}</p>}
                             </div>
                         </div>
 
@@ -251,7 +251,7 @@ const AddCourseOverlay = ({
                             <button
                                 type="button"
                                 onClick={handleSubmit}
-                                className="cursor-pointer px-5 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors duration-200"
+                                className="cursor-pointer px-5 py-2 rounded-lg bg-legacy-primary text-white hover:bg-legacy-primary-dark transition-colors duration-200"
                             >
                                 {isEdit ? "Lưu thay đổi" : "Thêm"}
                             </button>

@@ -36,12 +36,12 @@ const StatCard = ({
                         Sắp ra mắt
                     </p>
                 ) : (
-                    <p className="text-2xl font-bold text-ink mt-1">
+                    <p className="text-2xl font-bold text-legacy-ink mt-1">
                         {value}
                     </p>
                 )}
             </div>
-            <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
+            <div className="p-3 rounded-lg bg-legacy-primary/10 text-legacy-primary shrink-0">
                 {icon}
             </div>
         </div>
@@ -70,7 +70,7 @@ const Dashboard = () => {
         <div className="space-y-8">
             {/* Title */}
             <div>
-                <h2 className="text-2xl font-semibold text-ink">
+                <h2 className="text-2xl font-semibold text-legacy-ink">
                     Student Dashboard
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
@@ -107,7 +107,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Current courses */}
                 <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                    <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
+                    <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
                         <PlayCircle size={18} aria-hidden="true" />
                         Khóa học đang học
                     </h3>
@@ -117,7 +117,7 @@ const Dashboard = () => {
                         <button
                             type="button"
                             onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
-                            className="cursor-pointer mt-3 text-primary font-medium hover:underline"
+                            className="cursor-pointer mt-3 text-legacy-primary font-medium hover:underline"
                         >
                             Xem khóa học của tôi
                         </button>
@@ -126,7 +126,7 @@ const Dashboard = () => {
 
                 {/* Learning stats */}
                 <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                    <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
+                    <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
                         <Activity size={18} aria-hidden="true" />
                         Thống kê học tập
                     </h3>
@@ -139,7 +139,7 @@ const Dashboard = () => {
 
             {/* Quick actions */}
             <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
+                <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
                     <Zap size={18} aria-hidden="true" />
                     Quick Actions
                 </h3>
@@ -148,14 +148,14 @@ const Dashboard = () => {
                     <button
                         type="button"
                         onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark transition-colors duration-200"
+                        className="cursor-pointer px-4 py-2 rounded-lg bg-legacy-primary text-white text-sm hover:bg-legacy-primary-dark transition-colors duration-200"
                     >
                         Tiếp tục học
                     </button>
                     <button
                         type="button"
                         onClick={() => navigate(ROUTES.COURSES)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-cta text-white text-sm hover:bg-cta-dark transition-colors duration-200"
+                        className="cursor-pointer px-4 py-2 rounded-lg bg-legacy-cta text-white text-sm hover:bg-legacy-cta-dark transition-colors duration-200"
                     >
                         Khám phá khóa học
                     </button>

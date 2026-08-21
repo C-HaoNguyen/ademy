@@ -24,9 +24,9 @@ type Payment = {
 
 const statusStyle = (status: string) => {
     const normalized = status?.toUpperCase();
-    if (normalized === "SUCCESS") return "bg-success-light text-success";
-    if (normalized === "FAILED") return "bg-danger-light text-danger";
-    return "bg-warning-light text-warning";
+    if (normalized === "SUCCESS") return "bg-legacy-success-light text-legacy-success";
+    if (normalized === "FAILED") return "bg-legacy-danger-light text-legacy-danger";
+    return "bg-legacy-warning-light text-legacy-warning";
 };
 
 const statusLabel = (status: string) => {
@@ -82,7 +82,7 @@ const AdminOrders = () => {
 
     return (
         <div>
-            <h2 className="flex items-center text-2xl text-primary font-semibold mb-4 gap-3">
+            <h2 className="flex items-center text-2xl text-legacy-primary font-semibold mb-4 gap-3">
                 <Receipt size={24} aria-hidden="true" />
                 Quản lý đơn thanh toán
             </h2>
@@ -90,17 +90,17 @@ const AdminOrders = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
                     <p className="text-sm text-slate-500">Tổng số đơn</p>
-                    <p className="text-2xl font-bold text-ink mt-1">{payments.length}</p>
+                    <p className="text-2xl font-bold text-legacy-ink mt-1">{payments.length}</p>
                 </div>
                 <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
                     <p className="text-sm text-slate-500">Đơn thành công</p>
-                    <p className="text-2xl font-bold text-success mt-1">
+                    <p className="text-2xl font-bold text-legacy-success mt-1">
                         {payments.filter((p) => p.status?.toUpperCase() === "SUCCESS").length}
                     </p>
                 </div>
                 <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
                     <p className="text-sm text-slate-500">Doanh thu</p>
-                    <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(totalRevenue)}</p>
+                    <p className="text-2xl font-bold text-legacy-primary mt-1">{formatCurrency(totalRevenue)}</p>
                 </div>
             </div>
 
@@ -111,7 +111,7 @@ const AdminOrders = () => {
                         type="button"
                         onClick={() => setStatusFilter(status)}
                         className={`cursor-pointer px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${statusFilter === status
-                            ? "bg-primary text-white"
+                            ? "bg-legacy-primary text-white"
                             : "bg-white border border-slate-300 text-slate-600 hover:bg-slate-50"
                             }`}
                     >
@@ -167,7 +167,7 @@ const AdminOrders = () => {
                                         <td className="px-4 py-3 truncate text-center">
                                             {payment.course?.title ?? "—"}
                                         </td>
-                                        <td className="text-center px-4 py-3 font-medium text-ink">
+                                        <td className="text-center px-4 py-3 font-medium text-legacy-ink">
                                             {formatCurrency(payment.amount)}
                                         </td>
                                         <td className="text-center px-4 py-3 text-slate-600">

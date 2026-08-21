@@ -1,18 +1,27 @@
+import type { ReactNode } from "react";
+
+type BadgeVariant = "status" | "neutral";
+type BadgeTone = "success" | "warning" | "danger" | "info";
+
 interface BadgeProps {
-    text: string;
-    color?: "blue" | "green" | "red";
+    variant?: BadgeVariant;
+    tone?: BadgeTone;
+    children: ReactNode;
 }
 
-const Badge = ({ text, color = "blue" }: BadgeProps) => {
-    const map = {
-        blue: "bg-blue-100 text-blue-600",
-        green: "bg-green-100 text-green-600",
-        red: "bg-red-100 text-red-600",
-    };
+const toneClasses: Record<BadgeTone, string> = {
+    success: "bg-status-success-bg text-status-success-text",
+    warning: "bg-status-warning-bg text-status-warning-text",
+    danger: "bg-status-danger-bg text-status-danger-text",
+    info: "bg-status-info-bg text-status-info-text",
+};
+
+const Badge = ({ variant = "status", tone = "info", children }: BadgeProps) => {
+    const colorClasses = variant === "neutral" ? "bg-surface-brand-muted text-brand" : toneClasses[tone];
 
     return (
-        <span className={`px-4 py-1 rounded-full text-sm font-medium ${map[color]}`}>
-            {text}
+        <span className={`inline-flex items-center px-3 py-1 rounded-radius-full text-xs font-medium ${colorClasses}`}>
+            {children}
         </span>
     );
 };

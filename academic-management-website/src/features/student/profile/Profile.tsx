@@ -101,11 +101,10 @@ const Profile = () => {
                         <p className="text-gray-500">@{user.username}</p>
 
                         <div className="flex gap-3 mt-3">
-                            <Badge text={user.role} />
-                            <Badge
-                                text={user.status}
-                                color={user.status === "ACTIVE" ? "green" : "red"}
-                            />
+                            <Badge variant="neutral">{user.role}</Badge>
+                            <Badge variant="status" tone={user.status === "ACTIVE" ? "success" : "danger"}>
+                                {user.status}
+                            </Badge>
                         </div>
                     </div>
 

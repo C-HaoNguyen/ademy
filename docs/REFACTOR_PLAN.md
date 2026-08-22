@@ -466,18 +466,31 @@ academic-management-website/src/
 - **Exit criteria**: `Input`/`FormField`/`Card`/`DateRangeInput` sẵn sàng dùng, có test.
 - **Trace**: DESIGN_SYSTEM.md §10.2, §10.3, §11; Component System §3.2 (bao gồm `DateRangeInput`), §3.4.
 
-### Phase 13: Shared — ToastProvider, Modal, ConfirmDeleteModal
+### Phase 13: Shared — ToastProvider, Modal, ConfirmDeleteModal — ĐÃ HOÀN TẤT
 
 - **Goal**: Xóa nguồn duplication nghiêm trọng nhất (mỗi trang tự viết toast/modal logic).
-- **Scope**: Tạo `ToastProvider` + `useToast()` (thay `Toast.tsx` đơn lẻ hiện tại); tạo `Modal` khung dùng chung; tạo `ConfirmDeleteModal` preset trên `Modal`; tạo `DropdownMenu` (popover nhỏ, khác `Modal` — không overlay/focus-trap toàn màn hình, dùng cho menu "···" trong MyCourses — UI_SPEC §3.2).
-- **Dependencies**: Phase 11 (Button dùng trong Modal footer).
-- **Changes required**: `shared/ui/ToastProvider.tsx`, `shared/ui/Modal.tsx`, `shared/ui/ConfirmDeleteModal.tsx`, `shared/ui/DropdownMenu.tsx`; đặt `ToastProvider` ở root app (`main.tsx`), **chưa xóa toast logic cũ trong từng page ở phase này** (việc thay thế thuộc Stage I khi redesign từng trang).
-- **Modules/files**: `shared/ui/ToastProvider.tsx`, `shared/ui/Modal.tsx`, `shared/ui/ConfirmDeleteModal.tsx`, `src/main.tsx`.
-- **Existing behavior cần preserve**: Toast/modal hiện có trong từng page chưa bị thay thế ở phase này — component mới chạy song song, chưa bắt buộc dùng.
-- **Migration concerns**: `ToastProvider` đặt ở root phải không xung đột với toast tự viết còn lại trong lúc chuyển tiếp (2 hệ thống toast tồn tại song song tạm thời) — ghi rõ kế hoạch: mỗi trang khi redesign ở Stage I sẽ xóa toast logic riêng và chuyển sang `useToast()`, hoàn tất khi Stage I xong.
-- **Tests/verification**: Test `useToast()` hiển thị đúng tone/thời lượng; test `Modal` focus trap + trả focus khi đóng; test `ConfirmDeleteModal` gọi đúng `onConfirm`; test `DropdownMenu` đóng khi click ngoài, điều hướng được bằng bàn phím.
-- **Exit criteria**: `ToastProvider`/`Modal`/`ConfirmDeleteModal`/`DropdownMenu` sẵn sàng, có test, đặt ở root.
-- **Trace**: DESIGN_SYSTEM.md §10.8, §10.9; Component System §4.1, §4.2, §4.9.
+- **Scope thực tế đã làm**: Tạo `ToastProvider` + `useToast()` (thay `Toast.tsx` đơn lẻ hiện tại); tạo `Modal` khung dùng chung; tạo `ConfirmDeleteModal` preset trên `Modal`; tạo `DropdownMenu` (popover nhỏ, khác `Modal` — không overlay/focus-trap toàn màn hình, dùng cho menu "···" trong MyCourses — UI_SPEC §3.2).
+- **Dependencies**: Phase 11 (Button dùng trong Modal footer) — đã tồn tại trong code (`shared/ui/Button.tsx`), thỏa điều kiện.
+- **Changes đã thực hiện**:
+  - `shared/ui/toastContextObject.ts` + `shared/ui/useToast.ts` + `shared/ui/ToastProvider.tsx` — tách 3 file theo đúng convention `shared/auth/AuthContext.tsx` đã có sẵn trong repo (context object + hook + provider riêng), để tránh vi phạm rule `react-refresh/only-export-components` (ESLint `eslint-plugin-react-refresh` đang bật) — không có trong danh sách file gốc của Phase 13 nhưng là chi tiết implementation bắt buộc để pass lint, không phải mở rộng scope nghiệp vụ. Tone `success`/`warning`/`danger`/`info`, thời lượng cố định 3000ms (khớp giá trị `setTimeout` đang dùng thống nhất ở cả 6 page hiện có, đã audit trước khi chọn).
+  - `shared/ui/Modal.tsx` — render qua `createPortal(document.body)`; focus trap tự viết bằng ref + keydown listener (không thêm thư viện ngoài); ESC đóng; click overlay đóng; nút X đóng; trả focus về phần tử đã mở khi đóng; `role="dialog"` `aria-modal` `aria-labelledby`; size `sm`/`md`/`lg`.
+  - `shared/ui/ConfirmDeleteModal.tsx` — dựng trên `Modal`, `size="sm"` cố định, layout cố định (tiêu đề cảnh báo, `Button danger` "Xóa" + `Button secondary` "Hủy", `loading` disable nút Hủy).
+  - `shared/ui/DropdownMenu.tsx` — dùng `cloneElement` inject `onClick`/`aria-haspopup`/`aria-expanded` vào `trigger` (tái dùng đúng pattern `cloneElement` đã có ở `FormField.tsx`, không viết wrapper mới); đóng khi chọn item/click ngoài/ESC; điều hướng ↑/↓; không overlay, không focus trap (đúng §10.9b).
+  - `src/main.tsx` — bọc `<ToastProvider>` quanh `<App />`, trong `<AuthProvider>`.
+  - Không thêm token Tailwind mới — toàn bộ token cần dùng (`z-modal`/`z-toast`/`z-dropdown`, `shadow-modal`/`shadow-elevated`, `radius-lg`/`radius-md`, `status-*-icon`/`status-*-text`, `surface`/`surface-inverse`) đã có sẵn từ Phase 10.
+- **Modules/files**: `shared/ui/{ToastProvider.tsx,toastContextObject.ts,useToast.ts,Modal.tsx,ConfirmDeleteModal.tsx,DropdownMenu.tsx}`, `src/main.tsx`.
+- **Existing behavior cần preserve**: Toast/modal hiện có trong từng page (`Toast.tsx` cũ, `AddUserOverlay`/`EditUserOverlay`/`CategoryOverlay`/`AddCourseOverlay`) hoàn toàn chưa bị đụng tới ở phase này — component mới chạy song song, chưa page nào bắt buộc dùng. Đã verify bằng `git status`: 0 file trong `features/` bị sửa.
+- **Migration concerns**: `ToastProvider` đặt ở root không xung đột với toast tự viết còn lại (khác component, cùng namespace vị trí `bottom-right z-toast` nhưng không active đồng thời vì chưa page nào gọi `useToast()`) — kế hoạch giữ nguyên: mỗi trang khi redesign ở Stage I sẽ xóa toast logic riêng và chuyển sang `useToast()`.
+- **Điều chỉnh so với bản kế hoạch gốc (đã thống nhất trước khi implement)**: mục "Tests/verification" gốc giả định có hạ tầng test tự động (`test useToast()...`, `test Modal focus trap...`) nhưng frontend repo **chưa có** test framework nào (`package.json` không có `vitest`/`@testing-library/react`/`jest`, chưa có file `*.test.*` nào) — đúng khớp mục D của Target Structure ("Frontend test... Chưa có, sẽ thêm dần theo Phase 39"), và đúng tiền lệ Phase 1-5 backend. → Đã đổi sang **verify thủ công bằng app thật** (không cài thêm dependency vào project), dời hạ tầng test tự động sang Phase 39.
+- **Tests/verification**: Dựng harness test tạm thời (`src/Phase13Demo.tsx`, tạm thời render thay `<App />` trong `main.tsx`), chạy `npm run dev` thật, dùng Playwright (cài tạm qua `npx`/scratchpad, không thêm vào `package.json` của project) điều khiển Chromium thật để verify 25 case cụ thể — tất cả **25/25 PASS**, 0 console error:
+  - `Modal`: Tab/Shift+Tab chỉ chạy vòng trong panel (nút X → Hủy → OK → wrap về X), không thoát ra ngoài; ESC đóng; click overlay đóng; click "Hủy" đóng + trả focus đúng về nút đã mở; modal không có phần tử focusable nào trong content vẫn giữ focus ở nút X, không lỗi JS.
+  - `ConfirmDeleteModal`: đúng text "Xóa {itemName}?..."; bấm "Xóa" → nút Hủy bị disable trong lúc `loading`; xong → đóng modal + hiện toast success.
+  - `ToastProvider`/`useToast()`: cả 4 tone hiển thị đúng icon/màu (đối chiếu bằng screenshot); nhiều toast xếp chồng đúng thứ tự không đè nhau; tự biến mất đúng ~3s.
+  - `DropdownMenu`: mở đúng 3 item, item đầu tự nhận focus; ↑/↓ di chuyển đúng; click ngoài/ESC đóng; click item gọi đúng `onClick` + đóng menu; không có overlay nền (khác biệt với Modal, đã xác nhận bằng screenshot).
+  - Sau khi verify xong: đã dừng dev server, xóa `src/Phase13Demo.tsx`, revert `main.tsx` về đúng scope (`<App />`), xác nhận lại bằng `git status` không còn artifact test sót lại.
+  - `npm run lint`: 0 lỗi/warning mới do Phase 13 (2 lỗi tồn tại sẵn ở `CourseDetailPage.tsx`/`Profile.tsx`, không thuộc file Phase 13 đụng tới, xác nhận qua `git status` các file này không nằm trong diff). `npm run build` (`tsc -b && vite build`) PASS.
+- **Exit criteria**: Đạt đủ — `ToastProvider`/`Modal`/`ConfirmDeleteModal`/`DropdownMenu` sẵn sàng dùng, đặt ở root, verify thủ công 25/25 pass, build/lint pass, 0 page nào bị đổi hành vi.
+- **Trace**: DESIGN_SYSTEM.md §10.8, §10.9, §10.9b; Component System §4.1, §4.2, §4.9.
 
 ### Phase 14: Shared — Table, Tabs
 

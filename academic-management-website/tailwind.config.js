@@ -124,6 +124,33 @@ export default {
         'semibold': 600,
         'bold': 700,
       },
+      // Typography scale — DESIGN_SYSTEM.md §4. Phase 10 deliberately left §4 out of
+      // scope; added here in Phase 12 because FormField (§11) needs text-body-sm/
+      // text-caption as real tokens, and reuse across Stage C phases 13-16 is expected.
+      // `text-display` (Public Hero, has a separate mobile breakpoint value) is excluded
+      // — no consumer needs it yet; add it when a Public Hero phase requires it.
+      fontSize: {
+        h1: ['32px', { lineHeight: '40px', fontWeight: '700' }],
+        h2: ['24px', { lineHeight: '32px', fontWeight: '700' }],
+        h3: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        h4: ['16px', { lineHeight: '24px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '26px', fontWeight: '400' }],
+        body: ['14px', { lineHeight: '22px', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '20px', fontWeight: '400' }],
+        caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
+      },
+      // Z-index scale — DESIGN_SYSTEM.md §6. Same rationale as fontSize above: Phase 10
+      // left §6 out of scope; added here because DateRangeInput's popover (Component
+      // System §3.2) needs z-dropdown. Full scale added together (not just z-dropdown)
+      // since z-index values are only meaningful relative to each other — picking them
+      // piecemeal across later phases (Modal, Toast, Sidebar) risks stacking conflicts.
+      zIndex: {
+        sticky: '10',
+        dropdown: '20',
+        'overlay-nav': '30',
+        modal: '40',
+        toast: '50',
+      },
       borderRadius: {
         card: '20px',
         'radius-sm': '6px',

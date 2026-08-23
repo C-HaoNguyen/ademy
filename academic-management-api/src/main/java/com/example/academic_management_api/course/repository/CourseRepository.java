@@ -14,27 +14,4 @@ public interface CourseRepository extends JpaRepository<Courses, Integer> {
         LEFT JOIN FETCH c.category
         """)
     List<Courses> findAllWithDetails();
-
-    @Query(
-            value = """
-        SELECT 
-            c.course_id,
-            c.title,
-            c.description,
-            c.price,
-            c.thumbnail,
-            u.username,
-            u.full_name,
-            cat.category_id,
-            cat.category_name
-        FROM courses c
-        JOIN users u 
-            ON c.instructor_username = u.username
-        JOIN categories cat 
-            ON c.category_id = cat.category_id
-        ORDER BY c.created_at DESC
-        """,
-        nativeQuery = true
-    )
-    List<Object[]> findAllCoursesDetail();
 }

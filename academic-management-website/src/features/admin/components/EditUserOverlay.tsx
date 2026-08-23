@@ -83,7 +83,7 @@ const EditUserOverlay = ({
                                        focus:ring-2 focus:ring-legacy-primary/30 focus:border-legacy-primary outline-none transition-colors duration-200"
                         >
                             <option value="STUDENT">STUDENT</option>
-                            <option value="INSTRUCTOR">INSTRUCTOR</option>
+                            <option value="TEACHER">TEACHER</option>
                             <option value="ADMIN">ADMIN</option>
                         </select>
                     </div>

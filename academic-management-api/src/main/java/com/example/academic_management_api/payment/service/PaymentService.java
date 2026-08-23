@@ -35,15 +35,15 @@ public class PaymentService {
         this.enrollmentService = enrollmentService;
     }
 
-    public ResponseEntity<PaymentResponse> checkout(PaymentRequest request, Integer studentId) {
+    public ResponseEntity<PaymentResponse> checkout(PaymentRequest request, String username) {
 
         Courses course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new NotFoundException("Course not found"));
 
-        Users student = userRepository.findById(studentId)
+        Users student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        boolean enrolled = enrollmentService.isEnrolled(studentId, course.getCourseId());
+        boolean enrolled = enrollmentService.isEnrolled(student.getUserId(), course.getCourseId());
 
         if (enrolled) {
             return ResponseEntity.badRequest().body(

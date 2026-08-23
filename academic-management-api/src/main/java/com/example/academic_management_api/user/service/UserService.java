@@ -3,6 +3,7 @@ package com.example.academic_management_api.user.service;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.user.dto.AdminCreateUserRequest;
+import com.example.academic_management_api.user.dto.AdminInviteTeacherRequest;
 import com.example.academic_management_api.user.dto.AdminUpdateUserRequest;
 import com.example.academic_management_api.user.dto.UpdateProfileRequest;
 import com.example.academic_management_api.user.dto.UserProfileResponse;
@@ -80,6 +81,11 @@ public class UserService {
     // ---- Admin operations ----
 
     public ResponseEntity<?> createUser(AdminCreateUserRequest request) {
+        if (request.getRole() == Role.TEACHER) {
+            return ResponseEntity.badRequest()
+                    .body("Vui lòng dùng chức năng Mời Teacher để tạo tài khoản Teacher");
+        }
+
         if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("Người dùng đã tồn tại. Vui lòng chọn tên khác!");
         }
@@ -95,6 +101,28 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setActive(request.getActive() != null ? request.getActive() : true);
+
+        Users saved = userRepository.save(user);
+
+        return ResponseEntity.ok(saved);
+    }
+
+    public ResponseEntity<?> inviteTeacher(AdminInviteTeacherRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body("Người dùng đã tồn tại. Vui lòng chọn tên khác!");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("Email đã tồn tại. Vui lòng chọn email khác");
+        }
+
+        Users user = new Users();
+        user.setUsername(request.getUsername());
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.TEACHER);
+        user.setActive(true);
 
         Users saved = userRepository.save(user);
 
@@ -153,7 +181,7 @@ public class UserService {
     }
 
     public List<Users> getAllInstructors() {
-        return userRepository.findByRole(Role.INSTRUCTOR);
+        return userRepository.findByRole(Role.TEACHER);
     }
 
     public void deleteUser(Integer userId) {

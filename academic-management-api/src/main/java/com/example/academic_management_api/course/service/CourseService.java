@@ -84,17 +84,13 @@ public class CourseService {
         Users instructor = userRepository.findById(request.getInstructorId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy giảng viên"));
 
-        Categories category = null;
-
         if (request.getCategoryId() == null) {
             return ResponseEntity.badRequest()
                     .body("Danh mục không được để trống");
         }
 
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
-        }
+        Categories category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
 
         Courses course = new Courses();
 

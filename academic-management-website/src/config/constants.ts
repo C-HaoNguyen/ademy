@@ -63,7 +63,7 @@ export const API_ENDPOINTS = {
 
 export const ROLES = {
     ADMIN: "ADMIN",
-    INSTRUCTOR: "INSTRUCTOR",
+    TEACHER: "TEACHER",
     STUDENT: "STUDENT",
 } as const;
 

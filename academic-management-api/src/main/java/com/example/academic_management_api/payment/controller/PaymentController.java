@@ -3,10 +3,9 @@ package com.example.academic_management_api.payment.controller;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.service.PaymentService;
-import com.example.academic_management_api.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +21,7 @@ public class PaymentController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<PaymentResponse> checkout(@Valid @RequestBody PaymentRequest request, @AuthenticationPrincipal CustomUserDetails user) {
-        return paymentService.checkout(request, user.getUserId());
+    public ResponseEntity<PaymentResponse> checkout(@Valid @RequestBody PaymentRequest request, Authentication authentication) {
+        return paymentService.checkout(request, authentication.getName());
     }
 }

@@ -5,7 +5,7 @@ export type UserProfile = {
     username: string;
     email: string;
     phone?: string;
-    role: "ADMIN" | "INSTRUCTOR" | "STUDENT";
+    role: "ADMIN" | "TEACHER" | "STUDENT";
     status: "ACTIVE" | "INACTIVE";
     createdAt: string;
     updatedAt?: string;

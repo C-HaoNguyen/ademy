@@ -1,6 +1,7 @@
 package com.example.academic_management_api.user.controller;
 
 import com.example.academic_management_api.user.dto.AdminCreateUserRequest;
+import com.example.academic_management_api.user.dto.AdminInviteTeacherRequest;
 import com.example.academic_management_api.user.dto.AdminUpdateUserRequest;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.service.UserService;
@@ -26,6 +27,13 @@ public class AdminController {
             @Valid @RequestBody AdminCreateUserRequest request
     ) {
         return userService.createUser(request);
+    }
+
+    @PostMapping("/teachers")
+    public ResponseEntity<?> inviteTeacher(
+            @Valid @RequestBody AdminInviteTeacherRequest request
+    ) {
+        return userService.inviteTeacher(request);
     }
 
     @GetMapping("/users")

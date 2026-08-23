@@ -5,12 +5,17 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public class SignupRequest {
+    @NotBlank
     private String signupUsername;
+
+    @NotBlank
     private String signupFullName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String signupEmail;
+
+    @NotBlank
     private String signupPassword;
 
     public SignupRequest() {

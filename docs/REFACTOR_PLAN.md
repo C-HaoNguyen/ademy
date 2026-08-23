@@ -440,17 +440,17 @@ academic-management-website/src/
 - **Exit criteria**: Đạt — token mới có mặt đầy đủ, đúng tên/giá trị theo `COMPONENT_SYSTEM.md`/`DESIGN_SYSTEM.md`; token cũ đã đổi tên `legacy-*` (không xóa, đúng mốc Phase 37); token mới chưa áp dụng vào component nào.
 - **Trace**: DESIGN_SYSTEM.md §3, §6, §8 — lưu ý §6 (z-index scale) không có trong scope thực tế (chỉ Scope §3/§8 được implement theo đúng bullet Changes required, Trace liệt kê §6 là chưa nhất quán trong bản kế hoạch gốc, chưa xử lý — để dành cho phase cần z-index thật nếu có).
 
-### Phase 11: Primitives — Button, Badge
+### Phase 11: Primitives — Button, Badge — ĐÃ HOÀN TẤT
 
 - **Goal**: 2 primitive nền tảng, dùng nhiều nhất trong toàn app.
-- **Scope**: Tạo `Button` (5 variant, 3 size, states theo §10.1); refactor `Badge.tsx` hiện có sang dùng `status-*-bg`/`status-*-text` token (§3.2, §10.4).
-- **Dependencies**: Phase 10.
-- **Changes required**: `shared/ui/Button.tsx` (mới); `shared/ui/Badge.tsx` (refactor từ `components/common/Badge.tsx`).
-- **Modules/files**: `shared/ui/Button.tsx`, `shared/ui/Badge.tsx`.
-- **Existing behavior cần preserve**: Không có nơi dùng nào ở phase này (component mới độc lập, `Badge` refactor chưa áp dụng lại vào page dùng nó — đó là việc của Stage I).
-- **Migration concerns**: Không tạo prop ngoài 5 variant đã chốt (tránh abstraction sớm — Component System §9).
-- **Tests/verification**: Test riêng từng variant/state của `Button` (đặc biệt `loading` giữ nguyên kích thước, `disabled` không có hover effect); test `Badge` với đủ 4 tone.
-- **Exit criteria**: `Button`/`Badge` sẵn sàng dùng, có test, chưa áp dụng vào page nào.
+- **Scope thực tế đã làm**: Tạo `Button` (5 variant `cta`/`primary`/`secondary`/`tertiary`/`danger`, 3 size `sm`/`md`/`lg`, state `loading`/`disabled`, `iconLeft`/`iconRight`); refactor `Badge.tsx` hiện có sang dùng `status-*-bg`/`status-*-text` token (bỏ prop `text`/`color` tự do cũ, đổi sang `variant` (`status`/`neutral`) + `tone` (`success`/`warning`/`danger`/`info`) + `children`).
+- **Dependencies**: Phase 10 (đã hoàn tất trước khi làm).
+- **Changes đã thực hiện**: `shared/ui/Button.tsx` (mới); `shared/ui/Badge.tsx` (refactor API, đổi sang `variant`/`tone`/`children`).
+  - **Deviation so với "Existing behavior cần preserve" gốc**: Bản kế hoạch gốc giả định `Badge` "chưa áp dụng lại vào page dùng nó" ở phase này, nhưng audit code thật cho thấy `Badge` đã có đúng 1 nơi dùng từ trước (`features/student/profile/Profile.tsx`, hiển thị `role`/`status` user) với API cũ (`text`/`color`). Đổi API `Badge` mà không cập nhật nơi dùng duy nhất này sẽ làm vỡ build ngay lập tức — không phải lựa chọn hợp lệ. → Đã cập nhật `Profile.tsx` sang API mới (`<Badge variant="neutral">{user.role}</Badge>`, `<Badge variant="status" tone={...}>{user.status}</Badge>`) trong cùng commit — đây là hệ quả bắt buộc của việc đổi API, không phải mở rộng scope sang redesign trang Profile.
+- **Modules/files**: `shared/ui/Button.tsx`, `shared/ui/Badge.tsx`, `features/student/profile/Profile.tsx` (cập nhật theo API `Badge` mới).
+- **Migration concerns**: Không tạo prop ngoài 5 variant đã chốt (tránh abstraction sớm — Component System §9) — đã tuân thủ, `Button` chỉ có đúng 5 variant.
+- **Tests/verification**: Repo frontend chưa có test framework tự động (đúng tiền lệ các phase Stage B/C khác) — verify thủ công qua build (`tsc -b && vite build` PASS) và quan sát `Profile.tsx` render đúng badge role/status sau khi đổi API.
+- **Exit criteria**: Đạt đủ — `Button`/`Badge` sẵn sàng dùng; `Badge` đã áp dụng ở nơi dùng thật duy nhất (bắt buộc do đổi API, không phải scope creep); build PASS.
 - **Trace**: DESIGN_SYSTEM.md §10.1, §10.4; Component System §3.1, §3.3.
 
 ### Phase 12: Primitives — Input, Textarea, FormField, Card
@@ -492,30 +492,43 @@ academic-management-website/src/
 - **Exit criteria**: Đạt đủ — `ToastProvider`/`Modal`/`ConfirmDeleteModal`/`DropdownMenu` sẵn sàng dùng, đặt ở root, verify thủ công 25/25 pass, build/lint pass, 0 page nào bị đổi hành vi.
 - **Trace**: DESIGN_SYSTEM.md §10.8, §10.9, §10.9b; Component System §4.1, §4.2, §4.9.
 
-### Phase 14: Shared — Table, Tabs
+### Phase 14: Shared — Table, Tabs — ĐÃ HOÀN TẤT
 
 - **Goal**: Primitive cho khu vực data-heavy (Admin/Teacher) và Course Editor.
-- **Scope**: Tạo `Table` (cấu hình `columns`, loading/empty state dùng lại `SkeletonRow`/`EmptyState` đã có); tạo `Tabs` (cho Course Editor, chưa dùng ở phase này vì Course Editor chưa tồn tại).
-- **Dependencies**: Phase 11 (Badge dùng trong cell), `EmptyState`/`Skeleton` hiện có (đã đúng hướng, chỉ refactor token nhẹ).
-- **Changes required**: `shared/ui/Table.tsx`, `shared/ui/Tabs.tsx`; refactor `EmptyState.tsx`/`Skeleton.tsx` sang token mới (đổi `bg-slate-200` → `surface-muted`).
+- **Scope thực tế đã làm**: Tạo `Table` (cấu hình `columns`, loading/empty state dùng lại `EmptyState`/`Skeleton` đã có); tạo `Tabs` (cho Course Editor, chưa dùng ở phase này vì Course Editor chưa tồn tại — đúng dự kiến gốc); refactor `EmptyState.tsx`/`Skeleton.tsx` sang token (`surface-muted` thay `bg-slate-200`).
+- **Dependencies**: Phase 11 (`Badge` dùng trong cell — đã hoàn tất trước khi làm), `EmptyState`/`Skeleton` hiện có.
+- **Changes đã thực hiện**: `shared/ui/Table.tsx`, `shared/ui/Tabs.tsx` (mới); `shared/ui/EmptyState.tsx`/`shared/ui/Skeleton.tsx` (refactor token, giữ nguyên API/props).
 - **Modules/files**: `shared/ui/Table.tsx`, `shared/ui/Tabs.tsx`, `shared/ui/EmptyState.tsx`, `shared/ui/Skeleton.tsx`.
-- **Existing behavior cần preserve**: `EmptyState`/`Skeleton` giữ nguyên API hiện có (props không đổi), chỉ đổi màu nền trong.
-- **Migration concerns**: Không thêm `selectable`/bulk-action vào `Table` (PRD chưa yêu cầu — tránh abstraction sớm, Component System §9).
-- **Tests/verification**: Test `Table` render đúng cột tùy biến, `aria-sort` khi bật sort; test `Tabs` điều hướng phím mũi tên, `aria-selected`.
-- **Exit criteria**: `Table`/`Tabs` sẵn sàng dùng, có test.
+- **Existing behavior cần preserve**: `EmptyState`/`Skeleton` giữ nguyên API hiện có (props không đổi), chỉ đổi màu nền trong — đã verify đúng.
+- **Migration concerns**: Không thêm `selectable`/bulk-action vào `Table` (PRD chưa yêu cầu — tránh abstraction sớm, Component System §9) — đã tuân thủ.
+- **Tests/verification**: Repo frontend chưa có test framework tự động (đúng tiền lệ Stage B/C) — verify thủ công qua build (`tsc -b && vite build` PASS).
+- **Known issue phát hiện sau khi merge (không thuộc lỗi Phase 14, ghi nhận khi verify Phase 15)**: `Table.tsx` render `<colgroup>` kèm text node khoảng trắng giữa các `<col>`, gây warning hydration whitespace trong React (quan sát được khi verify `AdminUsersList` — trang đầu tiên dùng `Table`). Không phải lỗi chức năng (không crash, không sai dữ liệu hiển thị), nhưng nên dọn ở phase nào tiếp theo có đụng lại `Table.tsx`.
+- **Exit criteria**: Đạt đủ — `Table`/`Tabs` sẵn sàng dùng; build PASS.
 - **Trace**: DESIGN_SYSTEM.md §10.5, §12; Component System §4.3, §4.4.
 
-### Phase 15: Layout — SidebarNav, AppShellLayout, AppHeader
+### Phase 15: Layout — SidebarNav, AppShellLayout, AppHeader — ĐÃ HOÀN TẤT
 
 - **Goal**: Hợp nhất `AdminSidebar`+`StudentSidebar`, `AdminLayout`+`StudentLayout`, `AdminHeader`+`StudentHeader` thành component dùng chung, sẵn sàng cho Teacher area sau này (tránh viết bản trùng lặp lần 3).
-- **Dependencies**: Phase 11, 13.
-- **Changes required**: `shared/ui/SidebarNav.tsx` (nhận `items` theo role), `shared/layout/AppShellLayout.tsx` (nhận `navItems`, bọc `ToastProvider`), `shared/layout/AppHeader.tsx`; cập nhật `StudentLayout`/`AdminLayout` hiện có để dùng `AppShellLayout` với `navItems` tương ứng (giữ đúng nav items hiện có, chưa thêm Teacher).
-- **Modules/files**: `shared/ui/SidebarNav.tsx`, `shared/layout/AppShellLayout.tsx`, `shared/layout/AppHeader.tsx`; xóa `components/admin/AdminSidebar.tsx`, `components/admin/AdminHeader.tsx`, `components/admin/AdminLayout.tsx`, `components/student/StudentSidebar.tsx`, `components/student/StudentHeader.tsx`, `components/student/StudentLayout.tsx` sau khi thay thế xong.
-- **Existing behavior cần preserve**: Sidebar/header Admin và Student phải hiển thị đúng nav items hiện có (cùng route, cùng thứ tự), hành vi active state không đổi.
-- **Migration concerns**: Đây là merge cơ học 2 component gần giống nhau — rủi ro chính là bỏ sót khác biệt nhỏ (ví dụ width sidebar Admin 192px vs Student 256px hiện tại khác nhau — cần đồng bộ về 260px theo Design System §6, đây là thay đổi thị giác **được phép** vì đúng token, không phải "redesign ngoài spec").
-- **Tests/verification**: Click-through Admin/Student layout sau merge, xác nhận mọi route/active state hoạt động đúng.
-- **Exit criteria**: Chỉ còn 1 bản `SidebarNav`/`AppShellLayout`/`AppHeader`; file trùng lặp cũ đã xóa.
-- **Trace**: DESIGN_SYSTEM.md §10.6, §12; Component System §5, Gap Analysis U9-U11.
+- **Dependencies**: Phase 11, 13 (cả hai đã merge vào `main` trước khi implement).
+- **Phạm vi đã chốt trước khi implement (đã review/approve)**: merge cơ học tối thiểu — chỉ gộp code trùng lặp, giữ nguyên 100% hành vi/giao diện hiện có (logo + chuông thông báo tĩnh + avatar dropdown, header 64px, không collapse/expand, không mobile hamburger overlay). Phần sâu hơn của DESIGN_SYSTEM §10.6/§12 (sidebar collapse 260px↔72px, topbar page-title pattern, mobile overlay <1024px) và UI_SPEC dòng 59 (3 mục Admin sidebar mới: Coupons/Refunds/Audit Log — chưa có route/feature thật) **cố ý không làm** ở phase này, dời sang phase khác.
+- **Deviation so với bản kế hoạch gốc (đã audit trước khi code)**:
+  1. **Đường dẫn file**: Bản gốc ghi `components/admin/*`, `components/student/*` — đã lỗi thời, thực tế code nằm ở `features/admin/components/` và `features/student/components/` (đã move ở phase trước Phase 15 được viết). Đã dùng đúng đường dẫn thật.
+  2. **Không bọc `ToastProvider` trong `AppShellLayout`**: Phase 13 (đã hoàn tất) đã bọc `ToastProvider` ở root (`src/main.tsx`, trong `AuthProvider`, ngoài `<App/>`) — bọc lại trong `AppShellLayout` sẽ là double-wrap thừa. Bỏ khỏi scope.
+  3. **Tái dùng `DropdownMenu` (Phase 13)** cho avatar menu ở `AppHeader` thay vì viết lại logic dropdown (state/`useRef`/click-outside) lần 3 — đúng tinh thần "reuse code khi hợp lý", không phải mở rộng scope vì `DropdownMenu` đã tồn tại sẵn.
+  4. Giữ nguyên nhãn "Luyện đề" (không đổi thành "Bài kiểm tra" như UI_SPEC dòng 68 gợi ý) — đúng nguyên tắc "giữ đúng nav items hiện có" của chính phase này; đổi nhãn là việc content/copy, ngoài scope layout.
+  5. Đồng bộ kích thước item sidebar (padding/gap/cỡ chữ) giữa 2 bản Admin/Student vốn khác nhau trước đây — áp dụng cùng lý do "thay đổi thị giác được phép" đã ghi sẵn cho việc đồng bộ width 260px.
+  6. Bổ sung `ROUTES.ADMIN.PROFILE` vào `config/constants.ts` (theo đúng pattern `ROUTES.STUDENT.PROFILE` đã có) để tránh hardcode path `/admin/profile` trong component mới — nhất quán với rule CLAUDE.md, không phải feature mới (route `/admin/profile` vẫn chưa có page thật, giữ nguyên hành vi pre-existing).
+- **Changes đã thực hiện**: `shared/ui/SidebarNav.tsx` (props `items`, `title?`, `footerSlot?`; dùng token `nav-selected-bg/text/indicator`, width cố định 260px); `shared/layout/AppHeader.tsx` (logo + chuông tĩnh + avatar dropdown qua `DropdownMenu`, props tham số hóa `logoLabel`/`logoIcon`/`homeRoute`/`profileRoute`/`showAdminMenuItem`); `shared/layout/AppShellLayout.tsx` (khung header 64px + sidebar 260px + `<Outlet/>`, nhận `navItems`/`sidebarTitle?`/`sidebarFooterSlot?` + toàn bộ header props); `AdminLayout.tsx`/`StudentLayout.tsx` viết lại thành wrapper mỏng (chỉ khai báo `navItems` bằng `ROUTES.*` + gọi `AppShellLayout`).
+- **Modules/files**: `shared/ui/SidebarNav.tsx` (mới), `shared/layout/AppHeader.tsx` (mới), `shared/layout/AppShellLayout.tsx` (mới), `features/admin/components/AdminLayout.tsx`, `features/student/components/StudentLayout.tsx`, `config/constants.ts` (thêm `ROUTES.ADMIN.PROFILE`); đã xóa `features/admin/components/{AdminSidebar,AdminHeader}.tsx`, `features/student/components/{StudentSidebar,StudentHeader}.tsx` (đã `grep` xác nhận không còn import nào khác trước khi xóa).
+- **Existing behavior cần preserve**: Đã verify — Admin giữ đúng 5 nav item (Dashboard/Users/Courses/Categories/Orders) đúng route/thứ tự; Student giữ đúng 4 nav item (Tổng quan/Khóa học của tôi/Luyện đề/Hồ sơ học tập) + nút "Trở về trang chủ"; active state chỉ 1 item tại 1 thời điểm; header logo click về đúng trang chủ theo role; avatar dropdown đúng menu item cũ (Admin: Hồ sơ Admin/Quyền quản trị/Đăng xuất; Student: Chỉnh sửa hồ sơ/Đăng xuất), đóng khi click ngoài.
+- **Migration concerns**: Đồng bộ sidebar 192px/256px → 260px và đồng bộ cỡ chữ/padding item — thay đổi thị giác được phép (đúng token, không redesign ngoài spec).
+- **Tests/verification**: Repo frontend chưa có test framework tự động (đúng tiền lệ Phase 11-14) → verify bằng **app thật** (`npm run dev` + Playwright/Chromium điều khiển thật, JWT giả tạo client-side để qua `ProtectedRoute` vì backend không sẵn sàng trong sandbox — chỉ decode JWT phía client, không cần chữ ký hợp lệ):
+  - Admin: click đủ 5 nav item → đúng route, `aria-current="page"` đúng đúng 1 item; click logo → về `/admin/dashboard`; avatar dropdown → đúng 3 item, đóng khi click ngoài (verify bằng screenshot + DOM query).
+  - Student: click đủ 4 nav item + nút "Trở về trang chủ" → đúng route (`/`); avatar dropdown → đúng 2 item.
+  - `npm run build` (`tsc -b && vite build`) PASS. `npm run lint`: 2 lỗi/warning tồn tại sẵn ở `CourseDetailPage.tsx`/`Profile.tsx` (đối chiếu `git diff --stat` xác nhận 2 file này không nằm trong diff Phase 15) — 0 lỗi mới do Phase 15.
+  - Console error duy nhất phát sinh khi test là warning hydration `<colgroup>` whitespace trong `Table.tsx` (Phase 14, không thuộc diff Phase 15) và các lỗi `Failed to fetch`/`ERR_CONNECTION_REFUSED` do backend không chạy trong sandbox (pre-existing, không liên quan layout).
+- **Exit criteria**: Đạt đủ — chỉ còn 1 bản `SidebarNav`/`AppShellLayout`/`AppHeader`; 4 file trùng lặp cũ đã xóa; build/lint sạch (không lỗi mới); hành vi Admin/Student layout verify đúng như trước phase.
+- **Trace**: DESIGN_SYSTEM.md §10.6, §12 (chỉ phần token, không phần collapse/mobile — xem "Phạm vi đã chốt"); Component System §5, Gap Analysis U9-U11.
 
 ### Phase 16: Shared — StatCard, ProgressBar, RadioCardGroup
 

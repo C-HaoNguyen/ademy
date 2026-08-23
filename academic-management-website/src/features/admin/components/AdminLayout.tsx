@@ -1,25 +1,33 @@
-import { Outlet } from "react-router-dom";
-import AdminHeader from "./AdminHeader";
-import AdminSidebar from "./AdminSidebar";
+import {
+    LayoutDashboard,
+    Users,
+    BookOpen,
+    Layers,
+    CreditCard,
+} from "lucide-react";
+import AppShellLayout from "@/shared/layout/AppShellLayout";
+import type { SidebarNavItem } from "@/shared/ui/SidebarNav";
+import { ROUTES } from "@/config/constants";
+
+const adminNavItems: SidebarNavItem[] = [
+    { to: ROUTES.ADMIN.DASHBOARD, label: "Dashboard", icon: LayoutDashboard },
+    { to: ROUTES.ADMIN.USERS, label: "Users", icon: Users },
+    { to: ROUTES.ADMIN.COURSES, label: "Courses", icon: BookOpen },
+    { to: ROUTES.ADMIN.CATEGORIES, label: "Categories", icon: Layers },
+    { to: ROUTES.ADMIN.ORDERS, label: "Orders", icon: CreditCard },
+];
 
 const AdminLayout = () => {
     return (
-        <div className="min-h-screen bg-legacy-surface">
-            <div className="fixed top-0 left-0 right-0 h-16 z-50">
-                <AdminHeader />
-            </div>
-
-            <div className="pt-16 flex">
-                <aside className="w-48 fixed left-0 top-16 h-[calc(100vh-48px)] bg-white border-r">
-                    <AdminSidebar />
-                </aside>
-
-                <main className="ml-48 flex-1 p-6 bg-legacy-surface min-h-[calc(100vh-48px)]">
-                    <Outlet />
-                </main>
-            </div>
-        </div>
-
+        <AppShellLayout
+            navItems={adminNavItems}
+            sidebarTitle="Trang quản lý"
+            logoLabel="Ademy Admin"
+            logoIcon="shield"
+            homeRoute={ROUTES.ADMIN.DASHBOARD}
+            profileRoute={ROUTES.ADMIN.PROFILE}
+            showAdminMenuItem
+        />
     );
 };
 

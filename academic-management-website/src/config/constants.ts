@@ -102,6 +102,7 @@ export const ROUTES = {
         COURSES: "/admin/courses",
         CATEGORIES: "/admin/categories",
         ORDERS: "/admin/orders",
+        PROFILE: "/admin/profile",
     },
 
     // Teacher (future)

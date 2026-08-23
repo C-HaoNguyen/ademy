@@ -5,8 +5,11 @@ import {
     Layers,
     CreditCard,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AppShellLayout from "@/shared/layout/AppShellLayout";
 import type { SidebarNavItem } from "@/shared/ui/SidebarNav";
+import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
+import { useAuth } from "@/shared/auth/useAuth";
 import { ROUTES } from "@/config/constants";
 
 const adminNavItems: SidebarNavItem[] = [
@@ -18,6 +21,15 @@ const adminNavItems: SidebarNavItem[] = [
 ];
 
 const AdminLayout = () => {
+    const navigate = useNavigate();
+    const { logout } = useAuth();
+
+    const menuItems: DropdownMenuItem[] = [
+        { label: "Hồ sơ Admin", onClick: () => navigate(ROUTES.ADMIN.PROFILE) },
+        { label: "Quyền quản trị", onClick: () => {} },
+        { label: "Đăng xuất", onClick: () => logout(), destructive: true },
+    ];
+
     return (
         <AppShellLayout
             navItems={adminNavItems}
@@ -25,8 +37,8 @@ const AdminLayout = () => {
             logoLabel="Ademy Admin"
             logoIcon="shield"
             homeRoute={ROUTES.ADMIN.DASHBOARD}
-            profileRoute={ROUTES.ADMIN.PROFILE}
-            showAdminMenuItem
+            menuItems={menuItems}
+            avatarAlt="admin avatar"
         />
     );
 };

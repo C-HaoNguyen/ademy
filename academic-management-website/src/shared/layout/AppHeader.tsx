@@ -1,30 +1,17 @@
 import { Bell, ChevronDown, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/shared/auth/useAuth";
 import DropdownMenu, { type DropdownMenuItem } from "@/shared/ui/DropdownMenu";
 
 interface AppHeaderProps {
     logoLabel: string;
     logoIcon?: "brand" | "shield";
     homeRoute: string;
-    profileRoute: string;
-    showAdminMenuItem?: boolean;
+    menuItems: DropdownMenuItem[];
+    avatarAlt?: string;
 }
 
-const AppHeader = ({ logoLabel, logoIcon = "brand", homeRoute, profileRoute, showAdminMenuItem = false }: AppHeaderProps) => {
+const AppHeader = ({ logoLabel, logoIcon = "brand", homeRoute, menuItems, avatarAlt = "avatar" }: AppHeaderProps) => {
     const navigate = useNavigate();
-    const { logout } = useAuth();
-
-    const menuItems: DropdownMenuItem[] = [
-        {
-            label: showAdminMenuItem ? "Hồ sơ Admin" : "Chỉnh sửa hồ sơ",
-            onClick: () => navigate(profileRoute),
-        },
-        ...(showAdminMenuItem
-            ? [{ label: "Quyền quản trị", onClick: () => {} } as DropdownMenuItem]
-            : []),
-        { label: "Đăng xuất", onClick: () => logout(), destructive: true },
-    ];
 
     return (
         <header className="h-16 bg-surface border-b border-default px-6 flex items-center justify-between">
@@ -52,7 +39,7 @@ const AppHeader = ({ logoLabel, logoIcon = "brand", homeRoute, profileRoute, sho
                         <button className="flex items-center gap-2 px-2 py-1 rounded-radius-full hover:bg-surface-muted transition-all">
                             <img
                                 src="https://cdn-icons-png.flaticon.com/512/8188/8188362.png"
-                                alt={showAdminMenuItem ? "admin avatar" : "avatar"}
+                                alt={avatarAlt}
                                 className="w-8 h-8 rounded-radius-full object-cover"
                             />
                             <ChevronDown size={16} className="text-secondary" />

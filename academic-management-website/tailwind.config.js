@@ -151,6 +151,12 @@ export default {
         modal: '40',
         toast: '50',
       },
+      // Sidebar width — single source of truth for SidebarNav/AppShellLayout (Phase 15),
+      // shared via Tailwind's default spacing scale so both `w-sidebar` and `ml-sidebar`
+      // resolve to the same value.
+      spacing: {
+        sidebar: '260px',
+      },
       borderRadius: {
         card: '20px',
         'radius-sm': '6px',

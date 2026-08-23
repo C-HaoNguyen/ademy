@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
     BookOpen,
@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import AppShellLayout from "@/shared/layout/AppShellLayout";
 import type { SidebarNavItem } from "@/shared/ui/SidebarNav";
+import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
+import { useAuth } from "@/shared/auth/useAuth";
 import { ROUTES } from "@/config/constants";
 
 const studentNavItems: SidebarNavItem[] = [
@@ -18,12 +20,20 @@ const studentNavItems: SidebarNavItem[] = [
 ];
 
 const StudentLayout = () => {
+    const navigate = useNavigate();
+    const { logout } = useAuth();
+
+    const menuItems: DropdownMenuItem[] = [
+        { label: "Chỉnh sửa hồ sơ", onClick: () => navigate(ROUTES.STUDENT.PROFILE) },
+        { label: "Đăng xuất", onClick: () => logout(), destructive: true },
+    ];
+
     return (
         <AppShellLayout
             navItems={studentNavItems}
             logoLabel="Ademy"
             homeRoute={ROUTES.HOME}
-            profileRoute={ROUTES.STUDENT.PROFILE}
+            menuItems={menuItems}
             sidebarFooterSlot={
                 <Link to={ROUTES.HOME}>
                     <button

@@ -23,7 +23,7 @@ const SidebarNav = ({ items, title, footerSlot }: SidebarNavProps) => {
         }`;
 
     return (
-        <aside className="w-[260px] h-full bg-surface border-r border-default flex flex-col">
+        <aside className="w-sidebar h-full bg-surface border-r border-default flex flex-col">
             {title && (
                 <div className="p-4 text-h4 text-primary">{title}</div>
             )}

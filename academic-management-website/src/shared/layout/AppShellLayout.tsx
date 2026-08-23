@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import type { ReactNode } from "react";
 import SidebarNav, { type SidebarNavItem } from "@/shared/ui/SidebarNav";
 import AppHeader from "@/shared/layout/AppHeader";
+import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
 
 interface AppShellLayoutProps {
     navItems: SidebarNavItem[];
@@ -10,8 +11,8 @@ interface AppShellLayoutProps {
     logoLabel: string;
     logoIcon?: "brand" | "shield";
     homeRoute: string;
-    profileRoute: string;
-    showAdminMenuItem?: boolean;
+    menuItems: DropdownMenuItem[];
+    avatarAlt?: string;
 }
 
 const AppShellLayout = ({
@@ -21,8 +22,8 @@ const AppShellLayout = ({
     logoLabel,
     logoIcon,
     homeRoute,
-    profileRoute,
-    showAdminMenuItem,
+    menuItems,
+    avatarAlt,
 }: AppShellLayoutProps) => {
     return (
         <div className="min-h-screen bg-surface-muted">
@@ -31,17 +32,17 @@ const AppShellLayout = ({
                     logoLabel={logoLabel}
                     logoIcon={logoIcon}
                     homeRoute={homeRoute}
-                    profileRoute={profileRoute}
-                    showAdminMenuItem={showAdminMenuItem}
+                    menuItems={menuItems}
+                    avatarAlt={avatarAlt}
                 />
             </div>
 
             <div className="pt-16 flex">
-                <div className="fixed left-0 top-16 h-[calc(100vh-64px)] w-[260px]">
+                <div className="fixed left-0 top-16 h-[calc(100vh-64px)] w-sidebar">
                     <SidebarNav items={navItems} title={sidebarTitle} footerSlot={sidebarFooterSlot} />
                 </div>
 
-                <main className="ml-[260px] flex-1 p-6 min-h-[calc(100vh-64px)]">
+                <main className="ml-sidebar flex-1 p-6 min-h-[calc(100vh-64px)]">
                     <Outlet />
                 </main>
             </div>

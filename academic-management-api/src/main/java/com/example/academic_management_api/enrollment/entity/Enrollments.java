@@ -29,6 +29,12 @@ public class Enrollments {
     @Column(name = "enrolled_at", updatable = false)
     private LocalDateTime enrolledAt;
 
+    @Column(name = "access_revoked_at")
+    private LocalDateTime accessRevokedAt;
+
+    @Column(name = "access_revoked_reason", columnDefinition = "text")
+    private String accessRevokedReason;
+
     @PrePersist
     protected void onCreate() {
         enrolledAt = LocalDateTime.now();
@@ -64,5 +70,21 @@ public class Enrollments {
 
     public void setEnrolledAt(LocalDateTime enrolledAt) {
         this.enrolledAt = enrolledAt;
+    }
+
+    public LocalDateTime getAccessRevokedAt() {
+        return accessRevokedAt;
+    }
+
+    public void setAccessRevokedAt(LocalDateTime accessRevokedAt) {
+        this.accessRevokedAt = accessRevokedAt;
+    }
+
+    public String getAccessRevokedReason() {
+        return accessRevokedReason;
+    }
+
+    public void setAccessRevokedReason(String accessRevokedReason) {
+        this.accessRevokedReason = accessRevokedReason;
     }
 }

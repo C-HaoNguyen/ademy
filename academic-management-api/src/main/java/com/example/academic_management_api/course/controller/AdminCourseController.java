@@ -35,6 +35,12 @@ public class AdminCourseController {
         );
     }
 
+    /**
+     * @deprecated Admin CRUD trực tiếp course sẽ bị thay bằng Teacher Course Editor
+     * (Phase 30) + Admin chỉ giám sát/force-unpublish (Phase 31). Giữ lại cho tới hết
+     * Phase 31 để không breaking frontend Admin hiện có (Phase 18).
+     */
+    @Deprecated
     @PostMapping("/courses/add")
     public ResponseEntity<?> createCourse(
             @Valid @RequestBody CreateCourseRequest request
@@ -42,6 +48,10 @@ public class AdminCourseController {
         return courseService.createCourse(request);
     }
 
+    /**
+     * @deprecated xem {@link #createCourse(CreateCourseRequest)}.
+     */
+    @Deprecated
     @PutMapping("/courses/{id}")
     public ResponseEntity<?> updateCourse(
             @PathVariable Integer id,
@@ -50,8 +60,17 @@ public class AdminCourseController {
         return courseService.updateCourse(id, request);
     }
 
+    /**
+     * @deprecated xem {@link #createCourse(CreateCourseRequest)}.
+     */
+    @Deprecated
     @DeleteMapping("/deleted-course/{courseId}")
     public void deleteCourse(@PathVariable Integer courseId) {
         courseService.deleteCourse(courseId);
+    }
+
+    @PostMapping("/courses/{id}/force-unpublish")
+    public ResponseEntity<?> forceUnpublish(@PathVariable Integer id) {
+        return courseService.forceUnpublish(id);
     }
 }

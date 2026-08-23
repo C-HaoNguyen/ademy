@@ -1,10 +1,12 @@
 package com.example.academic_management_api.enrollment.service;
 
 import com.example.academic_management_api.common.exception.ConflictException;
+import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.EnrollRequest;
+import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
 import com.example.academic_management_api.enrollment.repository.EnrollmentRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -12,6 +14,7 @@ import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -95,5 +98,34 @@ public class EnrollmentService {
         enrollment.setCourse(course);
 
         return enrollmentRepository.save(enrollment);
+    }
+
+    public List<EnrolledStudentDto> getStudentsByCourse(Integer courseId, String teacherUsername) {
+        Courses course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy khóa học"));
+
+        if (!course.getInstructor().getUsername().equals(teacherUsername)) {
+            throw new ForbiddenException("Bạn không có quyền xem học viên của khóa học này");
+        }
+
+        return enrollmentRepository.findByCourse_CourseIdWithStudent(courseId)
+                .stream()
+                .map(e -> new EnrolledStudentDto(
+                        e.getEnrollmentId(),
+                        e.getStudent().getUsername(),
+                        e.getStudent().getFullName(),
+                        e.getEnrolledAt()
+                ))
+                .toList();
+    }
+
+    public void revokeAccess(Integer enrollmentId, String reason) {
+        Enrollments enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy enrollment"));
+
+        enrollment.setAccessRevokedAt(LocalDateTime.now());
+        enrollment.setAccessRevokedReason(reason);
+
+        enrollmentRepository.save(enrollment);
     }
 }

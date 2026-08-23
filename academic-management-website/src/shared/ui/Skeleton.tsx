@@ -3,12 +3,12 @@ interface SkeletonProps {
 }
 
 const Skeleton = ({ className = "h-4 w-full" }: SkeletonProps) => {
-    return <div className={`animate-pulse rounded-md bg-slate-200 ${className}`} />;
+    return <div className={`animate-pulse rounded-md bg-surface-muted ${className}`} />;
 };
 
 export const SkeletonCard = () => {
     return (
-        <div className="rounded-card border border-slate-200 bg-white p-4 space-y-3">
+        <div className="rounded-card border border-default bg-surface p-4 space-y-3">
             <Skeleton className="h-36 w-full rounded-xl" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-1/2" />

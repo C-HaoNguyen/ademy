@@ -58,6 +58,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/courses/**", "/categories").permitAll()
+                        // Gateway thanh toán (VNPay/Momo/Stripe) tự gọi endpoint này, không mang JWT của
+                        // Student — xác thực ở đây là verify chữ ký/signature riêng của từng gateway
+                        // (Phase 21), không phải Spring Security JWT.
+                        .requestMatchers("/payments/callback/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/enrollments/**").hasRole("STUDENT")
                         .requestMatchers("/teacher/**").hasRole("TEACHER")

@@ -31,6 +31,14 @@ public class Payments {
     @Convert(converter = PaymentStatusConverter.class)
     private PaymentStatus status;
 
+    // Chỉ có giá trị ở "live" mode (Phase 21) — dùng để đối chiếu callback/webhook thật với đúng
+    // payment record (vnp_TxnRef/orderId/client_reference_id gửi cho gateway chính là Idempotency-Key
+    // của request checkout). Uniqueness thật sự được enforce bằng partial index ở migration V6
+    // (chỉ áp dụng khi not null) — không khai @Column(unique = true) ở đây để tránh ngụ ý sai kiểu
+    // ràng buộc so với DB thật.
+    @Column(name = "gateway_transaction_ref", length = 100)
+    private String gatewayTransactionRef;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -65,6 +73,14 @@ public class Payments {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getGatewayTransactionRef() {
+        return gatewayTransactionRef;
+    }
+
+    public void setGatewayTransactionRef(String gatewayTransactionRef) {
+        this.gatewayTransactionRef = gatewayTransactionRef;
     }
 
     public void setPaymentId(Integer paymentId) {

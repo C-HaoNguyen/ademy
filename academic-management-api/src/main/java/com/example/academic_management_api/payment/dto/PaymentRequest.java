@@ -1,14 +1,14 @@
 package com.example.academic_management_api.payment.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.example.academic_management_api.payment.entity.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
 
 public class PaymentRequest {
     @NotNull(message = "Course id is required")
     private Integer courseId;
 
-    @NotBlank(message = "Payment method is required")
-    private String paymentMethod;
+    @NotNull(message = "Payment method is required")
+    private PaymentMethod paymentMethod;
 
     public Integer getCourseId() {
         return courseId;
@@ -18,11 +18,11 @@ public class PaymentRequest {
         this.courseId = courseId;
     }
 
-    public String getPaymentMethod() {
+    public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 }

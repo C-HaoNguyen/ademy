@@ -7,11 +7,11 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
+// Uniqueness của (student_id, course_id) chỉ áp dụng cho enrollment còn active
+// (access_revoked_at is null) — enforced bằng partial unique index ở migration V5,
+// không thể khai báo bằng @UniqueConstraint (không hỗ trợ WHERE clause).
 @Entity
-@Table(
-    name = "enrollments",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"})
-)
+@Table(name = "enrollments")
 public class Enrollments {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

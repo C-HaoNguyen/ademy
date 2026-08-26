@@ -6,3 +6,15 @@ services:
 
     env_file:
       - .env
+
+    environment:
+      - MAILPIT_HOST=mailpit
+
+    depends_on:
+      - mailpit
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"

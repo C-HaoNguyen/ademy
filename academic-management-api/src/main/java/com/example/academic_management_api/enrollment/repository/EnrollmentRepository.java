@@ -13,6 +13,11 @@ public interface EnrollmentRepository extends JpaRepository<Enrollments, Integer
             Integer courseId
     );
 
+    boolean existsByStudent_UserIdAndCourse_CourseIdAndAccessRevokedAtIsNull(
+            Integer studentId,
+            Integer courseId
+    );
+
     List<Enrollments> findByStudent_UserId(Integer studentId);
 
     @Query("""

@@ -89,7 +89,7 @@ public class EnrollmentService {
 
     public boolean isEnrolled(Integer studentId, Integer courseId) {
         return enrollmentRepository
-                .existsByStudent_UserIdAndCourse_CourseId(studentId, courseId);
+                .existsByStudent_UserIdAndCourse_CourseIdAndAccessRevokedAtIsNull(studentId, courseId);
     }
 
     public Enrollments createEnrollment(Users student, Courses course) {

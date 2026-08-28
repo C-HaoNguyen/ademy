@@ -4,6 +4,8 @@ import com.example.academic_management_api.application.port.PaymentGatewayPort;
 import com.example.academic_management_api.infrastructure.payment.MomoGateway;
 import com.example.academic_management_api.infrastructure.payment.StripeGateway;
 import com.example.academic_management_api.infrastructure.payment.VnPayGateway;
+import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
+import com.example.academic_management_api.payment.dto.CouponValidationRequest;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.service.PaymentCallbackOutcome;
@@ -81,6 +83,14 @@ public class PaymentController {
         }
 
         return paymentService.initiateGatewaySession(init.payment(), idempotencyKey);
+    }
+
+    // Checkout Bước 1 (UI_SPEC §2.8) — nút "Áp dụng" coupon. Route mặc định rơi vào nhánh
+    // "authenticated" của SecurityConfig (không phải /admin, /courses, /enrollments) — khớp đúng
+    // "mọi role đã đăng nhập" mà /checkout hiện cho phép. Không commit redemption — chỉ preview.
+    @PostMapping("/coupons/validate")
+    public CouponPreviewResponse validateCoupon(@Valid @RequestBody CouponValidationRequest request) {
+        return paymentService.previewCoupon(request.getCouponCode(), request.getCourseId());
     }
 
     @GetMapping("/callback/vnpay")

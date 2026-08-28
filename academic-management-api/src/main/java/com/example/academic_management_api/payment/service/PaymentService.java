@@ -1,11 +1,15 @@
 package com.example.academic_management_api.payment.service;
 
 import com.example.academic_management_api.application.port.PaymentGatewayPort;
+import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.common.exception.ServiceUnavailableException;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
+import com.example.academic_management_api.payment.coupon.entity.Coupons;
+import com.example.academic_management_api.payment.coupon.service.CouponService;
+import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.entity.PaymentIdempotencyKey;
@@ -21,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +43,7 @@ public class PaymentService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final EnrollmentService enrollmentService;
+    private final CouponService couponService;
     private final Map<String, PaymentGatewayPort> gatewaysById;
     private final String paymentMode;
 
@@ -46,6 +53,7 @@ public class PaymentService {
             CourseRepository courseRepository,
             UserRepository userRepository,
             EnrollmentService enrollmentService,
+            CouponService couponService,
             List<PaymentGatewayPort> gateways,
             @Value("${payment.mode:mock}") String paymentMode
     ) {
@@ -54,6 +62,7 @@ public class PaymentService {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.enrollmentService = enrollmentService;
+        this.couponService = couponService;
         this.gatewaysById = gateways.stream()
                 .collect(Collectors.toMap(PaymentGatewayPort::gatewayId, Function.identity()));
         this.paymentMode = paymentMode;
@@ -84,8 +93,12 @@ public class PaymentService {
             return alreadyEnrolledResponse();
         }
 
-        Payments payment = buildPayment(validated, request, PaymentStatus.SUCCESS);
+        CouponResolution couponResolution = resolveCoupon(request, validated.course());
+
+        Payments payment = buildPayment(validated, request, PaymentStatus.SUCCESS, couponResolution);
         paymentRepository.save(payment);
+
+        consumeCouponOrThrow(couponResolution, payment);
 
         enrollmentService.createEnrollment(validated.student(), validated.course());
 
@@ -151,7 +164,13 @@ public class PaymentService {
             return new LiveCheckoutInit(alreadyEnrolledResponse(), null);
         }
 
-        Payments payment = buildPayment(validated, request, PaymentStatus.PENDING);
+        // Coupon (nếu có) chỉ được validate ở đây (resolveCoupon() -> resolveValidCoupon() ném
+        // ConflictException ngay nếu coupon đã chết), KHÔNG consume redemption tại bước PENDING này
+        // — xem consumeCouponIfPresent() ở processCallback() để biết lý do (best practice: chỉ đốt
+        // lượt coupon khi tiền đã thực sự vào, không phải lúc khởi tạo giao dịch có thể fail/bỏ ngang).
+        CouponResolution couponResolution = resolveCoupon(request, validated.course());
+
+        Payments payment = buildPayment(validated, request, PaymentStatus.PENDING, couponResolution);
         paymentRepository.save(payment);
 
         persistIdempotencyKey(idempotencyKey, validated.student(), payment);
@@ -221,6 +240,7 @@ public class PaymentService {
 
         if (result.success()) {
             enrollmentService.createEnrollment(payment.getStudent(), payment.getCourse());
+            consumeCouponIfPresent(payment);
         }
 
         return PaymentCallbackOutcome.PROCESSED;
@@ -267,13 +287,103 @@ public class PaymentService {
         return ResponseEntity.badRequest().body(new PaymentResponse(false, "Bạn đã đăng ký khóa học này"));
     }
 
-    private Payments buildPayment(ValidatedCheckout validated, PaymentRequest request, PaymentStatus status) {
+    // ---------------------------------------------------------------------
+    // Coupon (Phase 22) — payment service là nơi DUY NHẤT tính amount cuối cùng (ARCHITECTURE.md
+    // §7); CouponService chỉ validate/trả về coupon hợp lệ, không tự tính discount hay tự set amount.
+    // ---------------------------------------------------------------------
+
+    private record CouponResolution(Coupons coupon, BigDecimal discountAmount) {
+        private static final CouponResolution NONE = new CouponResolution(null, BigDecimal.ZERO);
+    }
+
+    private CouponResolution resolveCoupon(PaymentRequest request, Courses course) {
+        String couponCode = request.getCouponCode();
+        if (couponCode == null || couponCode.isBlank()) {
+            return CouponResolution.NONE;
+        }
+
+        Coupons coupon = couponService.resolveValidCoupon(couponCode, course.getCourseId());
+        BigDecimal discountAmount = calculateDiscount(coupon, course.getPrice());
+        return new CouponResolution(coupon, discountAmount);
+    }
+
+    private BigDecimal calculateDiscount(Coupons coupon, BigDecimal price) {
+        BigDecimal discount = switch (coupon.getDiscountType()) {
+            case PERCENTAGE -> {
+                BigDecimal clampedPercent = coupon.getDiscountValue().min(BigDecimal.valueOf(100));
+                yield price.multiply(clampedPercent)
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            }
+            case FIXED -> coupon.getDiscountValue().min(price);
+        };
+        return discount.max(BigDecimal.ZERO);
+    }
+
+    // Chỉ dùng ở checkout() (mock mode) — payment SUCCESS ngay lập tức, chưa có tiền thật nào di
+    // chuyển qua gateway ngoài, nên an toàn để throw + rollback toàn bộ nếu coupon vừa hết lượt do
+    // race. Gọi ngay sau paymentRepository.save(payment) trong cùng transaction checkout — đây là
+    // exception ứng dụng bình thường (không phải DB constraint violation), không cần xử lý 2 pha
+    // như DataIntegrityViolationException của Idempotency-Key (ADR-007). Live mode KHÔNG dùng method
+    // này — xem consumeCouponIfPresent() ở processCallback().
+    private void consumeCouponOrThrow(CouponResolution couponResolution, Payments payment) {
+        if (couponResolution.coupon() == null) {
+            return;
+        }
+        boolean consumed = couponService.consumeRedemption(
+                couponResolution.coupon(), payment, couponResolution.discountAmount());
+        if (!consumed) {
+            throw new ConflictException("Mã coupon vừa hết lượt sử dụng, vui lòng thử lại");
+        }
+    }
+
+    // Live mode (Phase 21/22) — gọi từ processCallback() chỉ khi gateway đã xác nhận SUCCESS thật.
+    // Best practice cho coupon giới hạn lượt kết hợp payment gateway redirect flow: chỉ "đốt" lượt
+    // dùng khi tiền đã thực sự vào, không phải lúc khởi tạo giao dịch (createPendingPayment()) —
+    // nếu consume ngay lúc PENDING, 1 giao dịch bị fail/bỏ ngang sẽ khóa vĩnh viễn 1 coupon
+    // maxRedemptions thấp dù chưa ai thanh toán thành công (known issue phát hiện qua code review
+    // sau khi implement Phase 22 ban đầu — xem REFACTOR_PLAN.md).
+    // KHÔNG throw nếu consume thất bại (coupon vừa bị deactivate/hết lượt trong lúc chờ gateway xác
+    // nhận, race hiếm) — khác hẳn consumeCouponOrThrow() ở trên: tại đây gateway đã xác nhận tiền
+    // thật đã vào, không thể rollback payment SUCCESS/enrollment chỉ vì bookkeeping coupon thất bại.
+    // Student vẫn được hưởng đúng discount đã cam kết (amount đã trừ từ lúc tạo PENDING), chỉ có
+    // redemption_count không tăng trong trường hợp hiếm này — chấp nhận được, không có cách nào tốt
+    // hơn mà không hủy 1 giao dịch tiền thật đã xảy ra.
+    private void consumeCouponIfPresent(Payments payment) {
+        Coupons coupon = payment.getCoupon();
+        if (coupon == null) {
+            return;
+        }
+        BigDecimal discountAmount = payment.getCourse().getPrice().subtract(payment.getAmount());
+        couponService.consumeRedemption(coupon, payment, discountAmount);
+    }
+
+    // Preview coupon (UI_SPEC §2.8, Checkout Bước 1 — nút "Áp dụng") — tính discount y hệt checkout
+    // thật nhưng KHÔNG persist payment/increment redemption_count, để Student xem trước tổng tiền
+    // trước khi xác nhận thanh toán.
+    public CouponPreviewResponse previewCoupon(String couponCode, Integer courseId) {
+        Courses course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("Course not found"));
+
+        Coupons coupon = couponService.resolveValidCoupon(couponCode, courseId);
+        BigDecimal discountAmount = calculateDiscount(coupon, course.getPrice());
+        BigDecimal finalAmount = course.getPrice().subtract(discountAmount);
+
+        return new CouponPreviewResponse(discountAmount, finalAmount);
+    }
+
+    private Payments buildPayment(
+            ValidatedCheckout validated,
+            PaymentRequest request,
+            PaymentStatus status,
+            CouponResolution couponResolution
+    ) {
         Payments payment = new Payments();
         payment.setStudent(validated.student());
         payment.setCourse(validated.course());
-        payment.setAmount(validated.course().getPrice());
+        payment.setAmount(validated.course().getPrice().subtract(couponResolution.discountAmount()));
         payment.setPaymentMethod(request.getPaymentMethod().name());
         payment.setStatus(status);
+        payment.setCoupon(couponResolution.coupon());
         return payment;
     }
 

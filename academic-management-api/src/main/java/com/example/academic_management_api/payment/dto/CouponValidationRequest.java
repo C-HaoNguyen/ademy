@@ -1,16 +1,13 @@
 package com.example.academic_management_api.payment.dto;
 
-import com.example.academic_management_api.payment.entity.PaymentMethod;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class PaymentRequest {
+public class CouponValidationRequest {
     @NotNull(message = "Course id is required")
     private Integer courseId;
 
-    @NotNull(message = "Payment method is required")
-    private PaymentMethod paymentMethod;
-
-    // Optional — không có coupon vẫn checkout bình thường (Phase 22).
+    @NotBlank(message = "Coupon code is required")
     private String couponCode;
 
     public Integer getCourseId() {
@@ -19,14 +16,6 @@ public class PaymentRequest {
 
     public void setCourseId(Integer courseId) {
         this.courseId = courseId;
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
     }
 
     public String getCouponCode() {

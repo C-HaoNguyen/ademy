@@ -1,7 +1,9 @@
 package com.example.academic_management_api.payment.entity;
 
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.payment.coupon.entity.Coupons;
 import com.example.academic_management_api.user.entity.Users;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -38,6 +40,11 @@ public class Payments {
     // ràng buộc so với DB thật.
     @Column(name = "gateway_transaction_ref", length = 100)
     private String gatewayTransactionRef;
+
+    // null = checkout không dùng coupon (Phase 22).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupons coupon;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -81,6 +88,19 @@ public class Payments {
 
     public void setGatewayTransactionRef(String gatewayTransactionRef) {
         this.gatewayTransactionRef = gatewayTransactionRef;
+    }
+
+    // Không JOIN FETCH ở PaymentRepository.findAllWithDetails() (AdminPaymentController trả raw
+    // entity) và UI_SPEC §5.5 (AdminOrders) không có cột coupon — @JsonIgnore để tránh serialize
+    // proxy LAZY chưa initialize (cùng lớp bug lazy-proxy đã fix ở Phase 18), không phải vì thiếu dữ
+    // liệu (coupon vẫn dùng được nội bộ qua getCoupon() ở code Java, chỉ không lộ ra JSON response).
+    @JsonIgnore
+    public Coupons getCoupon() {
+        return coupon;
+    }
+
+    public void setCoupon(Coupons coupon) {
+        this.coupon = coupon;
     }
 
     public void setPaymentId(Integer paymentId) {

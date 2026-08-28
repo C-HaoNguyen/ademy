@@ -1,9 +1,15 @@
 package com.example.academic_management_api.payment.service;
 
 import com.example.academic_management_api.application.port.PaymentGatewayPort;
+import com.example.academic_management_api.common.exception.ConflictException;
+import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
+import com.example.academic_management_api.payment.coupon.entity.CouponDiscountType;
+import com.example.academic_management_api.payment.coupon.entity.Coupons;
+import com.example.academic_management_api.payment.coupon.service.CouponService;
+import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.entity.PaymentIdempotencyKey;
@@ -28,7 +34,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +53,8 @@ class PaymentServiceTest {
     @Mock
     private EnrollmentService enrollmentService;
     @Mock
+    private CouponService couponService;
+    @Mock
     private PaymentGatewayPort vnPayGateway;
 
     private PaymentService mockModeService;
@@ -58,6 +68,7 @@ class PaymentServiceTest {
                 courseRepository,
                 userRepository,
                 enrollmentService,
+                couponService,
                 List.of(),
                 "mock"
         );
@@ -70,9 +81,22 @@ class PaymentServiceTest {
                 courseRepository,
                 userRepository,
                 enrollmentService,
+                couponService,
                 List.of(vnPayGateway),
                 "live"
         );
+    }
+
+    private Coupons percentageCoupon(BigDecimal percent, Integer maxRedemptions, int redemptionCount) {
+        Coupons coupon = new Coupons();
+        coupon.setId(1);
+        coupon.setCode("SALE10");
+        coupon.setDiscountType(CouponDiscountType.PERCENTAGE);
+        coupon.setDiscountValue(percent);
+        coupon.setMaxRedemptions(maxRedemptions);
+        coupon.setRedemptionCount(redemptionCount);
+        coupon.setActive(true);
+        return coupon;
     }
 
     private Courses course(BigDecimal price) {
@@ -216,6 +240,31 @@ class PaymentServiceTest {
     }
 
     @Test
+    void createPendingPayment_withValidCoupon_discountsAmountButDoesNotConsumeRedemptionYet() {
+        // Best practice: coupon chỉ được "đốt" (increment redemption_count) khi gateway xác nhận
+        // SUCCESS thật ở processCallback(), không phải lúc tạo PENDING — 1 giao dịch PENDING bị
+        // fail/bỏ ngang không được phép khóa vĩnh viễn 1 coupon maxRedemptions thấp.
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), 1, 0);
+
+        PaymentRequest request = request();
+        request.setCouponCode("SALE10");
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+        when(couponService.resolveValidCoupon("SALE10", 1)).thenReturn(coupon);
+
+        PaymentService.LiveCheckoutInit init = liveModeService.createPendingPayment(request, "key-1", "student1");
+
+        assertThat(init.payment().getAmount()).isEqualByComparingTo("450000.00");
+        assertThat(init.payment().getCoupon()).isEqualTo(coupon);
+        verify(couponService, never()).consumeRedemption(any(), any(), any());
+    }
+
+    @Test
     void createPendingPayment_alreadyActivelyEnrolled_shortCircuitsWithoutCreatingPayment() {
         Courses course = course(new BigDecimal("500000.00"));
         Users student = student();
@@ -312,6 +361,81 @@ class PaymentServiceTest {
     }
 
     @Test
+    void processCallback_successfulCallbackWithoutCoupon_doesNotTouchCouponService() {
+        Payments payment = new Payments();
+        payment.setPaymentId(99);
+        payment.setStudent(student());
+        payment.setCourse(course(new BigDecimal("500000.00")));
+
+        when(paymentRepository.findByGatewayTransactionRef("key-1")).thenReturn(Optional.of(payment));
+        when(paymentRepository.updateStatusIfPending(99, PaymentStatus.SUCCESS)).thenReturn(1);
+
+        liveModeService.processCallback(new PaymentGatewayPort.CallbackResult(true, "key-1", true));
+
+        verifyNoInteractions(couponService);
+    }
+
+    @Test
+    void processCallback_successfulCallbackWithCoupon_consumesRedemptionWithLockedInDiscount() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), 1, 0);
+        Payments payment = new Payments();
+        payment.setPaymentId(99);
+        payment.setStudent(student());
+        payment.setCourse(course);
+        payment.setAmount(new BigDecimal("450000.00"));
+        payment.setCoupon(coupon);
+
+        when(paymentRepository.findByGatewayTransactionRef("key-1")).thenReturn(Optional.of(payment));
+        when(paymentRepository.updateStatusIfPending(99, PaymentStatus.SUCCESS)).thenReturn(1);
+
+        liveModeService.processCallback(new PaymentGatewayPort.CallbackResult(true, "key-1", true));
+
+        verify(couponService).consumeRedemption(coupon, payment, new BigDecimal("50000.00"));
+    }
+
+    @Test
+    void processCallback_failedCallbackWithCoupon_doesNotConsumeRedemption() {
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), 1, 0);
+        Payments payment = new Payments();
+        payment.setPaymentId(99);
+        payment.setCoupon(coupon);
+
+        when(paymentRepository.findByGatewayTransactionRef("key-1")).thenReturn(Optional.of(payment));
+        when(paymentRepository.updateStatusIfPending(99, PaymentStatus.FAILED)).thenReturn(1);
+
+        liveModeService.processCallback(new PaymentGatewayPort.CallbackResult(true, "key-1", false));
+
+        verifyNoInteractions(couponService);
+    }
+
+    @Test
+    void processCallback_successfulCallbackCouponConsumeFails_stillCompletesEnrollment() {
+        // Gateway đã xác nhận tiền thật -> không được rollback enrollment/payment SUCCESS chỉ vì
+        // coupon vừa bị deactivate/hết lượt trong lúc chờ callback (race hiếm) -> consumeRedemption
+        // trả false nhưng KHÔNG được throw.
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), 1, 1);
+        Payments payment = new Payments();
+        payment.setPaymentId(99);
+        payment.setStudent(student);
+        payment.setCourse(course);
+        payment.setAmount(new BigDecimal("450000.00"));
+        payment.setCoupon(coupon);
+
+        when(paymentRepository.findByGatewayTransactionRef("key-1")).thenReturn(Optional.of(payment));
+        when(paymentRepository.updateStatusIfPending(99, PaymentStatus.SUCCESS)).thenReturn(1);
+        when(couponService.consumeRedemption(eq(coupon), eq(payment), any(BigDecimal.class))).thenReturn(false);
+
+        PaymentCallbackOutcome outcome = liveModeService.processCallback(
+                new PaymentGatewayPort.CallbackResult(true, "key-1", true));
+
+        assertThat(outcome).isEqualTo(PaymentCallbackOutcome.PROCESSED);
+        verify(enrollmentService).createEnrollment(student, course);
+    }
+
+    @Test
     void processCallback_alreadyProcessed_duplicateOrLateWebhook_doesNotCreateEnrollmentAgain() {
         Payments payment = new Payments();
         payment.setPaymentId(99);
@@ -343,5 +467,158 @@ class PaymentServiceTest {
 
         assertThat(outcome).isEqualTo(PaymentCallbackOutcome.IGNORED);
         verifyNoInteractions(paymentRepository, enrollmentService);
+    }
+
+    // ------------------------------------------------------------------
+    // Coupon (Phase 22)
+    // ------------------------------------------------------------------
+
+    @Test
+    void checkout_withValidPercentageCoupon_discountsAmountAndConsumesRedemption() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), null, 0);
+
+        PaymentRequest request = request();
+        request.setCouponCode("SALE10");
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+        when(couponService.resolveValidCoupon("SALE10", 1)).thenReturn(coupon);
+        when(couponService.consumeRedemption(eq(coupon), any(Payments.class), eq(new BigDecimal("50000.00"))))
+                .thenReturn(true);
+
+        ResponseEntity<PaymentResponse> response = mockModeService.checkout(request, "key-1", "student1");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().isSuccess()).isTrue();
+
+        ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
+        verify(paymentRepository).save(paymentCaptor.capture());
+        assertThat(paymentCaptor.getValue().getAmount()).isEqualByComparingTo("450000.00");
+        assertThat(paymentCaptor.getValue().getCoupon()).isEqualTo(coupon);
+
+        verify(couponService).consumeRedemption(eq(coupon), any(Payments.class), eq(new BigDecimal("50000.00")));
+        verify(enrollmentService).createEnrollment(student, course);
+    }
+
+    @Test
+    void checkout_withoutCouponCode_behavesExactlyAsBeforePhase22() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+
+        mockModeService.checkout(request(), "key-1", "student1");
+
+        verifyNoInteractions(couponService);
+    }
+
+    @Test
+    void checkout_couponExpiredOrInvalid_propagatesConflictWithoutCreatingPayment() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+
+        PaymentRequest request = request();
+        request.setCouponCode("EXPIRED");
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+        when(couponService.resolveValidCoupon("EXPIRED", 1))
+                .thenThrow(new ConflictException("Mã coupon đã hết hạn"));
+
+        assertThatThrownBy(() -> mockModeService.checkout(request, "key-1", "student1"))
+                .isInstanceOf(ConflictException.class);
+
+        verify(paymentRepository, never()).save(any());
+        verify(enrollmentService, never()).createEnrollment(any(), any());
+    }
+
+    @Test
+    void checkout_couponExhaustedByRaceRightAfterPaymentSaved_rollsBackViaConflictException() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Users student = student();
+        Coupons coupon = percentageCoupon(new BigDecimal("10"), 1, 0);
+
+        PaymentRequest request = request();
+        request.setCouponCode("SALE10");
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+        when(couponService.resolveValidCoupon("SALE10", 1)).thenReturn(coupon);
+        when(couponService.consumeRedemption(eq(coupon), any(Payments.class), any(BigDecimal.class)))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> mockModeService.checkout(request, "key-1", "student1"))
+                .isInstanceOf(ConflictException.class);
+
+        // Payment đã được save() gọi (test hành vi thật của Postgres @Transactional rollback không
+        // verify được ở unit test này — chỉ verify enrollment/idempotency-key KHÔNG được tạo sau đó,
+        // đúng thứ tự gọi trong PaymentService.checkout()).
+        verify(enrollmentService, never()).createEnrollment(any(), any());
+        verify(paymentIdempotencyKeyRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void checkout_fixedDiscountLargerThanPrice_clampsAmountToZero() {
+        Courses course = course(new BigDecimal("50000.00"));
+        Users student = student();
+        Coupons coupon = new Coupons();
+        coupon.setId(2);
+        coupon.setCode("BIGFIXED");
+        coupon.setDiscountType(CouponDiscountType.FIXED);
+        coupon.setDiscountValue(new BigDecimal("100000.00"));
+        coupon.setActive(true);
+
+        PaymentRequest request = request();
+        request.setCouponCode("BIGFIXED");
+
+        when(paymentIdempotencyKeyRepository.findById("key-1")).thenReturn(Optional.empty());
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.isEnrolled(10, 1)).thenReturn(false);
+        when(couponService.resolveValidCoupon("BIGFIXED", 1)).thenReturn(coupon);
+        when(couponService.consumeRedemption(eq(coupon), any(Payments.class), eq(new BigDecimal("50000.00"))))
+                .thenReturn(true);
+
+        mockModeService.checkout(request, "key-1", "student1");
+
+        ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
+        verify(paymentRepository).save(paymentCaptor.capture());
+        assertThat(paymentCaptor.getValue().getAmount()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void previewCoupon_validCoupon_returnsDiscountWithoutPersistingAnything() {
+        Courses course = course(new BigDecimal("500000.00"));
+        Coupons coupon = percentageCoupon(new BigDecimal("20"), null, 0);
+
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(couponService.resolveValidCoupon("SALE20", 1)).thenReturn(coupon);
+
+        CouponPreviewResponse preview = mockModeService.previewCoupon("SALE20", 1);
+
+        assertThat(preview.getDiscountAmount()).isEqualByComparingTo("100000.00");
+        assertThat(preview.getFinalAmount()).isEqualByComparingTo("400000.00");
+
+        verifyNoInteractions(paymentRepository, enrollmentService, paymentIdempotencyKeyRepository);
+        verify(couponService, never()).consumeRedemption(any(), any(), any());
+    }
+
+    @Test
+    void previewCoupon_courseNotFound_throwsNotFoundException() {
+        when(courseRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mockModeService.previewCoupon("SALE20", 99))
+                .isInstanceOf(NotFoundException.class);
     }
 }

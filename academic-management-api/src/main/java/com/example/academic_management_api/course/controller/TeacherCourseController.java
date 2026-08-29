@@ -5,6 +5,9 @@ import com.example.academic_management_api.course.dto.PresignVideoRequest;
 import com.example.academic_management_api.course.dto.PresignVideoResponse;
 import com.example.academic_management_api.course.dto.TeacherCourseRequest;
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.course.lesson.dto.LessonRequest;
+import com.example.academic_management_api.course.lesson.entity.Lessons;
+import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +22,12 @@ import java.util.UUID;
 public class TeacherCourseController {
 
     private final CourseService courseService;
+    private final LessonService lessonService;
     private final ObjectStoragePort objectStoragePort;
 
-    public TeacherCourseController(CourseService courseService, ObjectStoragePort objectStoragePort) {
+    public TeacherCourseController(CourseService courseService, LessonService lessonService, ObjectStoragePort objectStoragePort) {
         this.courseService = courseService;
+        this.lessonService = lessonService;
         this.objectStoragePort = objectStoragePort;
     }
 
@@ -56,6 +61,35 @@ public class TeacherCourseController {
     @DeleteMapping("/{id}")
     public void deleteOwnCourse(@PathVariable Integer id, Authentication authentication) {
         courseService.deleteOwnCourse(id, authentication.getName());
+    }
+
+    @GetMapping("/{courseId}/lessons")
+    public ResponseEntity<List<Lessons>> getOwnLessons(@PathVariable Integer courseId, Authentication authentication) {
+        return ResponseEntity.ok(lessonService.getOwnLessons(courseId, authentication.getName()));
+    }
+
+    @PostMapping("/{courseId}/lessons")
+    public ResponseEntity<Lessons> createLesson(
+            @PathVariable Integer courseId,
+            @Valid @RequestBody LessonRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(lessonService.createLesson(courseId, request, authentication.getName()));
+    }
+
+    @PutMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<Lessons> updateLesson(
+            @PathVariable Integer courseId,
+            @PathVariable Integer lessonId,
+            @Valid @RequestBody LessonRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(lessonService.updateLesson(courseId, lessonId, request, authentication.getName()));
+    }
+
+    @DeleteMapping("/{courseId}/lessons/{lessonId}")
+    public void deleteLesson(@PathVariable Integer courseId, @PathVariable Integer lessonId, Authentication authentication) {
+        lessonService.deleteLesson(courseId, lessonId, authentication.getName());
     }
 
     @PostMapping("/{courseId}/lessons/{lessonId}/video/presign")

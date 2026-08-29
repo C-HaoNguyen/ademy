@@ -5,6 +5,7 @@ import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.dto.PresignVideoRequest;
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.service.CourseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,8 @@ class TeacherCourseControllerTest {
     @Mock
     private CourseService courseService;
     @Mock
+    private LessonService lessonService;
+    @Mock
     private ObjectStoragePort objectStoragePort;
     @Mock
     private Authentication authentication;
@@ -37,7 +40,7 @@ class TeacherCourseControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new TeacherCourseController(courseService, objectStoragePort);
+        controller = new TeacherCourseController(courseService, lessonService, objectStoragePort);
         lenientAuthUsername();
     }
 

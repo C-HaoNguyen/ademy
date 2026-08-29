@@ -3,6 +3,7 @@ package com.example.academic_management_api.common.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -42,6 +43,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadGatewayException.class)
     public ResponseEntity<ErrorResponse> handleBadGateway(BadGatewayException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_GATEWAY, ex.getMessage(), null, request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        // Vi phạm ràng buộc DB (FK/unique) không được service tự bắt trước — ví dụ xóa 1 dòng đang
+        // được tham chiếu bởi bảng khác, hoặc race condition tạo trùng bản ghi unique. Trả 409 thay
+        // vì để lộ stacktrace DB qua handleUnexpected (500).
+        return build(HttpStatus.CONFLICT, "Không thể thực hiện vì dữ liệu đang được tham chiếu hoặc đã tồn tại", null, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

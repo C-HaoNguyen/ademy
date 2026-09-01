@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     COURSES: {
         LIST: "/courses",
         DETAIL: (id: string) => `/courses/${id}`,
+        LESSONS: (id: number | string) => `/courses/${id}/lessons`,
         ADMIN_LIST: "/admin/courses",
         ADMIN_ADD: "/admin/courses/add",
         ADMIN_DETAIL: (id: number | string) => `/admin/courses/${id}`,

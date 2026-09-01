@@ -1,5 +1,7 @@
 package com.example.academic_management_api.course.dto;
 
+import com.example.academic_management_api.course.entity.CourseLevel;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,16 +16,18 @@ public class CourseResponseDto {
     private BigDecimal price;
     private String thumbnail;
     private LocalDateTime createdAt;
+    private CourseLevel level;
 
     private InstructorDto instructor;
     private CategoryDto category;
 
-    public CourseResponseDto(Integer courseId, String title, String description, BigDecimal price, LocalDateTime createdAt, String thumbnail, String instructorUsername, String instructorFullName, Integer categoryId, String categoryName) {
+    public CourseResponseDto(Integer courseId, String title, String description, BigDecimal price, LocalDateTime createdAt, String thumbnail, CourseLevel level, String instructorUsername, String instructorFullName, Integer categoryId, String categoryName) {
         this.courseId = courseId;
         this.title = title;
         this.description = description;
         this.price = price;
         this.thumbnail = thumbnail;
+        this.level = level;
 
         this.instructor = new InstructorDto(instructorUsername, instructorFullName);
         this.category = new CategoryDto(categoryId, categoryName);
@@ -51,6 +55,10 @@ public class CourseResponseDto {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public CourseLevel getLevel() {
+        return level;
     }
 
     public InstructorDto getInstructor() {

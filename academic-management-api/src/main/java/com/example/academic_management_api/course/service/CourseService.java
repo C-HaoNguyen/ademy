@@ -40,6 +40,7 @@ public class CourseService {
                 course.getPrice(),
                 course.getCreatedAt(),
                 course.getThumbnail(),
+                course.getLevel(),
 
                 // instructor
                 course.getInstructor().getUsername(),

@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import CourseCard from "./components/CourseCard";
 import { useCoursesQuery, type RawCourse } from "@/shared/api/queries/useCoursesQuery";
 import { useCategoriesQuery } from "@/shared/api/queries/useCategoriesQuery";
 import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import { UI } from "@/config/constants";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, SearchX } from "lucide-react";
 
 const toggleValue = (
@@ -17,6 +21,14 @@ const toggleValue = (
             ? prev.filter((item) => item !== value)
             : [...prev, value]
     );
+};
+
+// Backend trả level dạng lowercase enum (CourseLevel.toValue()); map sang nhãn hiển thị
+// tiếng Việt cho nhất quán với phần còn lại của UI.
+const LEVEL_LABELS: Record<string, string> = {
+    beginner: "Cơ bản",
+    intermediate: "Trung cấp",
+    advanced: "Nâng cao",
 };
 
 type Course = {
@@ -58,6 +70,8 @@ function mapCourse(item: RawCourse): Course {
 }
 
 const CourseList = () => {
+    const [searchParams] = useSearchParams();
+    const instructorParam = searchParams.get("instructor");
 
     const coursesQuery = useCoursesQuery();
     const categoriesQuery = useCategoriesQuery();
@@ -90,15 +104,15 @@ const CourseList = () => {
     const loading = coursesQuery.isLoading;
     const loadError = coursesQuery.isError;
 
-    const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+    const [searchInput, setSearchInput] = useState("");
     const [filterValue, setFilterValue] = useState("");
+    const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
 
-    const ITEMS_PER_PAGE = 9;
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.max(1, Math.ceil(filteredCourses.length / ITEMS_PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(filteredCourses.length / UI.DEFAULT_PAGE_SIZE));
     const paginatedCourses = filteredCourses.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        (currentPage - 1) * UI.DEFAULT_PAGE_SIZE,
+        currentPage * UI.DEFAULT_PAGE_SIZE
     );
 
     type DropdownType = "category" | "level" | null;
@@ -106,6 +120,12 @@ const CourseList = () => {
     const [categories, setCategories] = useState<string[]>([]);
     const [levels, setLevels] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<"popular" | "newest" | "price-asc" | "price-desc">("popular");
+
+    // Debounce search input theo UI.SEARCH_DEBOUNCE (§2.2)
+    useEffect(() => {
+        const timer = setTimeout(() => setFilterValue(searchInput), UI.SEARCH_DEBOUNCE);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
 
     useEffect(() => {
         let result = [...allCourses];
@@ -118,6 +138,11 @@ const CourseList = () => {
                 c.description?.toLowerCase().includes(keyword) ||
                 c.instructor?.fullName?.toLowerCase().includes(keyword)
             );
+        }
+
+        // Instructor (từ link "Xem khóa học" của LecturerPage, §2.4)
+        if (instructorParam) {
+            result = result.filter((c) => c.instructor?.username === instructorParam);
         }
 
         // Category
@@ -149,9 +174,10 @@ const CourseList = () => {
 
         setFilteredCourses(result);
         setCurrentPage(1);
-    }, [filterValue, categories, levels, allCourses, sortBy]);
+    }, [filterValue, instructorParam, categories, levels, allCourses, sortBy]);
 
     const clearFilters = () => {
+        setSearchInput("");
         setFilterValue("");
         setCategories([]);
         setLevels([]);
@@ -160,7 +186,7 @@ const CourseList = () => {
     const hasActiveFilters = filterValue.trim() !== "" || categories.length > 0 || levels.length > 0;
 
     return (
-        <div className="min-h-screen bg-legacy-surface px-6 py-12">
+        <div className="min-h-screen bg-background px-6 py-12">
             {/* ===== Hero Section ===== */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -168,10 +194,10 @@ const CourseList = () => {
                 transition={{ duration: 0.6 }}
                 className="max-w-6xl mx-auto mb-10"
             >
-                <h1 className="text-4xl font-bold text-legacy-primary mb-3">
+                <h1 className="text-h1 text-brand mb-3">
                     Khám phá khóa học của chúng tôi!
                 </h1>
-                <p className="text-slate-600 text-lg">
+                <p className="text-body-lg text-secondary">
                     Học hỏi kỹ năng mới, nâng cấp bản thân và phát triển sự nghiệp
                 </p>
             </motion.div>
@@ -185,20 +211,27 @@ const CourseList = () => {
             >
                 {/* ===== Search (LEFT) ===== */}
                 <div className="w-full md:max-w-md relative">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
-                    <input
+                    <label htmlFor="course-search" className="sr-only">
+                        Tìm kiếm khóa học
+                    </label>
+                    <Search
+                        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-placeholder"
+                        size={18}
+                        aria-hidden="true"
+                    />
+                    <Input
+                        id="course-search"
                         type="text"
                         placeholder="Tìm kiếm khóa học..."
-                        value={filterValue}
-                        onChange={(e) => setFilterValue(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 pl-11 pr-5 py-3
-                                    focus:outline-none focus:ring-2 focus:ring-legacy-primary/40 focus:border-legacy-primary transition-colors duration-200"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="pl-11"
                     />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 justify-end">
                     {/* Label */}
-                    <div className="flex items-center text-sm text-slate-600">
+                    <div className="flex items-center text-body-sm text-secondary">
                         Lọc:
                     </div>
 
@@ -212,30 +245,30 @@ const CourseList = () => {
                                 )
                             }
                             className="cursor-pointer flex min-h-[40px] w-full flex-wrap items-center gap-2
-                                    rounded-xl border border-slate-200 bg-white
-                                    px-3 py-2 text-sm text-slate-700
-                                    hover:bg-slate-50 transition-colors duration-200"
+                                    rounded-radius-md border border-default bg-surface
+                                    px-3 py-2 text-body-sm text-secondary
+                                    hover:bg-surface-muted transition-colors duration-200"
                         >
                             {categories.length === 0 ? (
-                                <span className="text-slate-400">Phân loại</span>
+                                <span className="text-placeholder">Phân loại</span>
                             ) : (
                                 categories.map((item) => (
                                     <span
                                         key={item}
-                                        className="rounded-lg bg-legacy-primary/10 px-2 py-1
-                                   text-xs text-legacy-primary"
+                                        className="rounded-radius-full bg-surface-brand-muted px-2 py-1
+                                   text-xs text-brand"
                                     >
                                         {item}
                                     </span>
                                 ))
                             )}
-                            <ChevronDown className="ml-auto text-slate-400" size={16} aria-hidden="true" />
+                            <ChevronDown className="ml-auto text-placeholder" size={16} aria-hidden="true" />
                         </button>
 
                         {activeDropdown === "category" && (
-                            <ul className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                            <ul className="absolute z-dropdown mt-2 w-full rounded-radius-md border border-default bg-surface shadow-elevated overflow-hidden">
                                 {categoryOptions.length === 0 ? (
-                                    <li className="px-4 py-2 text-sm text-slate-400">Không có danh mục</li>
+                                    <li className="px-4 py-2 text-body-sm text-placeholder">Không có danh mục</li>
                                 ) : (
                                     categoryOptions.map((item) => {
                                         const active = categories.includes(item);
@@ -246,10 +279,10 @@ const CourseList = () => {
                                                     toggleValue(item, categories, setCategories)
                                                 }
                                                 className={`flex cursor-pointer items-center justify-between
-                                        px-4 py-2 text-sm transition-colors duration-200
+                                        px-4 py-2 text-body-sm transition-colors duration-200
                                         ${active
-                                                        ? "bg-legacy-primary/10 text-legacy-primary"
-                                                        : "text-slate-700 hover:bg-slate-50"
+                                                        ? "bg-surface-brand-muted text-brand"
+                                                        : "text-secondary hover:bg-surface-muted"
                                                     }`}
                                             >
                                                 {item}
@@ -272,30 +305,30 @@ const CourseList = () => {
                                 )
                             }
                             className="cursor-pointer flex min-h-[40px] w-full flex-wrap items-center gap-2
-                                    rounded-xl border border-slate-200 bg-white
-                                    px-3 py-2 text-sm text-slate-700
-                                    hover:bg-slate-50 transition-colors duration-200"
+                                    rounded-radius-md border border-default bg-surface
+                                    px-3 py-2 text-body-sm text-secondary
+                                    hover:bg-surface-muted transition-colors duration-200"
                         >
                             {levels.length === 0 ? (
-                                <span className="text-slate-400">Trình độ</span>
+                                <span className="text-placeholder">Trình độ</span>
                             ) : (
                                 levels.map((item) => (
                                     <span
                                         key={item}
-                                        className="rounded-lg bg-legacy-primary-light/10 px-2 py-1
-                                   text-xs text-legacy-primary-dark"
+                                        className="rounded-radius-full bg-surface-brand-muted px-2 py-1
+                                   text-xs text-brand"
                                     >
-                                        {item}
+                                        {LEVEL_LABELS[item] ?? item}
                                     </span>
                                 ))
                             )}
-                            <ChevronDown className="ml-auto text-slate-400" size={16} aria-hidden="true" />
+                            <ChevronDown className="ml-auto text-placeholder" size={16} aria-hidden="true" />
                         </button>
 
                         {activeDropdown === "level" && (
-                            <ul className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                            <ul className="absolute z-dropdown mt-2 w-full rounded-radius-md border border-default bg-surface shadow-elevated overflow-hidden">
                                 {levelOptions.length === 0 ? (
-                                    <li className="px-4 py-2 text-sm text-slate-400">Không có trình độ</li>
+                                    <li className="px-4 py-2 text-body-sm text-placeholder">Không có trình độ</li>
                                 ) : (
                                     levelOptions.map((item) => {
                                         const active = levels.includes(item);
@@ -306,13 +339,13 @@ const CourseList = () => {
                                                     toggleValue(item, levels, setLevels)
                                                 }
                                                 className={`flex cursor-pointer items-center justify-between
-                                        px-4 py-2 text-sm transition-colors duration-200
+                                        px-4 py-2 text-body-sm transition-colors duration-200
                                         ${active
-                                                        ? "bg-legacy-primary-light/10 text-legacy-primary-dark"
-                                                        : "text-slate-700 hover:bg-slate-50"
+                                                        ? "bg-surface-brand-muted text-brand"
+                                                        : "text-secondary hover:bg-surface-muted"
                                                     }`}
                                             >
-                                                {item}
+                                                {LEVEL_LABELS[item] ?? item}
                                                 {active && <Check size={14} aria-hidden="true" />}
                                             </li>
                                         );
@@ -327,37 +360,33 @@ const CourseList = () => {
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                            className="appearance-none cursor-pointer rounded-xl border border-slate-200 bg-white
-                                        px-3 py-2 pr-10 text-sm text-slate-700 focus:border-legacy-primary focus:ring-2 focus:ring-legacy-primary/20
-                                        hover:bg-slate-50 transition-colors duration-200"
+                            className="appearance-none cursor-pointer rounded-radius-md border border-default bg-surface
+                                        px-3 py-2 pr-10 text-body-sm text-secondary focus:border-brand focus:ring-2 focus:ring-focus
+                                        hover:bg-surface-muted transition-colors duration-200"
                         >
                             <option value="popular">Phổ biến nhất</option>
                             <option value="newest">Mới nhất</option>
                             <option value="price-asc">Giá tăng dần</option>
                             <option value="price-desc">Giá giảm dần</option>
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-placeholder" size={16} aria-hidden="true" />
                     </div>
                 </div>
             </motion.div>
 
             {/* ===== Course Grid ===== */}
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto" aria-live="polite">
                 {loading ? (
-                    <SkeletonCardGrid count={9} />
+                    <SkeletonCardGrid count={UI.DEFAULT_PAGE_SIZE} />
                 ) : loadError ? (
                     <EmptyState
                         icon={SearchX}
                         title="Không thể tải danh sách khóa học"
                         description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
                         action={
-                            <button
-                                type="button"
-                                onClick={() => coursesQuery.refetch()}
-                                className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
-                            >
+                            <Button variant="primary" size="sm" onClick={() => coursesQuery.refetch()}>
                                 Thử lại
-                            </button>
+                            </Button>
                         }
                     />
                 ) : filteredCourses.length === 0 ? (
@@ -367,13 +396,9 @@ const CourseList = () => {
                         description="Hãy thử điều chỉnh từ khóa hoặc bộ lọc để xem thêm kết quả."
                         action={
                             hasActiveFilters ? (
-                                <button
-                                    type="button"
-                                    onClick={clearFilters}
-                                    className="cursor-pointer px-5 py-2 rounded-xl bg-legacy-primary text-white text-sm font-medium hover:bg-legacy-primary-dark transition-colors duration-200"
-                                >
+                                <Button variant="primary" size="sm" onClick={clearFilters}>
                                     Xóa bộ lọc
-                                </button>
+                                </Button>
                             ) : undefined
                         }
                     />
@@ -399,10 +424,10 @@ const CourseList = () => {
                         aria-label="Trang trước"
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}
-                        className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200
+                        className={`rounded-radius-md px-3 py-2 text-body-sm font-medium transition-colors duration-200
             ${currentPage === 1
-                                ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                                : "cursor-pointer bg-white border border-slate-300 hover:bg-slate-50"
+                                ? "cursor-not-allowed bg-action-disabled-bg text-action-disabled-text"
+                                : "cursor-pointer bg-surface border border-default hover:bg-surface-muted"
                             }`}
                     >
                         <ChevronLeft size={16} aria-hidden="true" />
@@ -418,10 +443,10 @@ const CourseList = () => {
                                 type="button"
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200
+                                className={`cursor-pointer rounded-radius-md px-4 py-2 text-body-sm font-medium transition-colors duration-200
                     ${active
-                                        ? "bg-legacy-primary text-white"
-                                        : "bg-white border border-slate-300 hover:bg-slate-50"
+                                        ? "bg-action-primary-bg text-inverse"
+                                        : "bg-surface border border-default hover:bg-surface-muted"
                                     }`}
                             >
                                 {page}
@@ -435,10 +460,10 @@ const CourseList = () => {
                         aria-label="Trang sau"
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => p + 1)}
-                        className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200
+                        className={`rounded-radius-md px-3 py-2 text-body-sm font-medium transition-colors duration-200
             ${currentPage === totalPages
-                                ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                                : "cursor-pointer bg-white border border-slate-300 hover:bg-slate-50"
+                                ? "cursor-not-allowed bg-action-disabled-bg text-action-disabled-text"
+                                : "cursor-pointer bg-surface border border-default hover:bg-surface-muted"
                             }`}
                     >
                         <ChevronRight size={16} aria-hidden="true" />

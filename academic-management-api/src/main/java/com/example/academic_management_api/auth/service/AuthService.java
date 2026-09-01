@@ -1,5 +1,6 @@
 package com.example.academic_management_api.auth.service;
 
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.auth.dto.AuthResponse;
 import com.example.academic_management_api.auth.dto.LoginRequest;
 import com.example.academic_management_api.auth.dto.SignupRequest;
@@ -47,6 +48,12 @@ public class AuthService {
         return ResponseEntity.ok("Đăng ký thành công");
     }
 
+    @Audited(
+            action = "AUTH_LOGIN",
+            targetType = "USER",
+            targetIdExpression = "#result.body.userId",
+            actorExpression = "#request.username"
+    )
     public ResponseEntity<?> login(LoginRequest request) {
 
         Users user = userRepository.findByUsername(request.getUsername())

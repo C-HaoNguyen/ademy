@@ -1,5 +1,6 @@
 package com.example.academic_management_api.payment.coupon.service;
 
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
@@ -38,6 +39,7 @@ public class CouponService {
         return couponRepository.findAllWithDetails().stream().map(this::toResponse).toList();
     }
 
+    @Audited(action = "ADMIN_COUPON_CREATE", targetType = "COUPON", targetIdExpression = "#result.id")
     public CouponResponse createCoupon(CouponRequest request) {
         if (couponRepository.existsByCode(request.getCode())) {
             throw new ConflictException("Mã coupon đã tồn tại");

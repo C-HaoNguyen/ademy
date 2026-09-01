@@ -1,6 +1,7 @@
 package com.example.academic_management_api.payment.service;
 
 import com.example.academic_management_api.application.port.PaymentGatewayPort;
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.common.exception.ServiceUnavailableException;
@@ -78,6 +79,16 @@ public class PaymentService {
     // ở REFACTOR_PLAN.md Phase 21.
     // ---------------------------------------------------------------------
 
+    // suppressOnDataIntegrityViolation: DataIntegrityViolationException từ đây là race condition
+    // dự kiến (idempotency-key trùng hoặc student+course trùng đồng thời), PaymentController bắt
+    // và gọi resolveCheckoutConflict() ở transaction mới để trả kết quả cuối cùng — method đó tự
+    // audit kết quả thật, không log "thất bại" giả ở đây cho 1 request thực ra đã thành công.
+    @Audited(
+            action = "PAYMENT_CHECKOUT",
+            targetType = "COURSE",
+            targetIdExpression = "#request.courseId",
+            suppressOnDataIntegrityViolation = true
+    )
     @Transactional
     public ResponseEntity<PaymentResponse> checkout(PaymentRequest request, String idempotencyKey, String username) {
 
@@ -118,6 +129,10 @@ public class PaymentService {
     //    idempotency key của request hiện tại (đang gọi hàm này) chưa từng được lưu -> không tìm
     //    thấy -> đây không phải một retry, mà là "đã đăng ký khóa học này" xảy ra ngay trong lúc
     //    request đang xử lý -> trả về đúng response mà isEnrolled() lẽ ra đã trả nếu không có race.
+    // Không có targetType/targetIdExpression — chỉ idempotencyKey khả dụng ở đây, không map được
+    // sang courseId (khác checkout() có sẵn #request.courseId). actor/action/success/timestamp vẫn
+    // đủ đáp ứng PRD-034 cho bản ghi audit của lần thử này.
+    @Audited(action = "PAYMENT_CHECKOUT")
     public ResponseEntity<PaymentResponse> resolveCheckoutConflict(String idempotencyKey) {
         Optional<PaymentIdempotencyKey> existingKey = paymentIdempotencyKeyRepository.findById(idempotencyKey);
 
@@ -152,6 +167,18 @@ public class PaymentService {
     // callback xác nhận SUCCESS thật từ gateway.
     // ---------------------------------------------------------------------
 
+    // Known limitation: AuditAspect chỉ nhận diện thất bại nghiệp vụ khi kết quả trả về trực tiếp
+    // là ResponseEntity lỗi (giống checkout() mock mode) — LiveCheckoutInit bọc ResponseEntity bên
+    // trong field shortCircuit thay vì trả trực tiếp, nên case "đã enroll"/"idempotency replay" ở
+    // đây bị ghi nhận success=true (không throw exception). Chấp nhận được: chỉ lỗi thật (throw
+    // NotFoundException/ConflictException từ validateCheckout/resolveCoupon) mới cần audit
+    // success=false; không mở rộng AuditAspect để unwrap kiểu trả về tùy biến của từng method.
+    @Audited(
+            action = "PAYMENT_CHECKOUT",
+            targetType = "COURSE",
+            targetIdExpression = "#request.courseId",
+            suppressOnDataIntegrityViolation = true
+    )
     @Transactional
     public LiveCheckoutInit createPendingPayment(PaymentRequest request, String idempotencyKey, String username) {
         Optional<PaymentIdempotencyKey> existingKey = paymentIdempotencyKeyRepository.findById(idempotencyKey);
@@ -180,6 +207,7 @@ public class PaymentService {
 
     // Cùng cơ chế phân biệt như resolveCheckoutConflict() ở trên, nhưng phản ánh đúng trạng thái
     // PENDING/SUCCESS/FAILED thật của live mode thay vì luôn giả định "Thanh toán thành công".
+    @Audited(action = "PAYMENT_CHECKOUT")
     public ResponseEntity<PaymentResponse> resolveLiveCheckoutConflict(String idempotencyKey) {
         Optional<PaymentIdempotencyKey> existingKey = paymentIdempotencyKeyRepository.findById(idempotencyKey);
 

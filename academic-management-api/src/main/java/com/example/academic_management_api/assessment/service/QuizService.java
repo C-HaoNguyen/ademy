@@ -1,6 +1,7 @@
 package com.example.academic_management_api.assessment.service;
 
 import com.example.academic_management_api.assessment.dto.*;
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.assessment.entity.QuizAttempts;
 import com.example.academic_management_api.assessment.entity.QuizChoices;
 import com.example.academic_management_api.assessment.entity.QuizQuestions;
@@ -168,6 +169,7 @@ public class QuizService {
         return toTeacherDto(quiz);
     }
 
+    @Audited(action = "TEACHER_QUIZ_SAVE", targetType = "QUIZ", targetIdExpression = "#result.id")
     @Transactional
     public QuizTeacherResponseDto saveOwnCourseQuiz(Integer courseId, QuizRequest request, String username) {
         Courses course = courseService.getOwnCourseDetail(courseId, username);
@@ -184,6 +186,7 @@ public class QuizService {
         }
     }
 
+    @Audited(action = "TEACHER_QUIZ_DELETE", targetType = "COURSE", targetIdExpression = "#courseId")
     @Transactional
     public void deleteOwnCourseQuiz(Integer courseId, String username) {
         courseService.getOwnCourseDetail(courseId, username);
@@ -201,6 +204,7 @@ public class QuizService {
         return toTeacherDto(quiz);
     }
 
+    @Audited(action = "TEACHER_QUIZ_SAVE", targetType = "QUIZ", targetIdExpression = "#result.id")
     @Transactional
     public QuizTeacherResponseDto saveOwnLessonQuiz(Integer courseId, Integer lessonId, QuizRequest request, String username) {
         Lessons lesson = getOwnedQuizLesson(courseId, lessonId, username);
@@ -217,6 +221,7 @@ public class QuizService {
         }
     }
 
+    @Audited(action = "TEACHER_QUIZ_DELETE", targetType = "LESSON", targetIdExpression = "#lessonId")
     @Transactional
     public void deleteOwnLessonQuiz(Integer courseId, Integer lessonId, String username) {
         Lessons lesson = getOwnedQuizLesson(courseId, lessonId, username);

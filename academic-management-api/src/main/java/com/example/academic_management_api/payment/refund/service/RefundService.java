@@ -2,6 +2,7 @@ package com.example.academic_management_api.payment.refund.service;
 
 import com.example.academic_management_api.application.port.EmailSenderPort;
 import com.example.academic_management_api.application.port.RefundGatewayPort;
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.BadGatewayException;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.ForbiddenException;
@@ -58,6 +59,16 @@ public class RefundService {
     // key) — bảng riêng refund_idempotency_keys, không tái dùng payment_idempotency_keys.
     // ---------------------------------------------------------------------
 
+    // suppressOnDataIntegrityViolation: DataIntegrityViolationException từ saveAndFlush() ở dưới là
+    // race condition dự kiến (2 request đồng thời cùng payment/idempotency-key) — controller bắt
+    // và gọi resolveCreateConflict() ở transaction mới để trả kết quả cuối cùng, method đó tự audit
+    // kết quả thật. Không log "thất bại" giả ở đây cho 1 request thực ra đã thành công.
+    @Audited(
+            action = "REFUND_REQUEST_CREATE",
+            targetType = "REFUND_REQUEST",
+            targetIdExpression = "#result.id",
+            suppressOnDataIntegrityViolation = true
+    )
     @Transactional
     public RefundResponse createRequest(RefundRequestCreateRequest request, String idempotencyKey, String username) {
         Optional<RefundIdempotencyKey> existingKey = refundIdempotencyKeyRepository.findById(idempotencyKey);
@@ -104,6 +115,7 @@ public class RefundService {
     // Idempotency-Key đã thắng race và commit trước (double-click/network retry, EC-001 cùng
     // nguyên tắc PaymentService.resolveCheckoutConflict). Gọi ở transaction mới vì transaction cũ
     // đã bị DB đánh dấu aborted.
+    @Audited(action = "REFUND_REQUEST_CREATE", targetType = "REFUND_REQUEST", targetIdExpression = "#result.id")
     public RefundResponse resolveCreateConflict(String idempotencyKey) {
         RefundIdempotencyKey existingKey = refundIdempotencyKeyRepository.findById(idempotencyKey)
                 .orElseThrow(() -> new ConflictException("Yêu cầu hoàn tiền đang được xử lý, vui lòng thử lại"));
@@ -119,6 +131,7 @@ public class RefundService {
         return refundRequestRepository.findAllWithDetails().stream().map(this::toResponse).toList();
     }
 
+    @Audited(action = "REFUND_APPROVE", targetType = "REFUND_REQUEST", targetIdExpression = "#id")
     @Transactional
     public RefundResponse approve(Integer id) {
         RefundRequests refundRequest = loadWithDetails(id);
@@ -140,6 +153,7 @@ public class RefundService {
         return toResponse(refundRequest);
     }
 
+    @Audited(action = "REFUND_REJECT", targetType = "REFUND_REQUEST", targetIdExpression = "#id")
     @Transactional
     public RefundResponse reject(Integer id, String adminNote) {
         RefundRequests refundRequest = loadWithDetails(id);
@@ -165,6 +179,7 @@ public class RefundService {
     // claimForManualCompletion() TRƯỚC khi gọi gateway — RefundGatewayPort sẽ được thay bằng adapter
     // thật gọi HTTP ở Phase 2 (ADR-011), nên phải đóng race "2 admin cùng markCompleted" ở đây, không
     // để tới lúc có adapter thật mới lộ ra thành gọi refund API 2 lần cho cùng 1 request.
+    @Audited(action = "REFUND_MARK_COMPLETED", targetType = "REFUND_REQUEST", targetIdExpression = "#id")
     @Transactional
     public RefundResponse markCompleted(Integer id) {
         RefundRequests refundRequest = loadWithDetails(id);

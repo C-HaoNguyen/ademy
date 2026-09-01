@@ -1,5 +1,6 @@
 package com.example.academic_management_api.course.service;
 
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.category.entity.Categories;
 import com.example.academic_management_api.category.repository.CategoryRepository;
 import com.example.academic_management_api.common.exception.ForbiddenException;
@@ -144,6 +145,7 @@ public class CourseService {
         return ResponseEntity.ok(saved);
     }
 
+    @Audited(action = "ADMIN_COURSE_DELETE", targetType = "COURSE", targetIdExpression = "#courseId")
     public void deleteCourse(Integer courseId) {
         if (!courseRepository.existsById(courseId)) {
             throw new NotFoundException("Không tìm thấy khóa học");
@@ -151,6 +153,7 @@ public class CourseService {
         courseRepository.deleteById(courseId);
     }
 
+    @Audited(action = "ADMIN_COURSE_FORCE_UNPUBLISH", targetType = "COURSE", targetIdExpression = "#courseId")
     public ResponseEntity<?> forceUnpublish(Integer courseId) {
         Courses course = courseRepository.findByIdWithDetails(courseId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy khóa học"));
@@ -187,6 +190,7 @@ public class CourseService {
         return course;
     }
 
+    @Audited(action = "TEACHER_COURSE_CREATE", targetType = "COURSE", targetIdExpression = "#result.body.courseId")
     public ResponseEntity<?> createOwnCourse(TeacherCourseRequest request, String username) {
         Users teacher = getTeacher(username);
 
@@ -215,6 +219,7 @@ public class CourseService {
         return ResponseEntity.ok(savedCourse);
     }
 
+    @Audited(action = "TEACHER_COURSE_UPDATE", targetType = "COURSE", targetIdExpression = "#courseId")
     public ResponseEntity<?> updateOwnCourse(Integer courseId, TeacherCourseRequest request, String username) {
         Users teacher = getTeacher(username);
         Courses course = courseRepository.findByIdWithDetails(courseId)
@@ -245,6 +250,7 @@ public class CourseService {
         return ResponseEntity.ok(saved);
     }
 
+    @Audited(action = "TEACHER_COURSE_DELETE", targetType = "COURSE", targetIdExpression = "#courseId")
     public void deleteOwnCourse(Integer courseId, String username) {
         Users teacher = getTeacher(username);
         Courses course = courseRepository.findById(courseId)

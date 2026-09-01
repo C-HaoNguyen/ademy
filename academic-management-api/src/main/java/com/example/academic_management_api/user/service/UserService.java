@@ -1,5 +1,6 @@
 package com.example.academic_management_api.user.service;
 
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.user.dto.AdminCreateUserRequest;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -25,6 +27,10 @@ public class UserService {
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public Optional<Users> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public UserProfileResponse getMyProfile(String username) {
@@ -134,6 +140,7 @@ public class UserService {
         return allUsers;
     }
 
+    @Audited(action = "ADMIN_USER_LOCK", targetType = "USER", targetIdExpression = "#id")
     public ResponseEntity<?> lockUser(Integer id, String currentUsername) {
         Users admin = userRepository
                 .findByUsername(currentUsername)
@@ -153,6 +160,7 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
+    @Audited(action = "ADMIN_USER_UNLOCK", targetType = "USER", targetIdExpression = "#id")
     public ResponseEntity<?> unlockUser(Integer id) {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
@@ -184,6 +192,7 @@ public class UserService {
         return userRepository.findByRole(Role.TEACHER);
     }
 
+    @Audited(action = "ADMIN_USER_DELETE", targetType = "USER", targetIdExpression = "#userId")
     public void deleteUser(Integer userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Không tìm thấy người dùng");

@@ -1,37 +1,65 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "../../assets/logo.svg"
+import logo from "../../assets/logo.svg";
 import { API_ENDPOINTS, ROLES, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/useAuth";
+import Card from "@/shared/ui/Card";
+import Button from "@/shared/ui/Button";
+import FormField from "@/shared/ui/FormField";
+import Input from "@/shared/ui/Input";
+import { useToast } from "@/shared/ui/useToast";
+
+type FormValues = {
+    username: string;
+    password: string;
+};
+
+type FormErrors = Partial<Record<keyof FormValues, string>>;
+
+const initialValues: FormValues = { username: "", password: "" };
 
 const Login = () => {
-
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
+    const { showToast } = useToast();
     const from = location.state?.from?.pathname as string | undefined;
-    const [username, setUserName] = useState("");
-    const [password, setPassword] = useState("");
+
+    const [values, setValues] = useState<FormValues>(initialValues);
+    const [errors, setErrors] = useState<FormErrors>({});
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
-    async function handleLogin() {
+    const validate = (): FormErrors => {
+        const next: FormErrors = {};
+        if (!values.username.trim()) next.username = "Vui lòng nhập tên đăng nhập";
+        if (!values.password.trim()) next.password = "Vui lòng nhập mật khẩu";
+        return next;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const validationErrors = validate();
+        setErrors(validationErrors);
+        if (Object.keys(validationErrors).length > 0) return;
+
+        setSubmitting(true);
         try {
-            setError(null);
-
             const response = await apiClient(API_ENDPOINTS.AUTH.LOGIN, {
                 method: "POST",
                 body: JSON.stringify({
-                    username,
-                    password,
+                    username: values.username,
+                    password: values.password,
                 }),
             });
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-                setError(errorMessage);
+                showToast({ tone: "danger", message: errorMessage || "Sai tên đăng nhập hoặc mật khẩu" });
                 return;
             }
 
@@ -56,119 +84,91 @@ const Login = () => {
             }
         } catch (error) {
             console.error("Login error:", error);
-            alert("Không thể kết nối server");
+            showToast({ tone: "danger", message: "Không thể kết nối server" });
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl flex overflow-hidden">
-                {/* Left side */}
-                <div className="hidden md:flex w-1/2 flex-col justify-center items-center p-10 bg-blue-600 text-white">
-                    <div className="bg-white px-6 rounded-xl shadow">
-                        <Link to="/" className="mb-6">
-                            <img src={logo} alt="Logo" className="h-24 w-24" />
+        <div className="bg-background flex items-center justify-center px-6 py-16 md:py-24">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-[420px]"
+            >
+                <Card variant="marketing">
+                    <div className="flex flex-col items-center text-center">
+                        <Link to={ROUTES.HOME}>
+                            <img src={logo} alt="Ademy" className="h-12 w-12" />
                         </Link>
+                        <h1 className="mt-4 text-h3 text-primary">Đăng nhập vào Ademy</h1>
+                        <p className="mt-1 text-body-sm text-secondary">
+                            Chào mừng bạn quay lại
+                        </p>
                     </div>
 
-                    <h1 className="text-3xl font-bold mb-4 text-center">
-                        Chào mừng bạn đến với Ademy
-                    </h1>
-
-                    <p className="text-center text-lg opacity-90">
-                        Nền tảng quản lý khóa học hiện đại, đơn giản và hiệu quả.
-                    </p>
-                </div>
-
-                {/* Right side */}
-                <div className="w-full md:w-1/2 flex items-center justify-center p-8">
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleLogin();
-                        }}
-                        className="w-full max-w-md"
-                    >
-                        <h2 className="text-2xl font-semibold text-left mb-6 text-blue-800">
-                            Đăng nhập ngay!
-                        </h2>
-
-                        <div className="mb-4">
-                            <label htmlFor="username" className="block font-semibold text-gray-700 mb-2">
-                                Tên đăng nhập
-                            </label>
-                            <input
-                                type="text"
-                                id="username"
-                                onChange={(e) => setUserName(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Nhập tên đăng nhập..."
+                    <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
+                        <FormField label="Tên đăng nhập" required error={errors.username}>
+                            <Input
+                                value={values.username}
+                                onChange={(e) => {
+                                    setValues((v) => ({ ...v, username: e.target.value }));
+                                    setErrors((err) => (err.username ? { ...err, username: undefined } : err));
+                                }}
+                                autoComplete="username"
+                                placeholder="Nhập tên đăng nhập"
                             />
-                        </div>
+                        </FormField>
 
-                        <div className="mb-4">
-                            <label htmlFor="password" className="block font-semibold text-gray-700 mb-2">
-                                Mật khẩu
-                            </label>
-
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-2 pr-10 border rounded-lg
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Nhập mật khẩu..."
-                                />
-
-                                {/* Eye icon */}
+                        <FormField
+                            label="Mật khẩu"
+                            required
+                            error={errors.password}
+                            endAdornment={
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                    onClick={() => setShowPassword((s) => !s)}
+                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
-                            </div>
-                        </div>
+                            }
+                        >
+                            <Input
+                                type={showPassword ? "text" : "password"}
+                                value={values.password}
+                                onChange={(e) => {
+                                    setValues((v) => ({ ...v, password: e.target.value }));
+                                    setErrors((err) => (err.password ? { ...err, password: undefined } : err));
+                                }}
+                                autoComplete="current-password"
+                                placeholder="Nhập mật khẩu"
+                                className="pr-10"
+                            />
+                        </FormField>
 
-                        {error && (
-                            <div className="mb-4 bg-red-50 px-3 py-2 text-sm text-red-600">
-                                {error}
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-between mb-4 text-sm">
-                            {/* Forgot password */}
-                            <Link
-                                to="/forgot-password"
-                                className="font-medium text-blue-600 hover:underline"
-                            >
+                        <div className="flex justify-end text-body-sm">
+                            <Link to={ROUTES.FORGOT_PASSWORD} className="font-medium text-brand hover:underline">
                                 Quên mật khẩu?
                             </Link>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full font-bold bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-                        >
+                        <Button type="submit" variant="primary" loading={submitting} className="w-full">
                             Đăng nhập
-                        </button>
-
-                        {/* Signup */}
-                        <p className="text-sm text-center text-gray-600 mt-4">
-                            Bạn mới biết đến Ademy?{" "}
-                            <Link
-                                to={"/signup"}
-                                className="font-medium text-blue-600 hover:underline"
-                            >
-                                Đăng ký ngay
-                            </Link>
-                        </p>
+                        </Button>
                     </form>
-                </div>
-            </div>
+
+                    <p className="mt-6 text-body-sm text-center text-secondary">
+                        Bạn mới biết đến Ademy?{" "}
+                        <Link to={ROUTES.SIGNUP} className="font-medium text-brand hover:underline">
+                            Đăng ký ngay
+                        </Link>
+                    </p>
+                </Card>
+            </motion.div>
         </div>
     );
 };

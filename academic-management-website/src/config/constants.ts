@@ -81,6 +81,11 @@ export const ROUTES = {
     // Auth
     LOGIN: "/login",
     SIGNUP: "/signup",
+    // Chưa có route thật (không phase nào định nghĩa trong AppRoutes.tsx) — centralize path
+    // string cho link hiện có ở Login/Signup, không phải khai báo route đã implement.
+    FORGOT_PASSWORD: "/forgot-password",
+    TERMS: "/terms",
+    PRIVACY: "/privacy",
 
     // Checkout
     CHECKOUT: "/checkout",

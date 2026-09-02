@@ -31,10 +31,6 @@ const AppRoutes = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* ===== AUTH ===== */}
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/login" element={<Login />} />
-
                 {/* ===== PUBLIC WEBSITE ===== */}
                 <Route element={<PublicLayout />}>
                     <Route path="/" element={<HomePage />} />
@@ -42,6 +38,10 @@ const AppRoutes = () => {
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
                     <Route path="/lecturer" element={<LecturerPage />} />
                     <Route path="/contact" element={<ContactPage />} />
+
+                    {/* ===== AUTH ===== */}
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/login" element={<Login />} />
 
                     <Route
                         path="/checkout"

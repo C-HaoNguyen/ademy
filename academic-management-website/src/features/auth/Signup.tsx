@@ -1,13 +1,19 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { API_ENDPOINTS } from "@/config/constants";
+import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import logo from "../../assets/logo.svg";
+import Card from "@/shared/ui/Card";
+import Button from "@/shared/ui/Button";
+import FormField from "@/shared/ui/FormField";
+import Input from "@/shared/ui/Input";
+import { useToast } from "@/shared/ui/useToast";
 
 const Signup = () => {
-
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const [fullName, setFullName] = useState("");
     const [username, setUserName] = useState("");
@@ -18,6 +24,10 @@ const Signup = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const passwordError = passwordTouched && password.trim() === "" ? "Mật khẩu không được để trống" : undefined;
+    const confirmPasswordError =
+        confirmPassword && password.trim() !== confirmPassword.trim() ? "Mật khẩu xác nhận không khớp" : undefined;
 
     const isFormValid =
         fullName.trim() !== "" &&
@@ -28,6 +38,7 @@ const Signup = () => {
         agreeTerms;
 
     const handleSignup = async () => {
+        setSubmitting(true);
         try {
             const response = await apiClient(API_ENDPOINTS.AUTH.SIGNUP, {
                 method: "POST",
@@ -41,209 +52,165 @@ const Signup = () => {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                alert(errorText);
+                showToast({ tone: "danger", message: errorText || "Đăng ký thất bại" });
                 return;
             }
 
-            alert("Đăng ký thành công! Bạn sẽ được chuyển hướng đến trang đăng nhập.");
-            navigate("/login");
+            showToast({
+                tone: "success",
+                message: "Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập.",
+            });
+            navigate(ROUTES.LOGIN);
         } catch (error) {
             console.error("Signup error:", error);
-            alert("Không thể kết nối server");
+            showToast({ tone: "danger", message: "Không thể kết nối server" });
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <form
-                onSubmit={(e) => e.preventDefault()}
-                className="bg-white px-8 py-6 rounded-2xl shadow-lg w-full max-w-lg"
+        <div className="bg-background flex items-center justify-center px-6 py-16 md:py-24">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-[420px]"
             >
-                <Link
-                    to="/"
-                    className="flex justify-center"
-                >
-                    <div className="flex items-center gap-2 cursor-pointer">
-                        <div
-                            className="w-10 h-10 rounded-full bg-blue-600
-                       flex items-center justify-center
-                       text-white font-bold text-lg"
-                        >
-                            A
-                        </div>
-                        <img src={logo} alt="Logo" className="h-24 w-24" />
-                    </div>
-                </Link>
-
-                <h2 className="text-2xl font-semibold text-center mb-4 text-gray-800">
-                    Đăng ký tài khoản
-                </h2>
-
-                {/* Full name */}
-                <div className="mb-2">
-                    <label className="block text-gray-700 mb-2">
-                        Họ và tên
-                    </label>
-                    <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required
-                        className="w-full px-4 py-2 border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Nguyễn Văn A"
-                    />
-                </div>
-
-                {/* Username */}
-                <div className="mb-2">
-                    <label className="block text-gray-700 mb-2">
-                        Tên đăng nhập
-                    </label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUserName(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Tên đăng nhập..."
-                    />
-                </div>
-
-                {/* Email */}
-                <div className="mb-2">
-                    <label className="block text-gray-700 mb-2">
-                        Email
-                    </label>
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="example@gmail.com"
-                    />
-                </div>
-
-                {/* Password */}
-                <div className="mb-2">
-                    <label className="block text-gray-700 mb-2">
-                        Mật khẩu
-                    </label>
-                    <div className="relative">
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onBlur={() => setPasswordTouched(true)}
-                            className="w-full px-4 py-2 pr-10 border rounded-lg
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Nhập mật khẩu..."
-                        />
-                        {/* Eye icon */}
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                    </div>
-                    {passwordTouched && password.trim() === "" && (
-                        <p className="text-sm text-red-500 mt-1">
-                            Mật khẩu không được để trống
+                <Card variant="marketing">
+                    <div className="flex flex-col items-center text-center">
+                        <Link to={ROUTES.HOME}>
+                            <img src={logo} alt="Ademy" className="h-12 w-12" />
+                        </Link>
+                        <h1 className="mt-4 text-h3 text-primary">Đăng ký tài khoản</h1>
+                        <p className="mt-1 text-body-sm text-secondary">
+                            Tạo tài khoản Student để bắt đầu học tập
                         </p>
-                    )}
-                </div>
-
-                {/* Confirm password */}
-                <div className="mb-2">
-                    <label className="block text-gray-700 mb-2">
-                        Xác nhận mật khẩu
-                    </label>
-                    <div className="relative">
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Nhập lại mật khẩu..."
-                        />
-                        {/* Eye icon */}
-                        <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
                     </div>
-                    {confirmPassword && password.trim() !== confirmPassword.trim() && (
-                        <p className="text-sm text-red-500 mt-1">
-                            Mật khẩu xác nhận không khớp
-                        </p>
-                    )}
-                </div>
 
-                {/* Terms & conditions */}
-                <div className="mb-6 mt-4">
-                    <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={agreeTerms}
-                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                            className="mt-1 rounded border-gray-300"
-                        />
-                        <span>
-                            Tôi đồng ý với{" "}
-                            <Link
-                                to="/terms"
-                                target="_blank"
-                                className="text-blue-600 hover:underline"
-                            >
-                                Điều khoản sử dụng
-                            </Link>{" "}
-                            và{" "}
-                            <Link
-                                to="/privacy"
-                                target="_blank"
-                                className="text-blue-600 hover:underline"
-                            >
-                                Chính sách bảo mật
-                            </Link>
-                        </span>
-                    </label>
-                </div>
-
-
-                {/* Submit */}
-                <button
-                    type="button"
-                    onClick={handleSignup}
-                    disabled={!isFormValid}
-                    className={`w-full py-2 rounded-lg transition
-                        ${isFormValid
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        }
-                    `}
-                >
-                    Đăng ký
-                </button>
-
-                {/* Redirect login */}
-                <p className="text-sm text-center text-gray-600 mt-4">
-                    Đã có tài khoản?{" "}
-                    <Link
-                        to={"/login"}
-                        className="text-blue-600 hover:underline"
+                    <form
+                        onSubmit={(e) => e.preventDefault()}
+                        noValidate
+                        className="mt-6 space-y-4"
                     >
-                        Đăng nhập
-                    </Link>
-                </p>
-            </form>
+                        <FormField label="Họ và tên" required>
+                            <Input
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                autoComplete="name"
+                                placeholder="Nguyễn Văn A"
+                            />
+                        </FormField>
+
+                        <FormField label="Tên đăng nhập" required>
+                            <Input
+                                value={username}
+                                onChange={(e) => setUserName(e.target.value)}
+                                autoComplete="username"
+                                placeholder="Tên đăng nhập"
+                            />
+                        </FormField>
+
+                        <FormField label="Email" required>
+                            <Input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
+                                placeholder="example@gmail.com"
+                            />
+                        </FormField>
+
+                        <FormField
+                            label="Mật khẩu"
+                            required
+                            error={passwordError}
+                            endAdornment={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((s) => !s)}
+                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            }
+                        >
+                            <Input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onBlur={() => setPasswordTouched(true)}
+                                autoComplete="new-password"
+                                placeholder="Nhập mật khẩu"
+                                className="pr-10"
+                            />
+                        </FormField>
+
+                        <FormField
+                            label="Xác nhận mật khẩu"
+                            required
+                            error={confirmPasswordError}
+                            endAdornment={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword((s) => !s)}
+                                    aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            }
+                        >
+                            <Input
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                autoComplete="new-password"
+                                placeholder="Nhập lại mật khẩu"
+                                className="pr-10"
+                            />
+                        </FormField>
+
+                        <label className="flex items-start gap-2 text-body-sm text-secondary cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={agreeTerms}
+                                onChange={(e) => setAgreeTerms(e.target.checked)}
+                                className="mt-1 rounded border-default"
+                            />
+                            <span>
+                                Tôi đồng ý với{" "}
+                                <Link to={ROUTES.TERMS} target="_blank" className="text-brand hover:underline">
+                                    Điều khoản sử dụng
+                                </Link>{" "}
+                                và{" "}
+                                <Link to={ROUTES.PRIVACY} target="_blank" className="text-brand hover:underline">
+                                    Chính sách bảo mật
+                                </Link>
+                            </span>
+                        </label>
+
+                        <Button
+                            type="button"
+                            variant="primary"
+                            loading={submitting}
+                            disabled={!isFormValid}
+                            onClick={handleSignup}
+                            className="w-full"
+                        >
+                            Đăng ký
+                        </Button>
+                    </form>
+
+                    <p className="mt-6 text-body-sm text-center text-secondary">
+                        Đã có tài khoản?{" "}
+                        <Link to={ROUTES.LOGIN} className="font-medium text-brand hover:underline">
+                            Đăng nhập
+                        </Link>
+                    </p>
+                </Card>
+            </motion.div>
         </div>
     );
 };

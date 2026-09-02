@@ -1,11 +1,12 @@
 import { cloneElement, useId } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 interface FormFieldProps {
     label: string;
     required?: boolean;
     error?: string;
     helperText?: string;
+    endAdornment?: ReactNode;
     children: ReactElement<{
         id?: string;
         "aria-describedby"?: string;
@@ -14,7 +15,7 @@ interface FormFieldProps {
     }>;
 }
 
-const FormField = ({ label, required = false, error, helperText, children }: FormFieldProps) => {
+const FormField = ({ label, required = false, error, helperText, endAdornment, children }: FormFieldProps) => {
     const generatedId = useId();
     const controlId = children.props.id ?? generatedId;
     const descriptionId = error || helperText ? `${controlId}-description` : undefined;
@@ -32,7 +33,14 @@ const FormField = ({ label, required = false, error, helperText, children }: For
                 {label}
                 {required && <span className="ml-0.5 text-status-danger-text">*</span>}
             </label>
-            {control}
+            {endAdornment ? (
+                <div className="relative">
+                    {control}
+                    {endAdornment}
+                </div>
+            ) : (
+                control
+            )}
             {(error || helperText) && (
                 <p
                     id={descriptionId}

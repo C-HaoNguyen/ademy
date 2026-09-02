@@ -939,7 +939,7 @@ Phát hiện lúc verify `updateOwnCourse` (Teacher, Phase 18): cùng bug tồn 
 - **Đã verify không phải regression (dù review ban đầu nghi ngờ)**: `TeacherCard`→`InstructorCard` rename không còn tham chiếu treo (grep xác nhận); `role`/`desc` (bio) của Teacher bị mất do đổi nguồn dữ liệu — đã là deviation ghi nhận có chủ đích (quyết định #2 ở trên), không phải bug mới; `whileHover` scale bị bỏ ở `CourseCard` — đúng chủ đích theo Do/Don't §18.
 - **Verify lại sau fix**: `npx tsc -b` PASS; `npm run lint` — 1 warning + 1 error, y hệt baseline trước Phase 26 (không tăng); `npm run build` PASS.
 
-### Phase 27: Redesign — Auth pages (Login, Signup)
+### Phase 27: Redesign — Auth pages (Login, Signup) — ĐÃ HOÀN TẤT
 
 - **Goal**: Login/Signup lên token mới, bỏ `alert()`, bổ sung validate còn thiếu ở Login.
 - **Scope**: Theo UI_SPEC §2.6-2.7 — dùng `FormField`/`Input`/`Button`, `useToast()` thay `alert()`.
@@ -951,6 +951,58 @@ Phát hiện lúc verify `updateOwnCourse` (Teacher, Phase 18): cùng bug tồn 
 - **Tests/verification**: Test Login với field rỗng bị chặn (mới); test Signup giữ nguyên hành vi validate hiện có; test lỗi hiển thị qua Toast/inline thay `alert()`.
 - **Exit criteria**: 2 trang khớp UI_SPEC §2.6-2.7, không còn `alert()`.
 - **Trace**: UI_SPEC §2.6-2.7.
+
+**Quyết định phạm vi đã duyệt trước khi implement (audit code thật phát hiện assumption sai trong bản plan gốc)**:
+1. **Tests/verification giả định có automated test**: repo frontend không có `vitest`/test framework nào (đúng tiền lệ đã lặp lại từ Phase 6/7/8/11-14/26 — hạ tầng test frontend dồn về Phase 39). → Không cài test framework mới ở phase này; verify bằng `tsc -b`/`lint`/`build` + checklist hành vi thủ công.
+2. **Layout Login/Signup**: `DESIGN_SYSTEM.md` §11 (Form Patterns) quy định rule cứng "Public form (Login/Signup/Checkout) luôn 1 cột, căn giữa, width giới hạn (tối đa ~420px)" — code cũ của Login dùng layout 2 cột (branding trái + form phải), trái rule này. Đã hỏi lại quyết định: chọn **1 cột compliant đúng §11**, chuẩn hoá thị giác bằng logo/heading/subtext trong Card + nền `bg-background` (đổi từ `bg-surface` ban đầu sau correction PublicLayout bên dưới) + motion fade-in nhẹ (đồng bộ pattern đã dùng ở `ContactPage`/`HomePage` từ Phase 26) thay vì cột branding riêng.
+3. **Dead link** (`/forgot-password` ở Login; `/terms`, `/privacy` ở Signup — không có route nào định nghĩa trong `AppRoutes.tsx`, tồn tại từ trước phase này): **giữ nguyên, chỉ retoken**, không xóa, không tạo route mới — đúng tinh thần "giữ cấu trúc form", không mở rộng scope.
+4. ~~Login/Signup không nằm trong `PublicLayout`~~ — **đã sửa lại, xem "Correction sau khi rà lại toàn bộ docs" bên dưới**. Quyết định ban đầu này sai: chỉ đối chiếu `UI_SPEC.md` §2.6/§2.7 (mô tả riêng từng trang), bỏ sót §1.3 "Shared Layouts" — bảng đó quy định rõ Login/Signup thuộc `PublicLayout`.
+
+**Changes đã thực hiện**:
+- `features/auth/Login.tsx`: `Card variant="marketing"` (max-width 420px, căn giữa) thay layout 2 cột; `FormField`/`Input` cho username; password field composed thủ công (label + `Input` + toggle button trong `relative` wrapper + caption lỗi) thay vì lồng qua `FormField` — lý do: `FormField.cloneElement` chỉ set `id`/`aria-describedby`/`hasError`/`required` lên **child trực tiếp**, nếu truyền `<div relative>` bọc `Input`+button làm child thì các prop này rơi vào `div` (sai `htmlFor`, mất `aria-describedby`, cảnh báo React do prop lạ trên DOM element) — dùng `useId()` để tự nối `id`/`aria-describedby` đúng chuẩn, tái dùng nguyên class Tailwind mà `FormField` áp cho label/caption (không tạo abstraction mới trong `shared/ui/`). Thêm validate rỗng (username + password) chặn submit trước khi gọi API. Thay toàn bộ `alert()`/`<div>` lỗi tay bằng `useToast()`. Giữ nguyên logic điều hướng theo role/`from`. Giữ link "Quên mật khẩu?" (dead link, xem quyết định #3).
+- `features/auth/Signup.tsx`: áp dụng cùng pattern (`Card`, `FormField` cho 3 field text, 2 password field composed thủ công như Login). Giữ nguyên 100% validation rule hiện có (`isFormValid`, mismatch password, checkbox `agreeTerms` bắt buộc). Thay 3 `alert()` bằng `useToast()` (lỗi server, lỗi network, thành công). Giữ nguyên đích điều hướng sau khi đăng ký thành công (Login). Giữ 2 link Terms/Privacy (dead link, xem quyết định #3).
+- Cả 2 form đều thêm `noValidate` (đồng bộ pattern `ContactPage`) — validate rỗng/mismatch tự viết đảm nhiệm thay vì HTML5 constraint validation; `required` native attribute trên `Input` (do `FormField` truyền xuống) trở thành khai báo ngữ nghĩa thuần túy (`aria-required`), không ảnh hưởng hành vi submit vì đã có `noValidate`.
+- `autoComplete`: `username`/`current-password` (Login), `name`/`username`/`email`/`new-password` ×2 (Signup) — đúng §2.6/§2.7 Accessibility.
+- Nút toggle hiện/ẩn password: thêm `aria-label` động ("Hiện mật khẩu"/"Ẩn mật khẩu") ở cả 3 vị trí (Login password, Signup password, Signup confirm password) — đúng §2.6 Accessibility, trước đây không có.
+- Literal `"/signup"`, `"/login"` → `ROUTES.SIGNUP`/`ROUTES.LOGIN`/`ROUTES.HOME` (dùng hằng số có sẵn, không tạo mới).
+- **Không đổi**: `shared/ui/*`, `shared/auth/*`, backend.
+- **Modules/files**: `features/auth/Login.tsx`, `features/auth/Signup.tsx` — mở rộng thêm `routes/AppRoutes.tsx`, `config/constants.ts` sau 2 vòng correction bên dưới (đã xin duyệt riêng từng lần, không tự ý mở rộng).
+
+**Tests/verification**: Không có test tự động (xem quyết định #1). Verify: `npx tsc -b` PASS (0 lỗi); `npm run lint` — 1 warning (`react-hooks/exhaustive-deps`, `CourseDetailPage.tsx`) + 1 lỗi pre-existing (`Profile.tsx`) — y hệt baseline trước phase này, không tăng; `npm run build` (`tsc -b && vite build`) PASS. `grep "alert("` trên 2 file → 0 kết quả.
+  - **Đã verify thủ công qua UI thật (người dùng test trực tiếp, xác nhận ổn)**: Card căn giữa, validate rỗng Login, toast, toggle password, điều hướng theo role.
+
+### Correction sau khi rà lại toàn bộ docs (không chỉ REFACTOR_PLAN.md)
+
+Sau khi implement + code review xong, rà lại toàn bộ 5 doc nguồn (`PRD.md`/`ARCHITECTURE.md`/`DESIGN_SYSTEM.md`/`UI_SPEC.md`/`COMPONENT_SYSTEM.md`) theo yêu cầu, phát hiện 1 assumption sai ở quyết định #4 phía trên: `UI_SPEC.md` §1.3 (bảng "Shared Layouts", không phải §2.6/§2.7 đã đối chiếu lúc plan) quy định rõ:
+
+> `PublicLayout` (Header ngang + Footer) | Khách, mọi trang Public **+ Login/Signup** | Giữ cấu trúc, redesign visual theo Design System §10.7
+
+Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, không Header/Footer) dựa trên giả định sai vì chỉ đối chiếu §2.6/§2.7, không kiểm tra §1.3. Đã xin duyệt lại và sửa:
+
+- `routes/AppRoutes.tsx`: chuyển `<Route path="/signup">`/`<Route path="/login">` vào trong `<Route element={<PublicLayout />}>` (trước đó đứng ngoài). Đúng pattern đã có sẵn với `/checkout` (cũng `ProtectedRoute` lồng trong `PublicLayout`) — không phải cấu trúc mới.
+- `features/auth/Login.tsx`, `features/auth/Signup.tsx`: bỏ `min-h-screen` (giả định full-viewport, không còn đúng khi có Header+Footer bao ngoài) + `bg-surface` (đổi `bg-background`, đồng bộ root class `ContactPage`/`HomePage` — các trang khác cũng render bên trong `PublicLayout`); giữ nguyên `flex items-center justify-center`, đổi `py-12` → `py-16 md:py-24` để card có khoảng thở hợp lý trong luồng nội dung tự nhiên (không còn ép căn giữa toàn màn hình).
+- **Verify lại sau fix**: `npx tsc -b` PASS; `npm run lint` — y hệt baseline; `npm run build` PASS.
+- **Visual QA thật qua UI (người dùng test trực tiếp sau khi có Header+Footer bao Login/Signup)**: đã xác nhận ổn — Header/Footer hiển thị đúng, không double-scroll/khoảng trắng bất thường, Card căn giữa hợp lý trong luồng nội dung.
+
+### Code review sau Phase 27 — 2 fix (đã hỏi lại quyết định)
+
+`/code-review` mức `high` sau khi implement xong Phase 27 phát hiện 3 finding. Đã verify từng cái trước khi sửa.
+
+- **Đã fix (bug thật)**: `Login.tsx` — lỗi validate rỗng (`errors.username`/`errors.password`) chỉ được set/reset trong `validate()` lúc submit, `onChange` không bao giờ clear — submit rỗng lần đầu hiện lỗi, user gõ lại đúng nhưng chưa submit lại thì lỗi cũ vẫn còn hiển thị. Đã verify đây đúng y hệt pattern có sẵn từ Phase 26 (`ContactPage.tsx` cũng không clear-on-change) — không phải bug riêng của Phase 27, nhưng đã xin quyết định và được duyệt sửa riêng ở Login (chấp nhận lệch pattern với `ContactPage`, không sửa `ContactPage` vì ngoài phạm vi). Đã thêm clear `errors[field]` tương ứng ngay trong `onChange` của `username`/`password`. **Signup không cần sửa**: `passwordError`/`confirmPasswordError` ở đó là giá trị derive lại mỗi render từ state sống (không phải `setErrors` rời rạc), nên đã tự động clear đúng theo giá trị mới.
+- **Đã fix (inconsistency, đã xin duyệt vì đụng file ngoài scope gốc)**: `Login.tsx`/`Signup.tsx` dùng literal `/forgot-password`, `/terms`, `/privacy` cứng trong khi các link khác cùng file đã đổi sang `ROUTES.LOGIN`/`ROUTES.SIGNUP`/`ROUTES.HOME` — vi phạm nhẹ rule CLAUDE.md ("Prefer adding to ROUTES... rather than hardcoding paths"). Đã thêm `ROUTES.FORGOT_PASSWORD`/`ROUTES.TERMS`/`ROUTES.PRIVACY` vào `config/constants.ts` (kèm comment ghi rõ đây là centralize path string cho link hiện có, không phải khai báo route đã implement) và đổi 3 chỗ dùng sang hằng số — giữ nguyên hành vi dead-link, không tạo route mới.
+- **Không sửa ở vòng review này** (đã ghi nhận, giải quyết ở vòng rà docs tiếp theo — xem "Correction #2" bên dưới): password field ở cả 2 trang compose thủ công thay vì lồng qua `FormField` — do giới hạn `cloneElement` chỉ nhận 1 child trực tiếp.
+- **Verify lại sau fix**: `npx tsc -b` PASS; `npm run lint` — 1 warning + 1 error, y hệt baseline trước Phase 27 (không tăng); `npm run build` PASS; `grep "alert(\|/forgot-password\|/terms\|/privacy"` trên 2 file → 0 kết quả (đã thay hết bằng `ROUTES.*`).
+
+### Correction #2 sau khi rà `COMPONENT_SYSTEM.md`
+
+`COMPONENT_SYSTEM.md` §3.2 quy định rule cứng: "mọi field trong form **luôn** bọc bởi `FormField`... đây là lý do tách `FormField` riêng thay vì để từng chỗ tự nối `aria-describedby` (đã từng bị bỏ sót ở `PaymentForm`/`CategoryOverlay` hiện tại)". 3 field password (Login password, Signup password + confirm) compose thủ công (không qua `FormField`) — đúng anti-pattern tài liệu này mô tả, dù về accessibility đang wire đúng tay. Gốc rễ: `FormField` chưa hỗ trợ field có adornment bên phải (nút toggle password) — gap thật trong component system, không phải lỗi audit ban đầu bỏ sót (§3.2 không nằm trong phạm vi đối chiếu §2.6/§2.7 lúc lập plan).
+
+Đã xin duyệt và sửa tận gốc thay vì tiếp tục chấp nhận tradeoff:
+- `shared/ui/FormField.tsx`: thêm prop optional `endAdornment?: ReactNode` — khi có, bọc `relative` quanh `control` + render `endAdornment` cạnh đó; cơ chế `cloneElement` set `id`/`aria-describedby`/`hasError`/`required` giữ nguyên như cũ. **Backward-compatible 100%** — `ContactPage.tsx` (usage `FormField` duy nhất khác trong repo, không dùng `endAdornment`) không đổi hành vi.
+- `features/auth/Login.tsx`, `features/auth/Signup.tsx`: đổi 3 field password sang `<FormField endAdornment={<button toggle .../>}>` đúng chuẩn, bỏ hết code compose tay (`useId`, label/caption viết lại thủ công).
+- **Modules/files mở rộng thêm lần nữa**: `shared/ui/FormField.tsx` (đã xin duyệt riêng, không tự ý).
+- **Verify lại**: `npx tsc -b` PASS; `npm run lint` — y hệt baseline; `npm run build` PASS; `grep FormField` toàn `src/features/` xác nhận `ContactPage.tsx` là usage khác duy nhất, không bị ảnh hưởng.
+- **Kết quả**: Login/Signup giờ **100% field đều qua `FormField`**, đúng `COMPONENT_SYSTEM.md` §3.2, không còn duplication risk đã nêu ở code review.
 
 ### Phase 28: Redesign — Student core pages
 

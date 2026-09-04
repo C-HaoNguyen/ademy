@@ -335,4 +335,14 @@ public class QuizService {
                 .map(AttemptResultDto::new)
                 .toList();
     }
+
+    // Phase 28 — Dashboard/LearningProfile: tổng số bài test đã làm + điểm trung bình, gộp trên
+    // mọi khóa học của Student hiện tại.
+    public QuizAttemptSummaryDto getMyAttemptSummary(String username) {
+        Users student = getUser(username);
+        long attemptCount = attemptRepository.countByStudent_UserId(student.getUserId());
+        Double avg = attemptRepository.averageScoreByStudentId(student.getUserId());
+        BigDecimal averageScore = avg != null ? BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP) : null;
+        return new QuizAttemptSummaryDto(attemptCount, averageScore);
+    }
 }

@@ -7,6 +7,7 @@ import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.EnrollRequest;
 import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
+import com.example.academic_management_api.enrollment.dto.MyCourseDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
 import com.example.academic_management_api.enrollment.repository.EnrollmentRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -68,14 +69,20 @@ public class EnrollmentService {
         );
     }
 
-    public List<Courses> getMyCourses(String username) {
+    public List<MyCourseDto> getMyCourses(String username) {
         Users student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Student not found"));
 
         return enrollmentRepository
                 .findByStudent_UserIdWithCourse(student.getUserId())
                 .stream()
-                .map(Enrollments::getCourse)
+                .map(e -> new MyCourseDto(
+                        e.getCourse().getCourseId(),
+                        e.getCourse().getTitle(),
+                        e.getCourse().getThumbnail(),
+                        e.getCourse().getInstructor().getFullName(),
+                        e.getEnrolledAt()
+                ))
                 .toList();
     }
 

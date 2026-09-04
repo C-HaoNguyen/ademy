@@ -1004,18 +1004,36 @@ Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, khô
 - **Verify lại**: `npx tsc -b` PASS; `npm run lint` — y hệt baseline; `npm run build` PASS; `grep FormField` toàn `src/features/` xác nhận `ContactPage.tsx` là usage khác duy nhất, không bị ảnh hưởng.
 - **Kết quả**: Login/Signup giờ **100% field đều qua `FormField`**, đúng `COMPONENT_SYSTEM.md` §3.2, không còn duplication risk đã nêu ở code review.
 
-### Phase 28: Redesign — Student core pages
+### Phase 28: Redesign — Student core pages — ĐÃ HOÀN TẤT (scope điều chỉnh so với bản gốc)
 
 - **Goal**: Dashboard, MyCourses, Profile, LearningProfile lên token mới + dữ liệu thật.
-- **Scope**: Theo UI_SPEC §3.1, §3.2, §3.6, §3.7 — dùng `StatCard`/`ProgressBar`/`Card`; Dashboard bỏ `comingSoon`, wire dữ liệu thật; MyCourses thêm action "Yêu cầu hoàn tiền" (cần Phase 23).
-- **Dependencies**: Phase 8 (React Query), Phase 16 (StatCard/ProgressBar), Phase 23 (refund action).
-- **Changes required**: Redesign 4 trang; thêm `RefundRequestModal` (feature component, dựng trên `Modal`+`FormField`) vào MyCourses.
-- **Modules/files**: `features/student/`.
-- **Existing behavior cần preserve**: Danh sách khóa học/tiến độ hiển thị đúng dữ liệu hiện có (chỉ bỏ mock, không đổi nguồn dữ liệu khác).
-- **Migration concerns**: `InfoItem.tsx` bị xóa ở phase này (Profile chuyển sang `FormField`/`Input`) — xác nhận không còn nơi nào khác import `InfoItem` trước khi xóa file.
-- **Tests/verification**: Test Dashboard hiện số liệu thật (không còn `comingSoon`); test gửi yêu cầu hoàn tiền từ MyCourses tạo đúng `RefundRequest` (Phase 23); test Profile lưu thay đổi thành công.
-- **Exit criteria**: 4 trang khớp UI_SPEC, `InfoItem.tsx` đã xóa.
-- **Trace**: UI_SPEC §3.1, §3.2, §3.6, §3.7; PRD-017, PRD-025, PRD-028.
+- **Scope thực tế đã làm** (điều chỉnh so với draft gốc sau khi audit code thực tế — xem lý do ở mục review trước khi implement, đã thảo luận và chốt với người review):
+  - Dashboard: 2/4 stat card có dữ liệu thật (số khóa học đã đăng ký, số bài test đã làm); "Tiến độ trung bình" hiện `pendingText="Sắp ra mắt"` (không có nguồn dữ liệu — `LessonProgress` chưa được ghi bởi bất kỳ endpoint nào, chờ Lesson Player Phase 35); bỏ hẳn "streak/hoạt động" (không có PRD/entity nào backing, không phải trạng thái chờ mà là không tồn tại). Danh sách "Tiếp tục học" không có progress bar (cùng lý do). Giữ nguyên "Quick Actions" (hành vi cũ, không có trong UI_SPEC nhưng không bị yêu cầu xóa).
+  - MyCourses: redesign card list lên token/component chuẩn, **không có action "Yêu cầu hoàn tiền"** — hoãn sang phase riêng (UI hoàn tiền là 1 luồng mới hoàn chỉnh — Modal, Idempotency-Key, mutation — không rẻ để làm chung; khác với field dữ liệu đơn thuần).
+  - Profile: `InfoItem` → `FormField`/`Input`, avatar có `alt`, toast tự viết → `useToast()`, copy khớp UI_SPEC ("Lưu thay đổi", "Đã lưu thay đổi").
+  - LearningProfile: viết lại từ UI tĩnh sang dữ liệu thật — tổng số khóa học, tổng bài test đã làm, **điểm trung bình** (thêm mới, xem dưới) là dữ liệu thật; **không có "% hoàn thành trung bình"** (cùng lý do LessonProgress ở trên) và không có breakdown theo từng khóa (backend chỉ tổng hợp được số liệu gộp).
+  - Backend bổ sung (theo nguyên tắc "rẻ vì đang sửa đúng chỗ đó, tránh phải touch lại cùng file lần 2 ở phase refund/Lesson Player"): `EnrollmentService.getMyCourses` đổi từ trả raw `List<Courses>` (leak lazy proxy) sang `MyCourseDto` (courseId/title/thumbnail/instructorName/enrolledAt); `GET /payments/me` mới (`PaymentService.getMyPayments`, `MyPaymentDto`) để phase hoàn tiền sau lấy `paymentId` theo course mà không cần sửa lại `EnrollmentService` (tránh circular bean dependency — `PaymentService` đã phụ thuộc `EnrollmentService`, chiều ngược lại sẽ tạo cycle); `GET /quiz-attempts/me/summary` mới (`QuizService.getMyAttemptSummary`, `QuizAttemptSummaryDto`: `attemptCount` + `averageScore`, dùng chung cho Dashboard và LearningProfile).
+  - `shared/ui/StatCard.tsx`: thêm prop optional `pendingText?: string` — khi có, hiện text đó thay `value` (không phải loading/error). Backward-compatible 100% — đã grep xác nhận `AdminDashboard.tsx` (usage khác duy nhất) không dùng prop này, không đổi hành vi.
+- **Dependencies**: Phase 8 (React Query), Phase 16 (StatCard/ProgressBar), Phase 24 (quiz attempts đã có dữ liệu thật để tổng hợp). **Không còn phụ thuộc Phase 23** — refund action đã hoãn khỏi phase này.
+- **Modules/files**: `features/student/`; `shared/ui/StatCard.tsx`; `shared/api/queries/useMyCoursesQuery.ts`, `useStudentSummaryQuery.ts` (mới); backend: `enrollment/service/EnrollmentService.java`, `enrollment/dto/MyCourseDto.java` (mới); `payment/service/PaymentService.java`, `payment/controller/PaymentController.java`, `payment/repository/PaymentRepository.java`, `payment/dto/MyPaymentDto.java` (mới); `assessment/service/QuizService.java`, `assessment/controller/QuizAttemptController.java`, `assessment/repository/QuizAttemptRepository.java`, `assessment/dto/QuizAttemptSummaryDto.java` (mới).
+- **Existing behavior cần preserve**: Danh sách khóa học hiển thị đúng dữ liệu enrollment hiện có (chỉ đổi response shape từ raw entity sang DTO, không đổi tập khóa học trả về); Profile giữ nguyên logic save/cancel/originalUser.
+- **API compatibility**: `GET /enrollments/student/me/courses` đổi response shape (raw `Courses[]` → `MyCourseDto[]`) — breaking change nội bộ, chỉ FE của repo này dùng, deploy đồng bộ FE+BE.
+- **Migration concerns**: `InfoItem.tsx` đã xóa (Profile chuyển sang `FormField`/`Input`) — đã grep xác nhận không còn nơi nào khác import trước khi xóa.
+- **Tests/verification**: `EnrollmentServiceTest.getMyCourses_returnsDtoWithInstructorNameAndEnrolledAt`; `PaymentServiceTest.getMyPayments_returnsOwnPaymentsMappedToDto`; `QuizServiceTest.getMyAttemptSummary_returnsCountAndAverageFromRepository` + `getMyAttemptSummary_noAttempts_averageScoreIsNullNotZero` (guard: 0 bài test phải trả `averageScore=null`, không phải `0`, tránh hiểu nhầm "điểm trung bình 0"). `mvn test` (130/130 pass), `npx tsc -b`, `npm run lint` (0 error, warning y hệt baseline), `npm run build` đều PASS.
+- **Exit criteria**: Đạt — Dashboard/MyCourses/Profile/LearningProfile dùng token/component chuẩn; không còn số liệu giả lập (`comingSoon` cũ) cho các số liệu có dữ liệu thật; số liệu chưa có dữ liệu thật hiện rõ ràng qua `StatCard.pendingText`, không giả lập; `InfoItem.tsx` đã xóa; MyCourses không có action hoàn tiền (hoãn có chủ đích).
+- **Việc còn lại cho phase sau** (không thuộc scope Phase 28, ghi nhận để không quên):
+  - Refund UI trong MyCourses (Modal thu thập lý do + `POST /refund-requests` với Idempotency-Key + `DropdownMenu` "···") — backend đã sẵn sàng (`POST /refund-requests` từ Phase 23, `GET /payments/me` mới thêm ở phase này).
+  - "% hoàn thành trung bình" (Dashboard + LearningProfile) và progress bar theo khóa học (Dashboard + MyCourses) — chờ Lesson Player (Phase 35) ghi `LessonProgress`; khi đó chỉ cần đổi `StatCard` từ `pendingText` sang `value` thật, không cần redesign lại trang.
+  - "Streak/hoạt động" đã bỏ khỏi UI_SPEC — nếu về sau có yêu cầu PRD thật, cần định nghĩa lại từ đầu (không có khái niệm nào sẵn có để phục hồi).
+- **Trace**: UI_SPEC §3.1, §3.2, §3.6, §3.7 (đã patch khớp scope thực tế); PRD-017 (một phần — số liệu thật cho những gì có nguồn, phần completion % vẫn treo tới Phase 35).
+
+### Code review sau Phase 28 — 2 fix (đã verify từng cái trước khi sửa)
+
+`/code-review` mức `high` sau khi implement xong Phase 28 phát hiện 2 finding, cả 2 đều verify đúng và đã fix:
+
+- **Bug runtime (critical)**: `QuizAttemptRepository.averageScoreByStudentId` khai `BigDecimal` cho `AVG(a.score)` — JPQL AVG luôn trả `Double` bất kể kiểu cột gốc (JPA spec §4.8.5), Hibernate trả `Double` thật, Spring Data ép kiểu trực tiếp sang `BigDecimal` khai trong signature → `ClassCastException` lúc runtime, `GET /quiz-attempts/me/summary` 500 với bất kỳ Student nào đã làm ≥1 bài test. `QuizServiceTest` không bắt được vì mock repository trực tiếp (bypass Hibernate thật). Fix: đổi return type repository sang `Double`, convert sang `BigDecimal` ở `QuizService.getMyAttemptSummary` (`BigDecimal.valueOf(avg).setScale(2, HALF_UP)`), cập nhật 2 mock trong `QuizServiceTest` theo `Double`.
+- **Gọi API thừa**: `LearningProfile.tsx` chỉ dùng `quizAttemptSummaryQuery` nhưng gọi `useStudentSummaryQuery()` (hook gộp) khiến `totalCoursesQuery` (`GET /enrollments/student/me/summary`) luôn bị fire dù không dùng tới (LearningProfile đã tự tính tổng khóa học từ `useMyCoursesQuery().length`). Fix: tách `useStudentSummaryQuery.ts` thành 2 hook độc lập (`useTotalCoursesQuery`, `useQuizAttemptSummaryQuery`) — Dashboard gọi cả 2, LearningProfile chỉ gọi cái cần, đúng pattern 1-hook-1-concern của `useCoursesQuery.ts`/`useMyCoursesQuery.ts` (khác `useAdminStatsQuery.ts` — hook gộp đó đúng vì AdminDashboard là consumer duy nhất và luôn cần cả 2).
+- **Verify lại sau fix**: `mvn test` PASS (130/130, không đổi số lượng); `mvn clean package` PASS; `npx tsc -b` PASS; `npm run lint` — 0 error, 1 warning y hệt baseline; `npm run build` PASS.
 
 ### Phase 29: Redesign — AdminDashboard (dữ liệu thật)
 

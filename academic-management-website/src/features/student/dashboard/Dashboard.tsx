@@ -1,173 +1,120 @@
-import {
-    BookOpen,
-    Clock,
-    CheckCircle,
-    TrendingUp,
-    PlayCircle,
-    Zap,
-    Activity,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { BookOpen, CheckCircle, TrendingUp, PlayCircle, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS, ROUTES } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
-
-const StatCard = ({
-    icon,
-    label,
-    value,
-    loading,
-    comingSoon,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value?: string | number;
-    loading?: boolean;
-    comingSoon?: boolean;
-}) => (
-    <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm text-slate-500">{label}</p>
-                {loading ? (
-                    <div className="mt-2 h-7 w-14 rounded-md bg-slate-200 animate-pulse" />
-                ) : comingSoon ? (
-                    <p className="text-xs font-medium text-slate-400 mt-2 inline-block px-2 py-1 rounded-full bg-slate-100">
-                        Sắp ra mắt
-                    </p>
-                ) : (
-                    <p className="text-2xl font-bold text-legacy-ink mt-1">
-                        {value}
-                    </p>
-                )}
-            </div>
-            <div className="p-3 rounded-lg bg-legacy-primary/10 text-legacy-primary shrink-0">
-                {icon}
-            </div>
-        </div>
-    </div>
-);
+import { ROUTES } from "@/config/constants";
+import { useMyCoursesQuery } from "@/shared/api/queries/useMyCoursesQuery";
+import { useTotalCoursesQuery, useQuizAttemptSummaryQuery } from "@/shared/api/queries/useStudentSummaryQuery";
+import Card from "@/shared/ui/Card";
+import StatCard from "@/shared/ui/StatCard";
+import Button from "@/shared/ui/Button";
+import EmptyState from "@/shared/ui/EmptyState";
+import { SkeletonText } from "@/shared/ui/Skeleton";
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [totalCourses, setTotalCourses] = useState<number | null>(null);
-    const [loading, setLoading] = useState(true);
+    const totalCoursesQuery = useTotalCoursesQuery();
+    const quizAttemptSummaryQuery = useQuizAttemptSummaryQuery();
+    const myCoursesQuery = useMyCoursesQuery();
 
-    useEffect(() => {
-        apiClient(API_ENDPOINTS.ENROLLMENTS.MY_SUMMARY)
-            .then((res) => res.json())
-            .then((data) => {
-                setTotalCourses(data.totalCourses);
-            })
-            .catch((err) => {
-                console.error("Failed to load dashboard summary", err);
-                setTotalCourses(0);
-            })
-            .finally(() => setLoading(false));
-    }, []);
+    const recentCourses = [...(myCoursesQuery.data ?? [])]
+        .sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())
+        .slice(0, 3);
 
     return (
         <div className="space-y-8">
-            {/* Title */}
             <div>
-                <h2 className="text-2xl font-semibold text-legacy-ink">
-                    Student Dashboard
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
+                <h2 className="text-h2 text-primary">Student Dashboard</h2>
+                <p className="text-body-sm text-secondary mt-1">
                     Theo dõi tiến độ học tập và hoạt động gần đây
                 </p>
             </div>
 
-            {/* Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
                     label="Khóa học đã đăng ký"
-                    value={totalCourses ?? 0}
-                    loading={loading}
+                    value={totalCoursesQuery.data ?? 0}
+                    loading={totalCoursesQuery.isLoading}
                 />
                 <StatCard
                     icon={<CheckCircle size={22} aria-hidden="true" />}
-                    label="Khóa học hoàn thành"
-                    comingSoon
-                />
-                <StatCard
-                    icon={<Clock size={22} aria-hidden="true" />}
-                    label="Giờ học đã học"
-                    comingSoon
+                    label="Bài test đã làm"
+                    value={quizAttemptSummaryQuery.data?.attemptCount ?? 0}
+                    loading={quizAttemptSummaryQuery.isLoading}
                 />
                 <StatCard
                     icon={<TrendingUp size={22} aria-hidden="true" />}
                     label="Tiến độ trung bình"
-                    comingSoon
+                    pendingText="Sắp ra mắt"
                 />
             </div>
 
-            {/* Middle section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Current courses */}
-                <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                    <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
-                        <PlayCircle size={18} aria-hidden="true" />
-                        Khóa học đang học
-                    </h3>
+            <Card variant="app">
+                <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                    <PlayCircle size={18} aria-hidden="true" />
+                    Tiếp tục học
+                </h3>
 
-                    <div className="flex flex-col items-center justify-center text-center py-6 text-sm text-slate-500">
-                        <p>Tính năng theo dõi tiến độ từng khóa học sắp ra mắt.</p>
-                        <button
-                            type="button"
-                            onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
-                            className="cursor-pointer mt-3 text-legacy-primary font-medium hover:underline"
-                        >
-                            Xem khóa học của tôi
-                        </button>
-                    </div>
-                </div>
+                {myCoursesQuery.isLoading ? (
+                    <SkeletonText lines={3} />
+                ) : recentCourses.length === 0 ? (
+                    <EmptyState
+                        icon={BookOpen}
+                        title="Bạn chưa có khóa học nào"
+                        description="Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn."
+                        action={
+                            <Button variant="primary" onClick={() => navigate(ROUTES.COURSES)}>
+                                Khám phá khóa học
+                            </Button>
+                        }
+                    />
+                ) : (
+                    <ul className="space-y-3">
+                        {recentCourses.map((course) => (
+                            <li
+                                key={course.courseId}
+                                className="flex items-center justify-between gap-4 rounded-radius-md border border-default p-3"
+                            >
+                                <div className="min-w-0">
+                                    <p className="text-body font-medium text-primary truncate">
+                                        {course.title}
+                                    </p>
+                                    {course.instructorName && (
+                                        <p className="text-body-sm text-secondary truncate">
+                                            {course.instructorName}
+                                        </p>
+                                    )}
+                                </div>
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
+                                >
+                                    Vào học
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Card>
 
-                {/* Learning stats */}
-                <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                    <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
-                        <Activity size={18} aria-hidden="true" />
-                        Thống kê học tập
-                    </h3>
-
-                    <div className="flex items-center justify-center text-center py-6 text-sm text-slate-500">
-                        Thống kê chi tiết (bài học, streak) sắp ra mắt.
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick actions */}
-            <div className="bg-white rounded-card p-5 shadow-sm border border-slate-100">
-                <h3 className="font-semibold text-legacy-ink mb-4 flex items-center gap-2">
+            <Card variant="app">
+                <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                     <Zap size={18} aria-hidden="true" />
                     Quick Actions
                 </h3>
 
                 <div className="flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-legacy-primary text-white text-sm hover:bg-legacy-primary-dark transition-colors duration-200"
-                    >
+                    <Button variant="primary" onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}>
                         Tiếp tục học
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate(ROUTES.COURSES)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-legacy-cta text-white text-sm hover:bg-legacy-cta-dark transition-colors duration-200"
-                    >
+                    </Button>
+                    <Button variant="cta" onClick={() => navigate(ROUTES.COURSES)}>
                         Khám phá khóa học
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate(ROUTES.STUDENT.PROFILE)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-slate-700 text-white text-sm hover:bg-slate-800 transition-colors duration-200"
-                    >
+                    </Button>
+                    <Button variant="secondary" onClick={() => navigate(ROUTES.STUDENT.PROFILE)}>
                         Hồ sơ cá nhân
-                    </button>
+                    </Button>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };

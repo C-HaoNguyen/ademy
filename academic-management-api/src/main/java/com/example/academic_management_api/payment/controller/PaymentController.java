@@ -6,6 +6,7 @@ import com.example.academic_management_api.infrastructure.payment.StripeGateway;
 import com.example.academic_management_api.infrastructure.payment.VnPayGateway;
 import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
 import com.example.academic_management_api.payment.dto.CouponValidationRequest;
+import com.example.academic_management_api.payment.dto.MyPaymentDto;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.service.PaymentCallbackOutcome;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -91,6 +93,13 @@ public class PaymentController {
     @PostMapping("/coupons/validate")
     public CouponPreviewResponse validateCoupon(@Valid @RequestBody CouponValidationRequest request) {
         return paymentService.previewCoupon(request.getCouponCode(), request.getCourseId());
+    }
+
+    // Route rơi vào anyRequest().authenticated() mặc định (cùng tiền lệ /refund-requests,
+    // /quizzes/**) — Student tự tra payment của chính mình, ownership qua authentication.getName().
+    @GetMapping("/me")
+    public ResponseEntity<List<MyPaymentDto>> getMyPayments(Authentication authentication) {
+        return ResponseEntity.ok(paymentService.getMyPayments(authentication.getName()));
     }
 
     @GetMapping("/callback/vnpay")

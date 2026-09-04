@@ -290,41 +290,41 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 
 ### 3.1 Dashboard — `/student/dashboard`
 
-**Classification**: Redesign (giữ cấu trúc stat cards + danh sách, thay toàn bộ `comingSoon` bằng dữ liệu thật)
+**Classification**: Redesign (giữ cấu trúc stat cards + danh sách; thay `comingSoon` bằng dữ liệu thật cho những số liệu có nguồn thật — xem ghi chú Phase 28 bên dưới)
 
 - **Purpose**: tổng quan nhanh cho Student mỗi khi đăng nhập — tiến độ, khóa học đang học.
 - **Target user**: Student.
 - **Entry points**: mặc định khi vào `/student` (redirect index), Sidebar "Tổng quan".
-- **Information hierarchy**: Chào mừng + stat card tổng quan → khóa học đang học gần nhất → hoạt động gần đây.
-- **Page structure / Main sections**: 4 stat card (`card-app`, compact — số khóa học đã mua, % hoàn thành trung bình, số bài test đã làm, streak/hoạt động — **tất cả lấy dữ liệu thật**, không còn `comingSoon`), danh sách "Tiếp tục học" (2-3 khóa học gần nhất, mỗi item có progress bar dùng `progress-fill`/`progress-track`).
-- **Primary action**: click "Tiếp tục học" trên 1 khóa học → Lesson Player.
-- **Component patterns**: Card app (§10.3), progress bar (token §3.2 `progress-*`), Skeleton loading.
+- **Information hierarchy**: Chào mừng + stat card tổng quan → khóa học đang học gần nhất.
+- **Page structure / Main sections**: 3 stat card (`card-app`, compact — số khóa học đã đăng ký, số bài test đã làm: **dữ liệu thật**; tiến độ trung bình: chưa có nguồn dữ liệu thật, hiện "Sắp ra mắt" cho tới khi Lesson Player (Phase 35) ghi nhận `LessonProgress`), danh sách "Tiếp tục học" (2-3 khóa học đăng ký gần nhất — **không có progress bar/streak/"hoạt động gần đây"**: không có nguồn dữ liệu thật cho các số liệu này ở phase hiện tại, xem ghi chú Phase 28 ở REFACTOR_PLAN.md).
+- **Primary action**: click "Vào học" trên 1 khóa học → tạm thời điều hướng tới MyCourses (Lesson Player chưa tồn tại, cùng tiền lệ CourseDetailPage ở Phase 26).
+- **Component patterns**: Card app (§10.3), StatCard (§10.3, có `pendingText` cho số liệu chưa có dữ liệu thật), Skeleton loading.
 - **Loading state**: skeleton cho từng stat card + danh sách khi fetch.
-- **Empty state**: nếu Student chưa mua khóa học nào, thay danh sách "Tiếp tục học" bằng Empty State "Bạn chưa có khóa học nào" + CTA `primary` "Khám phá khóa học" (dẫn `/courses`).
+- **Empty state**: nếu Student chưa đăng ký khóa học nào, thay danh sách "Tiếp tục học" bằng Empty State "Bạn chưa có khóa học nào" + CTA `primary` "Khám phá khóa học" (dẫn `/courses`).
 - **Error state**: Toast lỗi nếu fetch thất bại, stat card hiện giá trị "—" thay vì crash.
 - **Success state**: không áp dụng.
-- **Responsive**: mobile-first — 4 stat card thành `grid-cols-2` trên mobile thay vì `grid-cols-4`.
+- **Responsive**: mobile-first — 3 stat card dùng `grid-cols-2` trên mobile, `sm:grid-cols-3` từ tablet trở lên.
 - **Mobile behavior**: danh sách "Tiếp tục học" đủ rộng chạm (44px touch target theo §6).
-- **Accessibility**: progress bar có `role="progressbar"` + `aria-valuenow/min/max`.
+- **Accessibility**: không áp dụng phần progress bar cho tới khi có dữ liệu thật (Phase 35).
 
 ### 3.2 MyCourses — `/student/my-courses`
 
-**Classification**: Redesign (giữ cấu trúc danh sách, thêm action gửi yêu cầu hoàn tiền theo quyết định đã chốt)
+**Classification**: Redesign (giữ cấu trúc danh sách; action gửi yêu cầu hoàn tiền **hoãn sang phase sau** — xem ghi chú Phase 28 ở REFACTOR_PLAN.md)
 
-- **Purpose**: liệt kê mọi khóa học Student đã mua, truy cập nhanh vào học, khởi tạo yêu cầu hoàn tiền.
+- **Purpose**: liệt kê mọi khóa học Student đã mua, truy cập nhanh vào học.
 - **Target user**: Student.
 - **Entry points**: Sidebar "Khóa học của tôi", CTA "Vào học ngay" từ Header (mọi trang khi đã đăng nhập).
-- **Information hierarchy**: Danh sách khóa học đã mua, mỗi item hiện tiến độ, action chính "Vào học".
-- **Page structure / Main sections**: Lưới/danh sách `card-app` mỗi khóa học (thumbnail, tên, Teacher, progress bar, ngày mua), mỗi card có menu action phụ (···, `DropdownMenu` — §10.9b) chứa "Yêu cầu hoàn tiền" (chọn item mở `Modal` — §10.9 — thu thập lý do, submit tạo `RefundRequest` theo PRD-025, Idempotency-Key theo ADR-007).
-- **Primary action**: Button `primary` "Vào học" trên mỗi card → Lesson Player. **Secondary**: menu "···" (`DropdownMenu`) → "Yêu cầu hoàn tiền" (mở `Modal`).
-- **Component patterns**: Card app, `DropdownMenu` (§10.9b) cho menu "···", `Modal` (§10.9) cho form hoàn tiền, Progress bar.
-- **Loading state**: skeleton lưới card.
-- **Empty state**: Empty State "Bạn chưa mua khóa học nào" + CTA "Khám phá khóa học" (illustration theo §9 — đây là 1 trong các vị trí được phép dùng illustration).
-- **Error state**: Toast lỗi khi fetch danh sách thất bại; Toast lỗi riêng khi submit yêu cầu hoàn tiền thất bại (giữ modal mở để Student thử lại, không mất dữ liệu đã nhập).
-- **Success state**: Toast `status-success-text` "Đã gửi yêu cầu hoàn tiền" sau khi submit, đóng modal, cập nhật trạng thái hiển thị trên card (badge "Đang xử lý hoàn tiền" dùng `status-warning-bg`/`status-warning-text`).
+- **Information hierarchy**: Danh sách khóa học đã mua, action chính "Vào học".
+- **Page structure / Main sections**: Lưới `card-app` mỗi khóa học (thumbnail, tên, Teacher, ngày mua). **Không có progress bar** (chưa có nguồn dữ liệu thật — chờ Lesson Player, Phase 35) và **không có menu "···"/hoàn tiền** (backend `POST /refund-requests` đã có từ Phase 23, nhưng UI (Modal/Idempotency-Key/mutation) chưa build — hoãn sang phase riêng; `GET /payments/me` đã có sẵn để phase đó lấy `paymentId` theo course).
+- **Primary action**: Button `primary` "Vào học" trên mỗi card → tạm thời điều hướng tới chính MyCourses (Lesson Player chưa tồn tại, cùng tiền lệ CourseDetailPage ở Phase 26).
+- **Component patterns**: Card app, Button primary.
+- **Loading state**: skeleton lưới card (`SkeletonCardGrid`).
+- **Empty state**: Empty State "Bạn chưa mua khóa học nào" + CTA "Khám phá khóa học".
+- **Error state**: Toast lỗi khi fetch danh sách thất bại.
+- **Success state**: không áp dụng (hoàn tiền chưa có UI).
 - **Responsive**: mobile-first, lưới `grid-cols-1` → `sm:grid-cols-2`.
-- **Mobile behavior**: menu "···" mở dạng bottom-sheet trên mobile thay vì dropdown nhỏ (dễ chạm hơn).
-- **Accessibility**: menu "···" có `aria-label="Tùy chọn khác"`, modal hoàn tiền tuân §10.9 (focus trap, ESC đóng).
+- **Mobile behavior**: không có hành vi đặc biệt (menu "···" chưa tồn tại ở phase này).
+- **Accessibility**: không áp dụng phần menu/modal hoàn tiền cho tới khi build (phase sau).
 
 ### 3.3 Lesson Player — `/student/learn/:courseId` (route mới, layout riêng)
 
@@ -395,8 +395,8 @@ Dashboard · Users · Courses · Categories · Orders · **Coupons** (mới) · 
 - **Target user**: Student.
 - **Entry points**: Sidebar "Hồ sơ học tập".
 - **Information hierarchy**: Tổng quan số liệu học tập → chi tiết theo từng khóa học.
-- **Page structure / Main sections**: Stat card tổng (tổng số khóa học, % hoàn thành trung bình, tổng bài test đã làm, điểm trung bình), danh sách/bảng chi tiết theo khóa học (tên khóa, % tiến độ, số bài test đã làm).
-- **Primary action**: click 1 dòng khóa học → MyCourses/Lesson Player tương ứng.
+- **Page structure / Main sections**: Stat card tổng — tổng số khóa học, tổng bài test đã làm, điểm trung bình (**dữ liệu thật**, gộp trên mọi khóa học). **Không có "% hoàn thành trung bình"** ở phase này — chưa có nguồn dữ liệu thật, chờ Lesson Player (Phase 35). Danh sách chi tiết theo khóa học ở phase này chỉ hiện tên khóa + Teacher (**không có % tiến độ hay số bài test riêng theo từng khóa** — backend hiện chỉ tổng hợp được số liệu gộp trên toàn bộ khóa học của Student, chưa breakdown theo từng khóa; xem ghi chú Phase 28 ở REFACTOR_PLAN.md).
+- **Primary action**: click 1 dòng khóa học → tạm thời điều hướng tới MyCourses (Lesson Player chưa tồn tại).
 - **Component patterns**: Stat card (Card app), Table hoặc list tùy độ dài — Student thường có ít khóa học nên dùng list-card nhất quán với MyCourses/Test Practice thay vì Table đầy đủ (Table dành riêng cho khu vực Admin/Teacher theo Design System §10.5).
 - **Loading state**: skeleton.
 - **Empty state**: Empty State giống MyCourses khi chưa có khóa học nào.

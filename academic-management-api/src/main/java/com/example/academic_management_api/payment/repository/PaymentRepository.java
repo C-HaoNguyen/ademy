@@ -23,6 +23,15 @@ public interface PaymentRepository extends JpaRepository<Payments, Integer> {
 
     Optional<Payments> findByGatewayTransactionRef(String gatewayTransactionRef);
 
+    // Phase 28 — Student tự tra payment của chính mình (MyCourses cần paymentId theo course).
+    @Query("""
+        SELECT p FROM Payments p
+        JOIN FETCH p.course
+        WHERE p.student.userId = :studentId
+        ORDER BY p.createdAt DESC
+        """)
+    List<Payments> findByStudent_UserIdOrderByCreatedAtDesc(@Param("studentId") Integer studentId);
+
     // Update có điều kiện — chỉ chuyển trạng thái khi đang PENDING (EC-002, Phase 21). Nếu 0 row bị
     // ảnh hưởng nghĩa là callback này tới muộn/lặp lại sau khi trạng thái đã được xác định trước đó
     // (bởi 1 callback khác) — caller coi đó là no-op idempotent, không xử lý lại (không tạo enrollment

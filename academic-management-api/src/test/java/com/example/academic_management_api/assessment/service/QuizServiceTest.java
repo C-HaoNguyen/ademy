@@ -5,6 +5,7 @@ import com.example.academic_management_api.assessment.dto.AttemptResultDto;
 import com.example.academic_management_api.assessment.dto.ChoiceRequest;
 import com.example.academic_management_api.assessment.dto.QuestionRequest;
 import com.example.academic_management_api.assessment.dto.QuizRequest;
+import com.example.academic_management_api.assessment.dto.QuizAttemptSummaryDto;
 import com.example.academic_management_api.assessment.dto.QuizStudentResponseDto;
 import com.example.academic_management_api.assessment.dto.StudentChoiceDto;
 import com.example.academic_management_api.assessment.dto.SubmitAttemptRequest;
@@ -419,6 +420,32 @@ class QuizServiceTest {
         assertThat(history).hasSize(2);
         assertThat(history.get(0).getAttemptId()).isEqualTo(2);
         assertThat(history.get(1).getAttemptId()).isEqualTo(1);
+    }
+
+    @Test
+    void getMyAttemptSummary_returnsCountAndAverageFromRepository() {
+        Users student = user(5, "student1");
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(attemptRepository.countByStudent_UserId(5)).thenReturn(3L);
+        when(attemptRepository.averageScoreByStudentId(5)).thenReturn(72.5);
+
+        QuizAttemptSummaryDto summary = quizService.getMyAttemptSummary("student1");
+
+        assertThat(summary.getAttemptCount()).isEqualTo(3L);
+        assertThat(summary.getAverageScore()).isEqualByComparingTo(BigDecimal.valueOf(72.5));
+    }
+
+    @Test
+    void getMyAttemptSummary_noAttempts_averageScoreIsNullNotZero() {
+        Users student = user(5, "student1");
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(attemptRepository.countByStudent_UserId(5)).thenReturn(0L);
+        when(attemptRepository.averageScoreByStudentId(5)).thenReturn(null);
+
+        QuizAttemptSummaryDto summary = quizService.getMyAttemptSummary("student1");
+
+        assertThat(summary.getAttemptCount()).isEqualTo(0L);
+        assertThat(summary.getAverageScore()).isNull();
     }
 
     private AnswerRequest answer(int questionId, int choiceId) {

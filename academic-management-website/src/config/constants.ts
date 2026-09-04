@@ -54,6 +54,11 @@ export const API_ENDPOINTS = {
         MY_SUMMARY: "/enrollments/student/me/summary",
     },
 
+    // Quiz attempts
+    QUIZ_ATTEMPTS: {
+        MY_SUMMARY: "/quiz-attempts/me/summary",
+    },
+
     // Admin Stats
     ADMIN: {
         TOTAL_USERS: "/admin/total-users",

@@ -13,6 +13,7 @@ import com.example.academic_management_api.payment.coupon.service.CouponService;
 import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
+import com.example.academic_management_api.payment.dto.MyPaymentDto;
 import com.example.academic_management_api.payment.entity.PaymentIdempotencyKey;
 import com.example.academic_management_api.payment.entity.PaymentMethod;
 import com.example.academic_management_api.payment.entity.PaymentStatus;
@@ -149,6 +150,17 @@ public class PaymentService {
 
     public List<Payments> getAllPayments() {
         return paymentRepository.findAllWithDetails();
+    }
+
+    // Phase 28 — Student tự tra payment của chính mình theo course (MyCourses cần paymentId).
+    public List<MyPaymentDto> getMyPayments(String username) {
+        Users student = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        return paymentRepository.findByStudent_UserIdOrderByCreatedAtDesc(student.getUserId())
+                .stream()
+                .map(p -> new MyPaymentDto(p.getPaymentId(), p.getCourse().getCourseId(), p.getStatus()))
+                .toList();
     }
 
     public long getTotalPayments() {

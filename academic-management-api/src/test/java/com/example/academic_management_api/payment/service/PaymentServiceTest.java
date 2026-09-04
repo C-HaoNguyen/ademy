@@ -621,4 +621,26 @@ class PaymentServiceTest {
         assertThatThrownBy(() -> mockModeService.previewCoupon("SALE20", 99))
                 .isInstanceOf(NotFoundException.class);
     }
+
+    @Test
+    void getMyPayments_returnsOwnPaymentsMappedToDto() {
+        Users student = student();
+        Courses course = course(new BigDecimal("500000.00"));
+
+        Payments payment = new Payments();
+        payment.setPaymentId(7);
+        payment.setCourse(course);
+        payment.setStatus(PaymentStatus.SUCCESS);
+
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(paymentRepository.findByStudent_UserIdOrderByCreatedAtDesc(10)).thenReturn(List.of(payment));
+
+        List<com.example.academic_management_api.payment.dto.MyPaymentDto> result =
+                mockModeService.getMyPayments("student1");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPaymentId()).isEqualTo(7);
+        assertThat(result.get(0).getCourseId()).isEqualTo(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+    }
 }

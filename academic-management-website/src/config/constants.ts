@@ -63,7 +63,12 @@ export const API_ENDPOINTS = {
     ADMIN: {
         TOTAL_USERS: "/admin/total-users",
         TOTAL_COURSES: "/admin/total-courses",
+        TOTAL_TEACHERS: "/admin/total-teachers",
+        TOTAL_STUDENTS: "/admin/total-students",
+        TOTAL_REVENUE: "/admin/total-revenue",
         PAYMENTS: "/admin/payments",
+        RECENT_PENDING_REFUNDS: "/admin/refund-requests/pending-preview",
+        RECENTLY_PUBLISHED_COURSES: "/admin/courses/recently-published",
     },
 } as const;
 

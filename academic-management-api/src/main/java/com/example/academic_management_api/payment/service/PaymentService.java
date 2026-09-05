@@ -167,6 +167,12 @@ public class PaymentService {
         return paymentRepository.count();
     }
 
+    // Phase 29 — AdminDashboard "Tổng doanh thu": chỉ tính payment SUCCESS thật đã vào, không tính
+    // PENDING/FAILED.
+    public BigDecimal getTotalRevenue() {
+        return paymentRepository.sumAmountByStatusSuccess();
+    }
+
     // ---------------------------------------------------------------------
     // Live mode (Phase 21) — VNPay/Momo là redirect flow, Stripe là API-based: không thể trả kết
     // quả cuối cùng ngay trong response của /payments/checkout như mock. Tách 2 bước, gọi từ

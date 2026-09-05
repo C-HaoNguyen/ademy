@@ -1,187 +1,144 @@
+import { Users, GraduationCap, BookOpen, DollarSign, RefreshCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/config/constants";
 import {
-    Users,
-    GraduationCap,
-    ShoppingCart,
-    DollarSign,
-    Activity,
-    BookOpen,
-    UserCheck,
-    Zap,
-    BarChart3,
-} from "lucide-react";
-import { useAdminStatsQuery } from "@/shared/api/queries/useAdminStatsQuery";
+    useTotalStudentsQuery,
+    useTotalCoursesQuery,
+    useTotalTeachersQuery,
+    useTotalRevenueQuery,
+    useRecentPendingRefundsQuery,
+    useRecentlyPublishedCoursesQuery,
+} from "@/shared/api/queries/useAdminStatsQuery";
+import Card from "@/shared/ui/Card";
+import StatCard from "@/shared/ui/StatCard";
+import Button from "@/shared/ui/Button";
+import EmptyState from "@/shared/ui/EmptyState";
+import { SkeletonText } from "@/shared/ui/Skeleton";
 
-const StatCard = ({
-    icon,
-    label,
-    value,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: string | number;
-}) => (
-    <div className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition">
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
-                    {value}
-                </p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
-                {icon}
-            </div>
-        </div>
-    </div>
-);
+const formatCurrency = (amount: number) => Number(amount ?? 0).toLocaleString("vi-VN") + "₫";
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
 
-    const { totalUsersQuery, totalCoursesQuery } = useAdminStatsQuery();
-    const totalUsers = totalUsersQuery.data ?? 0;
-    const totalCourses = totalCoursesQuery.data ?? 0;
+    const totalStudentsQuery = useTotalStudentsQuery();
+    const totalCoursesQuery = useTotalCoursesQuery();
+    const totalTeachersQuery = useTotalTeachersQuery();
+    const totalRevenueQuery = useTotalRevenueQuery();
+    const recentPendingRefundsQuery = useRecentPendingRefundsQuery();
+    const recentlyPublishedCoursesQuery = useRecentlyPublishedCoursesQuery();
 
     return (
         <div className="space-y-8">
-            {/* Title */}
             <div>
-                <h2 className="text-2xl font-semibold text-gray-800">
-                    Admin Dashboard
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                    Overview of system statistics & recent activities
+                <h2 className="text-h2 text-primary">Admin Dashboard</h2>
+                <p className="text-body-sm text-secondary mt-1">
+                    Tổng quan vận hành toàn nền tảng
                 </p>
             </div>
 
-            {/* Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
-                    icon={<Users size={22} />}
-                    label="Tổng số người dùng"
-                    value={totalUsers}
-                />
-                <StatCard
-                    icon={<GraduationCap size={22} />}
-                    label="Tổng số khóa học"
-                    value={totalCourses}
-                />
-                <StatCard
-                    icon={<ShoppingCart size={22} />}
-                    label="Số lượng đơn mua"
-                    value={560}
-                />
-                <StatCard
-                    icon={<DollarSign size={22} />}
+                    icon={<DollarSign size={22} aria-hidden="true" />}
                     label="Tổng doanh thu"
-                    value="12.545.740 đ"
+                    value={totalRevenueQuery.isError ? "—" : formatCurrency(totalRevenueQuery.data ?? 0)}
+                    loading={totalRevenueQuery.isLoading}
+                />
+                <StatCard
+                    icon={<Users size={22} aria-hidden="true" />}
+                    label="Tổng số học viên"
+                    value={totalStudentsQuery.isError ? "—" : (totalStudentsQuery.data ?? 0)}
+                    loading={totalStudentsQuery.isLoading}
+                />
+                <StatCard
+                    icon={<BookOpen size={22} aria-hidden="true" />}
+                    label="Tổng số khóa học"
+                    value={totalCoursesQuery.isError ? "—" : (totalCoursesQuery.data ?? 0)}
+                    loading={totalCoursesQuery.isLoading}
+                />
+                <StatCard
+                    icon={<GraduationCap size={22} aria-hidden="true" />}
+                    label="Tổng số Giảng viên"
+                    value={totalTeachersQuery.isError ? "—" : (totalTeachersQuery.data ?? 0)}
+                    loading={totalTeachersQuery.isLoading}
                 />
             </div>
 
-            {/* Middle section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Course status */}
-                <div className="bg-white rounded-xl p-5 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <BookOpen size={18} />
-                        Course Status
+                <Card variant="app">
+                    <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                        <RefreshCcw size={18} aria-hidden="true" />
+                        Yêu cầu hoàn tiền đang chờ duyệt
                     </h3>
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">Active courses</span>
-                            <span className="font-medium text-green-600">
-                                28
-                            </span>
-                        </li>
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">Draft courses</span>
-                            <span className="font-medium text-yellow-600">
-                                5
-                            </span>
-                        </li>
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">
-                                Disabled courses
-                            </span>
-                            <span className="font-medium text-red-600">
-                                2
-                            </span>
-                        </li>
-                    </ul>
-                </div>
 
-                {/* Instructors */}
-                <div className="bg-white rounded-xl p-5 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <UserCheck size={18} />
-                        Instructors
-                    </h3>
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">
-                                Total instructors
-                            </span>
-                            <span className="font-medium">8</span>
-                        </li>
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">
-                                Max courses / instructor
-                            </span>
-                            <span className="font-medium">7</span>
-                        </li>
-                        <li className="flex justify-between">
-                            <span className="text-gray-600">
-                                New this month
-                            </span>
-                            <span className="font-medium text-blue-600">
-                                2
-                            </span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                    {recentPendingRefundsQuery.isLoading ? (
+                        <SkeletonText lines={3} />
+                    ) : recentPendingRefundsQuery.isError ? (
+                        <p className="text-body-sm text-secondary">—</p>
+                    ) : (recentPendingRefundsQuery.data ?? []).length === 0 ? (
+                        <EmptyState icon={RefreshCcw} title="Không có yêu cầu nào đang chờ" />
+                    ) : (
+                        <ul className="space-y-3">
+                            {(recentPendingRefundsQuery.data ?? []).map((refund) => (
+                                <li
+                                    key={refund.id}
+                                    className="flex items-center justify-between gap-4 rounded-radius-md border border-default p-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-body font-medium text-primary truncate">
+                                            {refund.courseTitle}
+                                        </p>
+                                        <p className="text-body-sm text-secondary truncate">
+                                            {new Date(refund.requestedAt).toLocaleDateString("vi-VN")}
+                                        </p>
+                                    </div>
+                                    <span className="text-body-sm font-medium text-primary shrink-0">
+                                        {formatCurrency(refund.amount)}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
 
-            {/* Recent activities */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Activity size={18} />
-                    Recent Activities
-                </h3>
-                <ul className="text-sm space-y-3">
-                    <li>➕ New user registered: <b>john_doe</b></li>
-                    <li>🎓 New course created: <b>React for Beginners</b></li>
-                    <li>💳 New order placed: <b>#ORD-1024</b></li>
-                    <li>✏️ Course updated: <b>Java Spring Boot</b></li>
-                </ul>
-            </div>
+                <Card variant="app">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-primary flex items-center gap-2">
+                            <BookOpen size={18} aria-hidden="true" />
+                            Khóa học mới publish gần đây
+                        </h3>
+                        <Button variant="tertiary" size="sm" onClick={() => navigate(ROUTES.ADMIN.COURSES)}>
+                            Xem tất cả
+                        </Button>
+                    </div>
 
-            {/* Quick actions */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Zap size={18} />
-                    Quick Actions
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                    <button className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-                        Add User
-                    </button>
-                    <button className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition">
-                        Create Course
-                    </button>
-                    <button className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 transition">
-                        Manage Categories
-                    </button>
-                    <button className="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-800 transition">
-                        View Reports
-                    </button>
-                </div>
-            </div>
-
-            {/* Chart placeholder */}
-            <div className="bg-white rounded-xl p-8 shadow-sm flex flex-col items-center justify-center text-gray-400">
-                <BarChart3 size={32} />
-                <p className="mt-2 text-sm">
-                    Revenue & User Growth Chart (Coming soon)
-                </p>
+                    {recentlyPublishedCoursesQuery.isLoading ? (
+                        <SkeletonText lines={3} />
+                    ) : recentlyPublishedCoursesQuery.isError ? (
+                        <p className="text-body-sm text-secondary">—</p>
+                    ) : (recentlyPublishedCoursesQuery.data ?? []).length === 0 ? (
+                        <EmptyState icon={BookOpen} title="Chưa có khóa học nào được publish" />
+                    ) : (
+                        <ul className="space-y-3">
+                            {(recentlyPublishedCoursesQuery.data ?? []).map((course) => (
+                                <li
+                                    key={course.courseId}
+                                    className="flex items-center justify-between gap-4 rounded-radius-md border border-default p-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-body font-medium text-primary truncate">
+                                            {course.title}
+                                        </p>
+                                        {course.instructorName && (
+                                            <p className="text-body-sm text-secondary truncate">
+                                                {course.instructorName}
+                                            </p>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
             </div>
         </div>
     );

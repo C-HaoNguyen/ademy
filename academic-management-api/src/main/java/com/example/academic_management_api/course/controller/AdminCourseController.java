@@ -1,6 +1,7 @@
 package com.example.academic_management_api.course.controller;
 
 import com.example.academic_management_api.course.dto.CreateCourseRequest;
+import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.service.CourseService;
 import jakarta.validation.Valid;
@@ -33,6 +34,12 @@ public class AdminCourseController {
         return ResponseEntity.ok(
                 Map.of("totalCourses", totalCourses)
         );
+    }
+
+    // Phase 29 — AdminDashboard danh sách rút gọn (top 5 course PUBLISHED mới cập nhật gần nhất).
+    @GetMapping("/courses/recently-published")
+    public List<RecentlyPublishedCourseDto> getRecentlyPublishedCourses() {
+        return courseService.getRecentlyPublished(5);
     }
 
     /**

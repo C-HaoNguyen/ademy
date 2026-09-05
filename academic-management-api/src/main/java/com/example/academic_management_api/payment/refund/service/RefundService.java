@@ -20,6 +20,7 @@ import com.example.academic_management_api.payment.refund.repository.RefundReque
 import com.example.academic_management_api.payment.repository.PaymentRepository;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,6 +130,15 @@ public class RefundService {
 
     public List<RefundResponse> getAll() {
         return refundRequestRepository.findAllWithDetails().stream().map(this::toResponse).toList();
+    }
+
+    // Phase 29 — AdminDashboard danh sách rút gọn "Yêu cầu hoàn tiền đang chờ duyệt".
+    public List<RefundResponse> getRecentPending(int limit) {
+        return refundRequestRepository
+                .findByBusinessStatusOrderByRequestedAtDesc(RefundBusinessStatus.REQUESTED, PageRequest.of(0, limit))
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Audited(action = "REFUND_APPROVE", targetType = "REFUND_REQUEST", targetIdExpression = "#id")

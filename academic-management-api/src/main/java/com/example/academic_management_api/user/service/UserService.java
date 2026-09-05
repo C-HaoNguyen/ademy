@@ -192,6 +192,16 @@ public class UserService {
         return userRepository.findByRole(Role.TEACHER);
     }
 
+    // Phase 29 — AdminDashboard cần tổng số Teacher/Student riêng biệt (khác getTotalUsers() —
+    // đếm mọi role). Dùng countByRole (COUNT query) thay vì fetch cả List<Users> rồi .size().
+    public long getTotalTeachers() {
+        return userRepository.countByRole(Role.TEACHER);
+    }
+
+    public long getTotalStudents() {
+        return userRepository.countByRole(Role.STUDENT);
+    }
+
     @Audited(action = "ADMIN_USER_DELETE", targetType = "USER", targetIdExpression = "#userId")
     public void deleteUser(Integer userId) {
         if (!userRepository.existsById(userId)) {

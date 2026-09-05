@@ -378,4 +378,33 @@ class RefundServiceTest {
 
         verify(refundGatewayPort, times(1)).executeRefund(any());
     }
+
+    // ------------------------------------------------------------------
+    // Phase 29 — AdminDashboard "Yêu cầu hoàn tiền đang chờ duyệt" (rút gọn)
+    // ------------------------------------------------------------------
+
+    @Test
+    void getRecentPending_returnsOnlyRequestedMappedToResponse() {
+        RefundRequests pending = refundRequest(RefundBusinessStatus.REQUESTED, RefundExecutionStatus.NOT_STARTED);
+
+        when(refundRequestRepository.findByBusinessStatusOrderByRequestedAtDesc(
+                eq(RefundBusinessStatus.REQUESTED), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(java.util.List.of(pending));
+
+        java.util.List<RefundResponse> result = refundService.getRecentPending(5);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getBusinessStatus()).isEqualTo(RefundBusinessStatus.REQUESTED);
+    }
+
+    @Test
+    void getRecentPending_noneRequested_returnsEmptyList() {
+        when(refundRequestRepository.findByBusinessStatusOrderByRequestedAtDesc(
+                eq(RefundBusinessStatus.REQUESTED), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(java.util.List.of());
+
+        java.util.List<RefundResponse> result = refundService.getRecentPending(5);
+
+        assertThat(result).isEmpty();
+    }
 }

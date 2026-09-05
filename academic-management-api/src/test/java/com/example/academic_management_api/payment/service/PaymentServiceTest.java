@@ -643,4 +643,26 @@ class PaymentServiceTest {
         assertThat(result.get(0).getCourseId()).isEqualTo(1);
         assertThat(result.get(0).getStatus()).isEqualTo(PaymentStatus.SUCCESS);
     }
+
+    // ------------------------------------------------------------------
+    // Phase 29 — AdminDashboard "Tổng doanh thu"
+    // ------------------------------------------------------------------
+
+    @Test
+    void getTotalRevenue_returnsSumFromRepository() {
+        when(paymentRepository.sumAmountByStatusSuccess()).thenReturn(new BigDecimal("1500000.00"));
+
+        BigDecimal result = mockModeService.getTotalRevenue();
+
+        assertThat(result).isEqualByComparingTo("1500000.00");
+    }
+
+    @Test
+    void getTotalRevenue_noSuccessfulPayments_returnsZeroNotNull() {
+        when(paymentRepository.sumAmountByStatusSuccess()).thenReturn(BigDecimal.ZERO);
+
+        BigDecimal result = mockModeService.getTotalRevenue();
+
+        assertThat(result).isEqualByComparingTo(BigDecimal.ZERO);
+    }
 }

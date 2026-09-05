@@ -76,6 +76,24 @@ public class AdminController {
         return userService.getAllInstructors();
     }
 
+    @GetMapping("/total-teachers")
+    public ResponseEntity<?> getTotalTeachers() {
+        long totalTeachers = userService.getTotalTeachers();
+
+        return ResponseEntity.ok(
+                Map.of("totalTeachers", totalTeachers)
+        );
+    }
+
+    @GetMapping("/total-students")
+    public ResponseEntity<?> getTotalStudents() {
+        long totalStudents = userService.getTotalStudents();
+
+        return ResponseEntity.ok(
+                Map.of("totalStudents", totalStudents)
+        );
+    }
+
     @DeleteMapping("/deleted-user")
     public void deleteUser(@RequestBody Users user) {
         userService.deleteUser(user.getUserId());

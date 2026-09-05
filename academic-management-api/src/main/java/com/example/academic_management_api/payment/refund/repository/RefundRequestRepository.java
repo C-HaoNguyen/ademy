@@ -3,6 +3,7 @@ package com.example.academic_management_api.payment.refund.repository;
 import com.example.academic_management_api.payment.entity.Payments;
 import com.example.academic_management_api.payment.refund.entity.RefundBusinessStatus;
 import com.example.academic_management_api.payment.refund.entity.RefundRequests;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -40,6 +41,19 @@ public interface RefundRequestRepository extends JpaRepository<RefundRequests, I
     // refund_requests_active_payment_uq (V8) — RefundService bắt DataIntegrityViolationException
     // khi vi phạm, cùng nguyên tắc PaymentService/isAlreadyEnrolled + enrollments_active_student_course_uq.
     boolean existsByPaymentAndBusinessStatusNot(Payments payment, RefundBusinessStatus businessStatus);
+
+    // Phase 29 — AdminDashboard "Yêu cầu hoàn tiền đang chờ duyệt" (danh sách rút gọn). Pageable
+    // giới hạn số dòng (JPQL không có LIMIT trực tiếp) — caller truyền PageRequest.of(0, N).
+    @Query("""
+        SELECT r FROM RefundRequests r
+        JOIN FETCH r.payment p
+        JOIN FETCH p.course
+        JOIN FETCH r.student
+        WHERE r.businessStatus = :businessStatus
+        ORDER BY r.requestedAt DESC
+        """)
+    List<RefundRequests> findByBusinessStatusOrderByRequestedAtDesc(
+            @Param("businessStatus") RefundBusinessStatus businessStatus, Pageable pageable);
 
     // Update có điều kiện — chỉ chuyển REQUESTED -> APPROVED/REJECTED, cùng nguyên tắc
     // PaymentRepository.updateStatusIfPending (Phase 21): đóng race 2 admin (hoặc double-click)

@@ -24,6 +24,12 @@ public class AdminRefundController {
         return refundService.getAll();
     }
 
+    // Phase 29 — AdminDashboard danh sách rút gọn (top 5 REQUESTED gần nhất).
+    @GetMapping("/pending-preview")
+    public List<RefundResponse> getPendingPreview() {
+        return refundService.getRecentPending(5);
+    }
+
     @PostMapping("/{id}/approve")
     public RefundResponse approve(@PathVariable Integer id) {
         return refundService.approve(id);

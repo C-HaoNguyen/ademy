@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,13 @@ public interface PaymentRepository extends JpaRepository<Payments, Integer> {
     List<Payments> findAllWithDetails();
 
     Optional<Payments> findByGatewayTransactionRef(String gatewayTransactionRef);
+
+    // Phase 29 — AdminDashboard "Tổng doanh thu". SUM trên state-field BigDecimal trả về BigDecimal
+    // theo JPA spec §4.8.5 (khác AVG luôn trả Double bất kể kiểu cột gốc — bug đã gặp ở Phase 28),
+    // nên khai BigDecimal ở đây là đúng, không cần convert qua Double. COALESCE về 0 khi chưa có
+    // payment SUCCESS nào (SUM trên tập rỗng trả NULL).
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payments p WHERE p.status = com.example.academic_management_api.payment.entity.PaymentStatus.SUCCESS")
+    BigDecimal sumAmountByStatusSuccess();
 
     // Phase 28 — Student tự tra payment của chính mình (MyCourses cần paymentId theo course).
     @Query("""

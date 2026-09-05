@@ -32,4 +32,11 @@ public class AdminPaymentController {
                 Map.of("totalPayments", totalPayments)
         );
     }
+
+    @GetMapping("/total-revenue")
+    public ResponseEntity<?> getTotalRevenue() {
+        return ResponseEntity.ok(
+                Map.of("totalRevenue", paymentService.getTotalRevenue())
+        );
+    }
 }

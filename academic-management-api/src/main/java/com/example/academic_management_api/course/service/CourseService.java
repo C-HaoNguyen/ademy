@@ -7,12 +7,14 @@ import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.dto.CourseResponseDto;
 import com.example.academic_management_api.course.dto.CreateCourseRequest;
+import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto;
 import com.example.academic_management_api.course.dto.TeacherCourseRequest;
 import com.example.academic_management_api.course.entity.CourseStatus;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -83,6 +85,20 @@ public class CourseService {
 
     public long getTotalCourses() {
         return courseRepository.count();
+    }
+
+    // Phase 29 — AdminDashboard danh sách rút gọn "Khóa học mới publish gần đây".
+    public List<RecentlyPublishedCourseDto> getRecentlyPublished(int limit) {
+        return courseRepository.findPublishedOrderByUpdatedAtDesc(PageRequest.of(0, limit))
+                .stream()
+                .map(c -> new RecentlyPublishedCourseDto(
+                        c.getCourseId(),
+                        c.getTitle(),
+                        c.getThumbnail(),
+                        c.getInstructor().getFullName(),
+                        c.getUpdatedAt()
+                ))
+                .toList();
     }
 
     public ResponseEntity<?> createCourse(CreateCourseRequest request) {

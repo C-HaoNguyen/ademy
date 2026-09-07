@@ -1,6 +1,7 @@
 package com.example.academic_management_api.enrollment.controller;
 
 import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,5 +25,10 @@ public class TeacherEnrollmentController {
     @GetMapping("/{id}/students")
     public ResponseEntity<List<EnrolledStudentDto>> getStudents(@PathVariable Integer id, Authentication authentication) {
         return ResponseEntity.ok(enrollmentService.getStudentsByCourse(id, authentication.getName()));
+    }
+
+    @GetMapping("/students-count")
+    public ResponseEntity<List<TeacherCourseStudentCountDto>> getStudentCounts(Authentication authentication) {
+        return ResponseEntity.ok(enrollmentService.getStudentCountsByTeacher(authentication.getName()));
     }
 }

@@ -8,6 +8,7 @@ import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.EnrollRequest;
 import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
 import com.example.academic_management_api.enrollment.dto.MyCourseDto;
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
 import com.example.academic_management_api.enrollment.repository.EnrollmentRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -124,6 +125,11 @@ public class EnrollmentService {
                         e.getEnrolledAt()
                 ))
                 .toList();
+    }
+
+    // Phase 30 — Teacher Dashboard (tổng học viên) + Teacher Courses List (cột Số học viên).
+    public List<TeacherCourseStudentCountDto> getStudentCountsByTeacher(String teacherUsername) {
+        return enrollmentRepository.countActiveStudentsGroupedByCourseForTeacher(teacherUsername);
     }
 
     public void revokeAccess(Integer enrollmentId, String reason) {

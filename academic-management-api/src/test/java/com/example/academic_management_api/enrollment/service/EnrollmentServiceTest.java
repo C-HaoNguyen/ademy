@@ -3,6 +3,7 @@ package com.example.academic_management_api.enrollment.service;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.MyCourseDto;
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
 import com.example.academic_management_api.enrollment.repository.EnrollmentRepository;
 import com.example.academic_management_api.user.entity.Users;
@@ -90,5 +91,21 @@ class EnrollmentServiceTest {
         assertThat(dto.getThumbnail()).isEqualTo("thumb.png");
         assertThat(dto.getInstructorName()).isEqualTo("Nguyen Van A");
         assertThat(dto.getEnrolledAt()).isEqualTo(enrolledAt);
+    }
+
+    @Test
+    void getStudentCountsByTeacher_delegatesToRepositoryGroupedQuery() {
+        List<TeacherCourseStudentCountDto> counts = List.of(
+                new TeacherCourseStudentCountDto(1, 3L),
+                new TeacherCourseStudentCountDto(2, 1L)
+        );
+        when(enrollmentRepository.countActiveStudentsGroupedByCourseForTeacher("teacher1")).thenReturn(counts);
+
+        List<TeacherCourseStudentCountDto> result = enrollmentService.getStudentCountsByTeacher("teacher1");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getCourseId()).isEqualTo(1);
+        assertThat(result.get(0).getStudentCount()).isEqualTo(3L);
+        verify(enrollmentRepository).countActiveStudentsGroupedByCourseForTeacher("teacher1");
     }
 }

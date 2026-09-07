@@ -14,6 +14,7 @@ import Checkout from "@/features/payment/Checkout";
 import PublicLayout from "@/features/public/components/PublicLayout";
 import StudentLayout from "@/features/student/components/StudentLayout";
 import AdminLayout from "@/features/admin/components/AdminLayout";
+import TeacherLayout from "@/features/teacher/components/TeacherLayout";
 
 import Dashboard from "@/features/student/dashboard/Dashboard";
 import MyCourses from "@/features/student/my-courses/MyCourses";
@@ -26,6 +27,10 @@ import AdminUsersList from "@/features/admin/users/AdminUsersList";
 import AdminCourses from "@/features/admin/courses/AdminCourses";
 import AdminCategories from "@/features/admin/categories/AdminCategories";
 import AdminOrders from "@/features/admin/orders/AdminOrders";
+
+import TeacherDashboard from "@/features/teacher/dashboard/TeacherDashboard";
+import TeacherCoursesList from "@/features/teacher/courses/TeacherCoursesList";
+import CourseEditor from "@/features/teacher/courses/CourseEditor";
 
 const AppRoutes = () => {
     return (
@@ -85,6 +90,22 @@ const AppRoutes = () => {
                     <Route path="courses" element={<AdminCourses />} />
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="orders" element={<AdminOrders />} />
+                </Route>
+
+                {/* ===== TEACHER (PRIVATE) ===== */}
+                <Route
+                    path="/teacher"
+                    element={
+                        <ProtectedRoute allowedRoles={[ROLES.TEACHER]}>
+                            <TeacherLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<TeacherDashboard />} />
+                    <Route path="courses" element={<TeacherCoursesList />} />
+                    <Route path="courses/new" element={<CourseEditor />} />
+                    <Route path="courses/:courseId/edit" element={<CourseEditor />} />
                 </Route>
             </Routes>
         </BrowserRouter>

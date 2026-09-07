@@ -3,6 +3,7 @@ package com.example.academic_management_api.course.service;
 import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.category.entity.Categories;
 import com.example.academic_management_api.category.repository.CategoryRepository;
+import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.dto.CourseResponseDto;
@@ -11,6 +12,7 @@ import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto
 import com.example.academic_management_api.course.dto.TeacherCourseRequest;
 import com.example.academic_management_api.course.entity.CourseStatus;
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
@@ -27,11 +29,18 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final LessonService lessonService;
 
-    public CourseService(CourseRepository courseRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
+    public CourseService(
+            CourseRepository courseRepository,
+            UserRepository userRepository,
+            CategoryRepository categoryRepository,
+            LessonService lessonService
+    ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.lessonService = lessonService;
     }
 
     private CourseResponseDto mapToDto(Courses course) {
@@ -216,6 +225,11 @@ public class CourseService {
                     .body("Danh mục không được để trống");
         }
 
+        // Course vừa tạo chưa thể có lesson nào — không cho publish ngay lúc tạo (UI_SPEC §4.3).
+        if (request.getStatus() == CourseStatus.PUBLISHED) {
+            throw new ConflictException("Không thể publish khóa học chưa có nội dung (lesson)");
+        }
+
         Categories category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
 
@@ -246,6 +260,11 @@ public class CourseService {
         if (request.getCategoryId() == null) {
             return ResponseEntity.badRequest()
                     .body("Danh mục không được để trống");
+        }
+
+        // UI_SPEC §4.3: publish thất bại nếu curriculum rỗng.
+        if (request.getStatus() == CourseStatus.PUBLISHED && !lessonService.hasAnyLesson(courseId)) {
+            throw new ConflictException("Không thể publish khóa học chưa có nội dung (lesson)");
         }
 
         Categories category = categoryRepository.findById(request.getCategoryId())

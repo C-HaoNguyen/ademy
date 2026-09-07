@@ -118,4 +118,10 @@ public class LessonService {
         return lessonRepository.findByIdWithCourse(lessonId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy lesson"));
     }
+
+    // Dùng cho CourseService validate publish (Phase 30) — không có ownership check, caller tự đảm bảo
+    // đã verify ownership course trước đó.
+    public boolean hasAnyLesson(Integer courseId) {
+        return lessonRepository.existsByCourse_CourseId(courseId);
+    }
 }

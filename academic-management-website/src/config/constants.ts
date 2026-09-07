@@ -70,6 +70,22 @@ export const API_ENDPOINTS = {
         RECENT_PENDING_REFUNDS: "/admin/refund-requests/pending-preview",
         RECENTLY_PUBLISHED_COURSES: "/admin/courses/recently-published",
     },
+
+    // Teacher (Phase 30)
+    TEACHER: {
+        COURSES: "/teacher/courses",
+        COURSE_DETAIL: (id: number | string) => `/teacher/courses/${id}`,
+        STUDENTS_COUNT: "/teacher/courses/students-count",
+        STUDENTS: (courseId: number | string) => `/teacher/courses/${courseId}/students`,
+        LESSONS: (courseId: number | string) => `/teacher/courses/${courseId}/lessons`,
+        LESSON_DETAIL: (courseId: number | string, lessonId: number | string) =>
+            `/teacher/courses/${courseId}/lessons/${lessonId}`,
+        LESSON_VIDEO_PRESIGN: (courseId: number | string, lessonId: number | string) =>
+            `/teacher/courses/${courseId}/lessons/${lessonId}/video/presign`,
+        COURSE_QUIZ: (courseId: number | string) => `/teacher/courses/${courseId}/quiz`,
+        LESSON_QUIZ: (courseId: number | string, lessonId: number | string) =>
+            `/teacher/courses/${courseId}/lessons/${lessonId}/quiz`,
+    },
 } as const;
 
 export const ROLES = {
@@ -121,10 +137,13 @@ export const ROUTES = {
         PROFILE: "/admin/profile",
     },
 
-    // Teacher (future)
+    // Teacher
     TEACHER: {
         ROOT: "/teacher",
         DASHBOARD: "/teacher/dashboard",
+        COURSES: "/teacher/courses",
+        COURSE_NEW: "/teacher/courses/new",
+        COURSE_EDIT: (id: number | string) => `/teacher/courses/${id}/edit`,
     },
 } as const;
 

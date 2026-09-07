@@ -1,5 +1,6 @@
 package com.example.academic_management_api.enrollment.repository;
 
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -37,4 +38,17 @@ public interface EnrollmentRepository extends JpaRepository<Enrollments, Integer
         WHERE e.course.courseId = :courseId
         """)
     List<Enrollments> findByCourse_CourseIdWithStudent(@Param("courseId") Integer courseId);
+
+    @Query("""
+        SELECT new com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto(
+            e.course.courseId, COUNT(e)
+        )
+        FROM Enrollments e
+        WHERE e.course.instructor.username = :teacherUsername
+        AND e.accessRevokedAt IS NULL
+        GROUP BY e.course.courseId
+        """)
+    List<TeacherCourseStudentCountDto> countActiveStudentsGroupedByCourseForTeacher(
+            @Param("teacherUsername") String teacherUsername
+    );
 }

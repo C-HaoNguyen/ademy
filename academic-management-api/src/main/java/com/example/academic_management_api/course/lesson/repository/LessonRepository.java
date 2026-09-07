@@ -24,4 +24,6 @@ public interface LessonRepository extends JpaRepository<Lessons, Integer> {
         WHERE l.lessonId = :lessonId
         """)
     Optional<Lessons> findByIdWithCourse(@Param("lessonId") Integer lessonId);
+
+    boolean existsByCourse_CourseId(Integer courseId);
 }

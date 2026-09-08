@@ -14,6 +14,7 @@ import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
 import Tabs, { type TabItem } from "@/shared/ui/Tabs";
 import { SkeletonText } from "@/shared/ui/Skeleton";
+import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
 import OverviewTab from "./tabs/OverviewTab";
 import CurriculumTab from "./tabs/CurriculumTab";
 import QuizTab from "./tabs/QuizTab";
@@ -21,18 +22,6 @@ import StudentsTab from "./tabs/StudentsTab";
 import SettingsTab from "./tabs/SettingsTab";
 
 type CourseStatus = "draft" | "published" | "archived";
-
-const statusTone: Record<string, "success" | "warning" | "danger"> = {
-    published: "success",
-    draft: "warning",
-    archived: "danger",
-};
-
-const statusLabel: Record<string, string> = {
-    published: "Published",
-    draft: "Draft",
-    archived: "Archived",
-};
 
 const nextQuickStatus: Record<string, { status: CourseStatus; label: string }> = {
     draft: { status: "published", label: "Publish" },
@@ -157,8 +146,8 @@ const CourseEditor = () => {
                 <div className="flex items-center gap-3">
                     <h2 className="text-h2 text-primary">{course ? course.title : "Tạo khóa học mới"}</h2>
                     {course && (
-                        <Badge variant="status" tone={statusTone[course.status] ?? "info"}>
-                            {statusLabel[course.status] ?? course.status}
+                        <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
+                            {COURSE_STATUS_LABEL[course.status] ?? course.status}
                         </Badge>
                     )}
                 </div>

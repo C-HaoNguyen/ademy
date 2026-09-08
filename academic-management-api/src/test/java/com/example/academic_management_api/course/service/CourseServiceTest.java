@@ -3,12 +3,16 @@ package com.example.academic_management_api.course.service;
 import com.example.academic_management_api.category.entity.Categories;
 import com.example.academic_management_api.category.repository.CategoryRepository;
 import com.example.academic_management_api.common.exception.ConflictException;
+import com.example.academic_management_api.common.exception.ForbiddenException;
+import com.example.academic_management_api.course.dto.AdminCourseListDto;
 import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto;
 import com.example.academic_management_api.course.dto.TeacherCourseRequest;
 import com.example.academic_management_api.course.entity.CourseStatus;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.repository.CourseRepository;
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
+import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +36,7 @@ import static org.mockito.Mockito.when;
 // Phase 29 — AdminDashboard "Khóa học mới publish gần đây". Chỉ test method mới thêm ở phase này,
 // không mở rộng coverage cho phần còn lại của CourseService (ngoài scope Phase 29).
 // Phase 30 — thêm test cho validate publish thất bại khi curriculum rỗng (UI_SPEC §4.3).
+// Phase 31 — thêm test cho getAllCourses (DTO giám sát) + lock sau force-unpublish.
 @ExtendWith(MockitoExtension.class)
 class CourseServiceTest {
 
@@ -43,12 +48,15 @@ class CourseServiceTest {
     private CategoryRepository categoryRepository;
     @Mock
     private LessonService lessonService;
+    @Mock
+    private EnrollmentService enrollmentService;
 
     private CourseService courseService;
 
     @BeforeEach
     void setUp() {
-        courseService = new CourseService(courseRepository, userRepository, categoryRepository, lessonService);
+        courseService = new CourseService(
+                courseRepository, userRepository, categoryRepository, lessonService, enrollmentService);
     }
 
     private Courses publishedCourse() {
@@ -186,5 +194,93 @@ class CourseServiceTest {
         ResponseEntity<?> response = courseService.updateOwnCourse(10, request, "teacher1");
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+    }
+
+    @Test
+    void updateOwnCourse_publishWhenAdminLocked_throwsForbidden() {
+        Users teacher = new Users();
+        teacher.setUserId(9);
+        when(userRepository.findByUsername("teacher1")).thenReturn(Optional.of(teacher));
+
+        Courses course = new Courses();
+        course.setCourseId(10);
+        course.setInstructor(teacher);
+        course.setAdminLocked(true);
+        when(courseRepository.findByIdWithDetails(10)).thenReturn(Optional.of(course));
+        when(lessonService.hasAnyLesson(10)).thenReturn(true);
+
+        TeacherCourseRequest request = requestWithStatus(CourseStatus.PUBLISHED, 1);
+
+        assertThatThrownBy(() -> courseService.updateOwnCourse(10, request, "teacher1"))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void forceUnpublish_setsArchivedStatusAndAdminLocked() {
+        Users instructor = new Users();
+        instructor.setUserId(5);
+
+        Courses course = new Courses();
+        course.setCourseId(1);
+        course.setInstructor(instructor);
+        course.setStatus(CourseStatus.PUBLISHED);
+        when(courseRepository.findByIdWithDetails(1)).thenReturn(Optional.of(course));
+        when(courseRepository.save(any(Courses.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        courseService.forceUnpublish(1, "Nội dung vi phạm bản quyền");
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.ARCHIVED);
+        assertThat(course.isAdminLocked()).isTrue();
+        assertThat(course.getForceUnpublishReason()).isEqualTo("Nội dung vi phạm bản quyền");
+    }
+
+    @Test
+    void getAllCourses_mapsStudentCountAndPublishedAtWithoutLeakingEntity() {
+        Users instructor = new Users();
+        instructor.setUserId(5);
+        instructor.setFullName("Nguyễn Văn A");
+
+        Courses course = new Courses();
+        course.setCourseId(1);
+        course.setTitle("Java cơ bản");
+        course.setStatus(CourseStatus.PUBLISHED);
+        course.setInstructor(instructor);
+        LocalDateTime publishedAt = LocalDateTime.of(2026, 9, 1, 10, 0);
+        course.setPublishedAt(publishedAt);
+
+        when(courseRepository.findAllWithDetails()).thenReturn(List.of(course));
+        when(enrollmentService.getAllStudentCounts())
+                .thenReturn(List.of(new TeacherCourseStudentCountDto(1, 3L)));
+
+        List<AdminCourseListDto> result = courseService.getAllCourses();
+
+        assertThat(result).hasSize(1);
+        AdminCourseListDto dto = result.get(0);
+        assertThat(dto.getCourseId()).isEqualTo(1);
+        assertThat(dto.getTitle()).isEqualTo("Java cơ bản");
+        assertThat(dto.getStatus()).isEqualTo(CourseStatus.PUBLISHED);
+        assertThat(dto.getInstructorFullName()).isEqualTo("Nguyễn Văn A");
+        assertThat(dto.getStudentCount()).isEqualTo(3L);
+        assertThat(dto.getPublishedAt()).isEqualTo(publishedAt);
+    }
+
+    @Test
+    void getAllCourses_courseWithNoEnrollments_studentCountIsZeroNotMissing() {
+        Users instructor = new Users();
+        instructor.setUserId(5);
+        instructor.setFullName("Nguyễn Văn A");
+
+        Courses course = new Courses();
+        course.setCourseId(2);
+        course.setTitle("Course chưa ai mua");
+        course.setStatus(CourseStatus.DRAFT);
+        course.setInstructor(instructor);
+
+        when(courseRepository.findAllWithDetails()).thenReturn(List.of(course));
+        when(enrollmentService.getAllStudentCounts()).thenReturn(List.of());
+
+        List<AdminCourseListDto> result = courseService.getAllCourses();
+
+        assertThat(result.get(0).getStudentCount()).isEqualTo(0L);
     }
 }

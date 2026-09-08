@@ -5,18 +5,7 @@ import Card from "@/shared/ui/Card";
 import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
 import ConfirmDeleteModal from "@/shared/ui/ConfirmDeleteModal";
-
-const statusTone: Record<string, "success" | "warning" | "danger"> = {
-    published: "success",
-    draft: "warning",
-    archived: "danger",
-};
-
-const statusLabel: Record<string, string> = {
-    published: "Published",
-    draft: "Draft",
-    archived: "Archived",
-};
+import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
 
 interface SettingsTabProps {
     course: TeacherCourse;
@@ -34,8 +23,8 @@ const SettingsTab = ({ course, changingStatus, onChangeStatus, deleting, onDelet
             <Card variant="app">
                 <h3 className="font-semibold text-primary mb-4">Trạng thái khóa học</h3>
                 <div className="flex items-center gap-4">
-                    <Badge variant="status" tone={statusTone[course.status] ?? "info"}>
-                        {statusLabel[course.status] ?? course.status}
+                    <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
+                        {COURSE_STATUS_LABEL[course.status] ?? course.status}
                     </Badge>
                     <div className="flex gap-2">
                         <Button

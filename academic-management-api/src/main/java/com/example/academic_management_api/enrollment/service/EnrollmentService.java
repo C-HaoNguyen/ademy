@@ -1,5 +1,6 @@
 package com.example.academic_management_api.enrollment.service;
 
+import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
@@ -116,13 +117,28 @@ public class EnrollmentService {
             throw new ForbiddenException("Bạn không có quyền xem học viên của khóa học này");
         }
 
+        return mapToEnrolledStudentDtos(courseId);
+    }
+
+    // Phase 31 — AdminCourses "Thu hồi quyền truy cập": Admin xem học viên của mọi course, không
+    // qua ownership check (khác getStudentsByCourse của Teacher ở trên).
+    public List<EnrolledStudentDto> getStudentsByCourseAsAdmin(Integer courseId) {
+        if (!courseRepository.existsById(courseId)) {
+            throw new NotFoundException("Không tìm thấy khóa học");
+        }
+
+        return mapToEnrolledStudentDtos(courseId);
+    }
+
+    private List<EnrolledStudentDto> mapToEnrolledStudentDtos(Integer courseId) {
         return enrollmentRepository.findByCourse_CourseIdWithStudent(courseId)
                 .stream()
                 .map(e -> new EnrolledStudentDto(
                         e.getEnrollmentId(),
                         e.getStudent().getUsername(),
                         e.getStudent().getFullName(),
-                        e.getEnrolledAt()
+                        e.getEnrolledAt(),
+                        e.getAccessRevokedAt()
                 ))
                 .toList();
     }
@@ -132,6 +148,14 @@ public class EnrollmentService {
         return enrollmentRepository.countActiveStudentsGroupedByCourseForTeacher(teacherUsername);
     }
 
+    // Phase 31 — AdminCourses "Số học viên" (tổng số đã mua, mọi course) — public entry point cho
+    // CourseService gọi qua (module course không được đụng EnrollmentRepository trực tiếp, ADR
+    // module boundary ở CLAUDE.md).
+    public List<TeacherCourseStudentCountDto> getAllStudentCounts() {
+        return enrollmentRepository.countAllStudentsGroupedByCourse();
+    }
+
+    @Audited(action = "ADMIN_ENROLLMENT_REVOKE_ACCESS", targetType = "ENROLLMENT", targetIdExpression = "#enrollmentId")
     public void revokeAccess(Integer enrollmentId, String reason) {
         Enrollments enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy enrollment"));

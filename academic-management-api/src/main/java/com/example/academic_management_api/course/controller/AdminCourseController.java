@@ -1,8 +1,8 @@
 package com.example.academic_management_api.course.controller;
 
-import com.example.academic_management_api.course.dto.CreateCourseRequest;
+import com.example.academic_management_api.course.dto.AdminCourseListDto;
+import com.example.academic_management_api.course.dto.ForceUnpublishRequest;
 import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto;
-import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ public class AdminCourseController {
     }
 
     @GetMapping("/courses")
-    public List<Courses> getAllCourses() {
+    public List<AdminCourseListDto> getAllCourses() {
         return courseService.getAllCourses();
     }
 
@@ -42,42 +42,8 @@ public class AdminCourseController {
         return courseService.getRecentlyPublished(5);
     }
 
-    /**
-     * @deprecated Admin CRUD trực tiếp course sẽ bị thay bằng Teacher Course Editor
-     * (Phase 30) + Admin chỉ giám sát/force-unpublish (Phase 31). Giữ lại cho tới hết
-     * Phase 31 để không breaking frontend Admin hiện có (Phase 18).
-     */
-    @Deprecated
-    @PostMapping("/courses/add")
-    public ResponseEntity<?> createCourse(
-            @Valid @RequestBody CreateCourseRequest request
-    ) {
-        return courseService.createCourse(request);
-    }
-
-    /**
-     * @deprecated xem {@link #createCourse(CreateCourseRequest)}.
-     */
-    @Deprecated
-    @PutMapping("/courses/{id}")
-    public ResponseEntity<?> updateCourse(
-            @PathVariable Integer id,
-            @Valid @RequestBody CreateCourseRequest request
-    ) {
-        return courseService.updateCourse(id, request);
-    }
-
-    /**
-     * @deprecated xem {@link #createCourse(CreateCourseRequest)}.
-     */
-    @Deprecated
-    @DeleteMapping("/deleted-course/{courseId}")
-    public void deleteCourse(@PathVariable Integer courseId) {
-        courseService.deleteCourse(courseId);
-    }
-
     @PostMapping("/courses/{id}/force-unpublish")
-    public ResponseEntity<?> forceUnpublish(@PathVariable Integer id) {
-        return courseService.forceUnpublish(id);
+    public ResponseEntity<?> forceUnpublish(@PathVariable Integer id, @Valid @RequestBody ForceUnpublishRequest request) {
+        return courseService.forceUnpublish(id, request.getReason());
     }
 }

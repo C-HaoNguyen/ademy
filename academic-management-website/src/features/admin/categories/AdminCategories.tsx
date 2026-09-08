@@ -21,7 +21,7 @@ const AdminCategories = () => {
     const courseCountByCategory = useMemo<Record<number, number>>(() => {
         const counts: Record<number, number> = {};
         (coursesQuery.data ?? []).forEach((course) => {
-            const id = course.category?.categoryId;
+            const id = course.categoryId;
             if (id != null) {
                 counts[id] = (counts[id] ?? 0) + 1;
             }

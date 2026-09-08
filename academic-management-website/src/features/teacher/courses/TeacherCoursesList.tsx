@@ -11,6 +11,7 @@ import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
 import EmptyState from "@/shared/ui/EmptyState";
 import Table, { type TableColumn, type TableSort } from "@/shared/ui/Table";
+import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
 
 type StatusFilter = "all" | "draft" | "published" | "archived";
 
@@ -20,18 +21,6 @@ const statusFilters: { key: StatusFilter; label: string }[] = [
     { key: "published", label: "Published" },
     { key: "archived", label: "Archived" },
 ];
-
-const statusTone: Record<string, "success" | "warning" | "danger"> = {
-    published: "success",
-    draft: "warning",
-    archived: "danger",
-};
-
-const statusLabel: Record<string, string> = {
-    published: "Published",
-    draft: "Draft",
-    archived: "Archived",
-};
 
 const TeacherCoursesList = () => {
     const navigate = useNavigate();
@@ -81,8 +70,8 @@ const TeacherCoursesList = () => {
             header: "Trạng thái",
             sortable: true,
             render: (course) => (
-                <Badge variant="status" tone={statusTone[course.status] ?? "info"}>
-                    {statusLabel[course.status] ?? course.status}
+                <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
+                    {COURSE_STATUS_LABEL[course.status] ?? course.status}
                 </Badge>
             ),
         },

@@ -1,7 +1,9 @@
 package com.example.academic_management_api.enrollment.service;
 
+import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.repository.CourseRepository;
+import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
 import com.example.academic_management_api.enrollment.dto.MyCourseDto;
 import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
 import com.example.academic_management_api.enrollment.entity.Enrollments;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,5 +110,41 @@ class EnrollmentServiceTest {
         assertThat(result.get(0).getCourseId()).isEqualTo(1);
         assertThat(result.get(0).getStudentCount()).isEqualTo(3L);
         verify(enrollmentRepository).countActiveStudentsGroupedByCourseForTeacher("teacher1");
+    }
+
+    @Test
+    void getStudentsByCourseAsAdmin_returnsStudentsWithoutOwnershipCheck() {
+        when(courseRepository.existsById(1)).thenReturn(true);
+
+        Users student = new Users();
+        student.setUsername("student1");
+        student.setFullName("Nguyễn Văn B");
+
+        Enrollments enrollment = new Enrollments();
+        enrollment.setEnrollmentId(100);
+        enrollment.setStudent(student);
+        LocalDateTime enrolledAt = LocalDateTime.of(2026, 1, 1, 0, 0);
+        enrollment.setEnrolledAt(enrolledAt);
+
+        when(enrollmentRepository.findByCourse_CourseIdWithStudent(1)).thenReturn(List.of(enrollment));
+
+        List<EnrolledStudentDto> result = enrollmentService.getStudentsByCourseAsAdmin(1);
+
+        assertThat(result).hasSize(1);
+        EnrolledStudentDto dto = result.get(0);
+        assertThat(dto.getEnrollmentId()).isEqualTo(100);
+        assertThat(dto.getStudentUsername()).isEqualTo("student1");
+        assertThat(dto.getStudentFullName()).isEqualTo("Nguyễn Văn B");
+        assertThat(dto.getEnrolledAt()).isEqualTo(enrolledAt);
+        assertThat(dto.getAccessRevokedAt()).isNull();
+        verify(courseRepository, never()).findById(anyInt());
+    }
+
+    @Test
+    void getStudentsByCourseAsAdmin_courseNotFound_throwsNotFound() {
+        when(courseRepository.existsById(99)).thenReturn(false);
+
+        assertThatThrownBy(() -> enrollmentService.getStudentsByCourseAsAdmin(99))
+                .isInstanceOf(NotFoundException.class);
     }
 }

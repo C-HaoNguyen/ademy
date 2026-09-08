@@ -48,6 +48,18 @@ public class Courses {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Phase 31 — set true khi Admin force-unpublish; chặn Teacher tự publish lại qua updateOwnCourse.
+    @Column(name = "admin_locked", nullable = false)
+    private boolean adminLocked = false;
+
+    // Phase 31 — thời điểm course chuyển sang PUBLISHED gần nhất (UI_SPEC §5.3 "Ngày publish").
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
+    // Phase 31 — lý do vi phạm Admin nhập khi force-unpublish (UI_SPEC §5.3).
+    @Column(name = "force_unpublish_reason", columnDefinition = "text")
+    private String forceUnpublishReason;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
@@ -144,5 +156,29 @@ public class Courses {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isAdminLocked() {
+        return adminLocked;
+    }
+
+    public void setAdminLocked(boolean adminLocked) {
+        this.adminLocked = adminLocked;
+    }
+
+    public LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public String getForceUnpublishReason() {
+        return forceUnpublishReason;
+    }
+
+    public void setForceUnpublishReason(String forceUnpublishReason) {
+        this.forceUnpublishReason = forceUnpublishReason;
     }
 }

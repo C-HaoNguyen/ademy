@@ -1,6 +1,21 @@
 # Ademy — Academic Management System
 
-Hệ thống quản lý học tập gồm **backend API** (Spring Boot) và **frontend website** (React + Vite).
+Nền tảng quản lý khóa học trực tuyến: học viên mua và học khóa học, giảng viên tạo nội dung, quản trị viên vận hành hệ thống. Monorepo gồm **REST API** (Spring Boot) và **website** (React + Vite).
+
+## Tech stack
+
+**Backend** — Java 24, Spring Boot 3.5, Spring Security (JWT), Spring Data JPA, PostgreSQL, Flyway, Spring AOP (audit logging), Cloudflare R2 (S3-compatible video storage), Stripe / VNPay / Momo (thanh toán), Resend / Mailpit (email), Docker.
+
+**Frontend** — React 19, TypeScript, Vite, React Router, TanStack Query, Tailwind CSS, Framer Motion.
+
+## Tính năng chính
+
+- **Auth & phân quyền**: đăng ký/đăng nhập JWT, 3 vai trò `STUDENT` / `TEACHER` / `ADMIN`, route & API guard theo role.
+- **Khóa học**: CRUD khóa học/danh mục, bài học (upload video qua R2 presigned URL), quiz/assessment gắn theo bài học.
+- **Ghi danh & thanh toán**: enroll khóa học, checkout qua Stripe/VNPay/Momo (có chế độ mock để test không cần credential thật), coupon giảm giá, refund.
+- **Học tập**: theo dõi tiến độ học (lesson progress), làm quiz, dashboard học viên.
+- **Quản trị**: dashboard thống kê (users/courses/payments/revenue), quản lý user (khóa/mở khóa), duyệt/từ chối khóa học, audit log các thao tác nhạy cảm.
+- **Giảng viên**: dashboard riêng, tạo/sửa khóa học và bài học.
 
 ## Cấu trúc project
 
@@ -8,19 +23,18 @@ Hệ thống quản lý học tập gồm **backend API** (Spring Boot) và **fr
 ademy/
 ├── academic-management-api/       # Spring Boot REST API (port 8080)
 │   └── src/main/
-│       ├── java/.../controller|dto|entity|repository|security|seeder/
+│       ├── java/.../{auth,user,category,course,enrollment,payment,assessment,audit,security}/
+│       │   └── mỗi package: controller/service/repository/entity/dto riêng
 │       └── resources/
 │           ├── application.properties
 │           └── db/migration/      # Flyway migrations (tự apply khi khởi động)
 │
 └── academic-management-website/   # React frontend (port 5173)
     └── src/
-        ├── config/                # constants, API URL
-        ├── routes/                # routing & guards
-        ├── pages/                 # auth | public | student | admin
-        ├── components/            # public | student | admin | common
-        ├── utils/                 # AuthUtils, AuthFetch
-        └── types/
+        ├── config/       # API URL, endpoints, routes, roles — cấu hình tập trung
+        ├── routes/       # routing & role guard
+        ├── features/     # auth | public | courses | student | teacher | admin | payment
+        └── shared/       # api client, auth utils, UI dùng chung
 ```
 
 ## Yêu cầu
@@ -40,7 +54,7 @@ Schema được quản lý bởi **Flyway** — tự động apply khi API khở
 CREATE DATABASE "AcademicManagement";
 ```
 
-> **Lưu ý:** Flyway từ chối migrate nếu database không rỗng và chưa có bảng `flyway_schema_history` (ví dụ DB cũ từng seed thủ công trước khi có Flyway) — tạo database mới thay vì tái dùng DB kiểu đó.
+Flyway từ chối migrate nếu database không rỗng và chưa có bảng `flyway_schema_history` (ví dụ DB cũ từng seed thủ công trước khi có Flyway) — tạo database mới thay vì tái dùng DB kiểu đó.
 
 ## 2. Chạy Backend API
 
@@ -54,7 +68,13 @@ API chạy tại: **http://localhost:8080**
 
 Tài khoản admin mặc định (tự seed khi khởi động): `admin` / `admin123`
 
-Cấu hình DB qua biến môi trường `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` (xem `.env.example`) — `application.properties` không còn giá trị mặc định hardcode. Spring Boot **không** tự đọc file `.env` khi chạy `mvn spring-boot:run`/từ IDE; cần export biến trước hoặc set trong run config. Chạy qua `docker-compose` (mục 6) thì `.env` được nạp tự động.
+Cấu hình DB qua biến môi trường `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` (xem `.env.example`) — `application.properties` không có giá trị mặc định hardcode. Spring Boot **không** tự đọc file `.env` khi chạy `mvn spring-boot:run`/từ IDE; cần export biến trước hoặc set trong run config. Chạy qua `docker-compose` (mục 6) thì `.env` được nạp tự động.
+
+Các nhóm biến môi trường khác trong `.env.example`:
+
+- `R2_*` — Cloudflare R2 (S3-compatible), bắt buộc ở mọi profile để upload video bài học.
+- `MAIL_FROM_ADDRESS`, `MAILPIT_*`, `RESEND_API_KEY` — email: profile `local` dùng Mailpit (kèm trong docker-compose), profile `prod` dùng Resend.
+- `PAYMENT_MODE=mock` (mặc định) — `/payments/checkout` thành công ngay, không cần credential cổng thanh toán nào. Đặt `PAYMENT_MODE=live` cùng `VNPAY_*` / `MOMO_*` / `STRIPE_*` để chạy thanh toán thật qua VNPay/Momo/Stripe.
 
 ## 3. Chạy Frontend Website
 
@@ -78,13 +98,13 @@ VITE_API_URL=http://localhost:8080
 
 **Terminal 1 — Backend:**
 ```bash
-cd D:\courses\SE347\ademy\academic-management-api
+cd academic-management-api
 mvn spring-boot:run
 ```
 
 **Terminal 2 — Frontend:**
 ```bash
-cd D:\courses\SE347\ademy\academic-management-website
+cd academic-management-website
 npm run dev
 ```
 
@@ -104,7 +124,7 @@ npm run build
 npm run preview
 ```
 
-## 6. Docker (Backend)
+## 6. Docker (Backend + Mailpit)
 
 ```bash
 cd academic-management-api
@@ -112,14 +132,12 @@ cp .env.example .env    # rồi điền giá trị thật (Docker tự nạp .en
 docker compose up --build
 ```
 
-`docker-compose.yml` dùng `env_file: .env` để inject `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` vào container — không cần truyền `-e` thủ công.
+`docker-compose.yml` dùng `env_file: .env` để inject toàn bộ biến môi trường (`DB_*`, `R2_*`, `PAYMENT_MODE`, ...) vào container — không cần truyền `-e` thủ công. Mailpit được khởi động kèm để nhận email test, UI xem tại **http://localhost:8025**.
 
-## Thay đổi cấu trúc (refactor)
+## Test
 
-Refactor gần đây **không đổi logic nghiệp vụ**, chỉ tổ chức lại:
-
-- Gom cấu hình API vào `src/config/` (xóa `pages/api.ts`)
-- Thêm path alias `@/` → `src/` (Vite + TypeScript)
-- Chuẩn hóa trang admin vào subfolder: `dashboard/`, `categories/`, `orders/`
-- Xóa file không dùng: `App.css`, `QuickActions.tsx`, `DateUtils.tsx`
-- Backend: sửa stub `@Valid` gây tắt validation, dọn dead code, chuyển SQL sang `db/migration/`
+```bash
+cd academic-management-api
+mvn test                     # toàn bộ test
+mvn test -Dtest=ClassName    # một test class
+```

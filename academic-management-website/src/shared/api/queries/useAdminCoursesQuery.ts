@@ -5,24 +5,13 @@ import { apiClient } from "@/shared/api/client";
 export type AdminCourse = {
     courseId: number;
     title: string;
-    description: string | null;
-    thumbnail: string | null;
-    price: number;
-    level: string;
     status: string;
-    createdAt: string;
-    updatedAt: string;
-
-    instructor: {
-        userId: number;
-        username: string;
-        fullName: string;
-    };
-
-    category: {
-        categoryId: number;
-        categoryName: string;
-    } | null;
+    instructorFullName: string;
+    studentCount: number;
+    publishedAt: string | null;
+    // Không hiển thị ở bảng AdminCourses (UI_SPEC §5.3) — giữ lại vì AdminCategories.tsx dùng field
+    // này để đếm "Số khóa học" theo danh mục.
+    categoryId: number | null;
 };
 
 export const adminCoursesQueryKey = ["admin", "courses"] as const;

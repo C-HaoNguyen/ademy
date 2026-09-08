@@ -6,22 +6,27 @@ import com.example.academic_management_api.category.repository.CategoryRepositor
 import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
+import com.example.academic_management_api.course.dto.AdminCourseListDto;
 import com.example.academic_management_api.course.dto.CourseResponseDto;
-import com.example.academic_management_api.course.dto.CreateCourseRequest;
 import com.example.academic_management_api.course.dto.RecentlyPublishedCourseDto;
 import com.example.academic_management_api.course.dto.TeacherCourseRequest;
 import com.example.academic_management_api.course.entity.CourseStatus;
 import com.example.academic_management_api.course.entity.Courses;
 import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.repository.CourseRepository;
+import com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto;
+import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CourseService {
@@ -30,17 +35,20 @@ public class CourseService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final LessonService lessonService;
+    private final EnrollmentService enrollmentService;
 
     public CourseService(
             CourseRepository courseRepository,
             UserRepository userRepository,
             CategoryRepository categoryRepository,
-            LessonService lessonService
+            LessonService lessonService,
+            EnrollmentService enrollmentService
     ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.lessonService = lessonService;
+        this.enrollmentService = enrollmentService;
     }
 
     private CourseResponseDto mapToDto(Courses course) {
@@ -88,8 +96,28 @@ public class CourseService {
 
     // ---- Admin operations ----
 
-    public List<Courses> getAllCourses() {
-        return courseRepository.findAllWithDetails();
+    // Phase 31 — Admin chuyển sang giám sát (không còn CRUD trực tiếp), bảng khớp UI_SPEC §5.3.
+    public List<AdminCourseListDto> getAllCourses() {
+        List<Courses> courses = courseRepository.findAllWithDetails();
+
+        Map<Integer, Long> studentCountByCourseId = new HashMap<>();
+        for (TeacherCourseStudentCountDto count : enrollmentService.getAllStudentCounts()) {
+            studentCountByCourseId.put(count.getCourseId(), count.getStudentCount());
+        }
+
+        List<AdminCourseListDto> response = new ArrayList<>();
+        for (Courses course : courses) {
+            response.add(new AdminCourseListDto(
+                    course.getCourseId(),
+                    course.getTitle(),
+                    course.getStatus(),
+                    course.getInstructor().getFullName(),
+                    studentCountByCourseId.getOrDefault(course.getCourseId(), 0L),
+                    course.getPublishedAt(),
+                    course.getCategory() != null ? course.getCategory().getCategoryId() : null
+            ));
+        }
+        return response;
     }
 
     public long getTotalCourses() {
@@ -110,81 +138,15 @@ public class CourseService {
                 .toList();
     }
 
-    public ResponseEntity<?> createCourse(CreateCourseRequest request) {
-        Users instructor = userRepository.findById(request.getInstructorId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy giảng viên"));
-
-        if (request.getCategoryId() == null) {
-            return ResponseEntity.badRequest()
-                    .body("Danh mục không được để trống");
-        }
-
-        Categories category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
-
-        Courses course = new Courses();
-
-        course.setTitle(request.getTitle());
-        course.setDescription(request.getDescription());
-        course.setInstructor(instructor);
-        course.setCategory(category);
-        course.setThumbnail(request.getThumbnail());
-        course.setPrice(request.getPrice());
-        course.setLevel(request.getLevel());
-        course.setStatus(
-                request.getStatus() != null ? request.getStatus() : CourseStatus.DRAFT
-        );
-
-        Courses savedCourse = courseRepository.save(course);
-
-        return ResponseEntity.ok(savedCourse);
-    }
-
-    public ResponseEntity<?> updateCourse(Integer id, CreateCourseRequest request) {
-        Courses course = courseRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy khóa học"));
-
-        Users instructor = userRepository.findById(request.getInstructorId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy giảng viên"));
-
-        if (request.getCategoryId() == null) {
-            return ResponseEntity.badRequest()
-                    .body("Danh mục không được để trống");
-        }
-
-        Categories category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
-
-        course.setTitle(request.getTitle());
-        course.setDescription(request.getDescription());
-        course.setInstructor(instructor);
-        course.setCategory(category);
-        course.setThumbnail(request.getThumbnail());
-        course.setPrice(request.getPrice());
-        course.setLevel(request.getLevel());
-        course.setStatus(
-                request.getStatus() != null ? request.getStatus() : course.getStatus()
-        );
-
-        Courses saved = courseRepository.save(course);
-
-        return ResponseEntity.ok(saved);
-    }
-
-    @Audited(action = "ADMIN_COURSE_DELETE", targetType = "COURSE", targetIdExpression = "#courseId")
-    public void deleteCourse(Integer courseId) {
-        if (!courseRepository.existsById(courseId)) {
-            throw new NotFoundException("Không tìm thấy khóa học");
-        }
-        courseRepository.deleteById(courseId);
-    }
-
     @Audited(action = "ADMIN_COURSE_FORCE_UNPUBLISH", targetType = "COURSE", targetIdExpression = "#courseId")
-    public ResponseEntity<?> forceUnpublish(Integer courseId) {
+    public ResponseEntity<?> forceUnpublish(Integer courseId, String reason) {
         Courses course = courseRepository.findByIdWithDetails(courseId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy khóa học"));
 
         course.setStatus(CourseStatus.ARCHIVED);
+        // Phase 31 — chặn Teacher tự publish lại (BR-005: chỉ ẩn khỏi catalog, không đụng enrollment).
+        course.setAdminLocked(true);
+        course.setForceUnpublishReason(reason);
         Courses saved = courseRepository.save(course);
 
         return ResponseEntity.ok(saved);
@@ -267,8 +229,18 @@ public class CourseService {
             throw new ConflictException("Không thể publish khóa học chưa có nội dung (lesson)");
         }
 
+        // Phase 31 — course đã bị Admin force-unpublish không được Teacher tự publish lại.
+        if (request.getStatus() == CourseStatus.PUBLISHED && course.isAdminLocked()) {
+            throw new ForbiddenException("Khóa học đã bị Admin khóa, không thể tự publish lại");
+        }
+
         Categories category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy danh mục"));
+
+        CourseStatus newStatus = request.getStatus() != null ? request.getStatus() : course.getStatus();
+        if (newStatus == CourseStatus.PUBLISHED && course.getStatus() != CourseStatus.PUBLISHED) {
+            course.setPublishedAt(LocalDateTime.now());
+        }
 
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
@@ -277,9 +249,7 @@ public class CourseService {
         course.setThumbnail(request.getThumbnail());
         course.setPrice(request.getPrice());
         course.setLevel(request.getLevel());
-        course.setStatus(
-                request.getStatus() != null ? request.getStatus() : course.getStatus()
-        );
+        course.setStatus(newStatus);
 
         Courses saved = courseRepository.save(course);
 

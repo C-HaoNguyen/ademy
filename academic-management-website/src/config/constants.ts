@@ -28,9 +28,8 @@ export const API_ENDPOINTS = {
         DETAIL: (id: string) => `/courses/${id}`,
         LESSONS: (id: number | string) => `/courses/${id}/lessons`,
         ADMIN_LIST: "/admin/courses",
-        ADMIN_ADD: "/admin/courses/add",
-        ADMIN_DETAIL: (id: number | string) => `/admin/courses/${id}`,
-        ADMIN_DELETE: "/admin/deleted-course",
+        ADMIN_FORCE_UNPUBLISH: (id: number | string) => `/admin/courses/${id}/force-unpublish`,
+        ADMIN_STUDENTS: (id: number | string) => `/admin/courses/${id}/students`,
         TOTAL: "/admin/total-courses",
     },
 
@@ -52,6 +51,7 @@ export const API_ENDPOINTS = {
         CREATE: "/enrollments",
         MY_COURSES: "/enrollments/student/me/courses",
         MY_SUMMARY: "/enrollments/student/me/summary",
+        ADMIN_REVOKE_ACCESS: (id: number | string) => `/admin/enrollments/${id}/revoke-access`,
     },
 
     // Quiz attempts

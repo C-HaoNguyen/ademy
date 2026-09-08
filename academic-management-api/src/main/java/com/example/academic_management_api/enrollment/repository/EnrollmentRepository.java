@@ -51,4 +51,16 @@ public interface EnrollmentRepository extends JpaRepository<Enrollments, Integer
     List<TeacherCourseStudentCountDto> countActiveStudentsGroupedByCourseForTeacher(
             @Param("teacherUsername") String teacherUsername
     );
+
+    // Phase 31 — AdminCourses "Số học viên" (tổng số đã mua, không loại trừ đã bị thu hồi truy cập,
+    // khác semantics countActiveStudentsGroupedByCourseForTeacher ở trên) — tái dùng DTO (courseId,
+    // count) sẵn có thay vì tạo DTO trùng shape mới.
+    @Query("""
+        SELECT new com.example.academic_management_api.enrollment.dto.TeacherCourseStudentCountDto(
+            e.course.courseId, COUNT(e)
+        )
+        FROM Enrollments e
+        GROUP BY e.course.courseId
+        """)
+    List<TeacherCourseStudentCountDto> countAllStudentsGroupedByCourse();
 }

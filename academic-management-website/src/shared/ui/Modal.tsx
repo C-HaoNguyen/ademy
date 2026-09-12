@@ -27,6 +27,11 @@ const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalPro
     const previousFocusRef = useRef<HTMLElement | null>(null);
     const titleId = useId();
 
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
+
+    const mouseDownOnOverlayRef = useRef(false);
+
     useEffect(() => {
         if (!open) return;
 
@@ -38,7 +43,7 @@ const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalPro
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                onClose();
+                onCloseRef.current();
                 return;
             }
             if (e.key !== "Tab") return;
@@ -68,14 +73,21 @@ const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalPro
             document.removeEventListener("keydown", handleKeyDown);
             previousFocusRef.current?.focus();
         };
-    }, [open, onClose]);
+    }, [open]);
 
     if (!open) return null;
 
     return createPortal(
         <div
             className="fixed inset-0 z-modal flex items-center justify-center bg-surface-inverse/40 animate-overlayFade"
-            onClick={onClose}
+            onMouseDown={(e) => {
+                mouseDownOnOverlayRef.current = e.target === e.currentTarget;
+            }}
+            onClick={(e) => {
+                if (mouseDownOnOverlayRef.current && e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
         >
             <div
                 ref={panelRef}

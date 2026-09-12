@@ -3,19 +3,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FolderKanban, Pencil, Trash2, Plus, FolderX } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
-import { SkeletonTable } from "@/shared/ui/Skeleton";
+import Badge from "@/shared/ui/Badge";
+import Button from "@/shared/ui/Button";
 import EmptyState from "@/shared/ui/EmptyState";
-import Toast from "@/shared/ui/Toast";
-import CategoryOverlay, { type CategoryPayload } from "@/features/admin/components/CategoryOverlay";
+import Table, { type TableColumn } from "@/shared/ui/Table";
+import ConfirmDeleteModal from "@/shared/ui/ConfirmDeleteModal";
+import { useToast } from "@/shared/ui/useToast";
+import CategoryFormOverlay, { type CategoryPayload } from "@/features/admin/components/CategoryFormOverlay";
 import { useAdminCategoriesQuery, adminCategoriesQueryKey, type AdminCategory as Category } from "@/shared/api/queries/useAdminCategoriesQuery";
 import { useAdminCoursesQuery } from "@/shared/api/queries/useAdminCoursesQuery";
 
 const AdminCategories = () => {
+    const { showToast } = useToast();
     const queryClient = useQueryClient();
 
     const categoriesQuery = useAdminCategoriesQuery();
     const categories = categoriesQuery.data ?? [];
-    const loading = categoriesQuery.isLoading;
 
     const coursesQuery = useAdminCoursesQuery();
     const courseCountByCategory = useMemo<Record<number, number>>(() => {
@@ -32,19 +35,22 @@ const AdminCategories = () => {
     const [showAddOverlay, setShowAddOverlay] = useState(false);
     const [showEditOverlay, setShowEditOverlay] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [formSubmitting, setFormSubmitting] = useState(false);
 
-    const [showDeleteOverlay, setShowDeleteOverlay] = useState(false);
+    const editingCategoryInitialValues = useMemo<CategoryPayload | undefined>(
+        () =>
+            editingCategory
+                ? { categoryName: editingCategory.categoryName, description: editingCategory.description ?? "" }
+                : undefined,
+        [editingCategory]
+    );
+
     const [deletedCategory, setDeletedCategory] = useState<Category | null>(null);
-
-    type ToastType = "success" | "error";
-    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-
-    const showToast = (type: ToastType, message: string) => {
-        setToast({ type, message });
-        setTimeout(() => setToast(null), 3000);
-    };
+    const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
+    const [deleting, setDeleting] = useState(false);
 
     const handleCreate = async (form: CategoryPayload) => {
+        setFormSubmitting(true);
         try {
             const res = await apiClient(API_ENDPOINTS.CATEGORIES.ADD, {
                 method: "POST",
@@ -53,16 +59,17 @@ const AdminCategories = () => {
 
             if (!res.ok) {
                 const message = await res.text().catch(() => "");
-                showToast("error", message || "Thêm danh mục thất bại");
+                showToast({ tone: "danger", message: message || "Thêm danh mục thất bại" });
                 return;
             }
 
-            showToast("success", "Đã thêm danh mục mới");
+            showToast({ tone: "success", message: "Đã thêm danh mục mới" });
             setShowAddOverlay(false);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
-        } catch (err) {
-            console.error(err);
-            showToast("error", "Lỗi kết nối server");
+        } catch {
+            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+        } finally {
+            setFormSubmitting(false);
         }
     };
 
@@ -74,6 +81,7 @@ const AdminCategories = () => {
     const handleSubmitEdit = async (form: CategoryPayload) => {
         if (!editingCategory) return;
 
+        setFormSubmitting(true);
         try {
             const res = await apiClient(API_ENDPOINTS.CATEGORIES.DETAIL(editingCategory.categoryId), {
                 method: "PUT",
@@ -82,57 +90,141 @@ const AdminCategories = () => {
 
             if (!res.ok) {
                 const message = await res.text().catch(() => "");
-                showToast("error", message || "Cập nhật danh mục thất bại");
+                showToast({ tone: "danger", message: message || "Cập nhật danh mục thất bại" });
                 return;
             }
 
-            showToast("success", "Đã cập nhật danh mục");
+            showToast({ tone: "success", message: "Đã cập nhật danh mục" });
             setShowEditOverlay(false);
             setEditingCategory(null);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
-        } catch (err) {
-            console.error(err);
-            showToast("error", "Lỗi kết nối server");
+        } catch {
+            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+        } finally {
+            setFormSubmitting(false);
         }
     };
 
     const handleDelete = async () => {
         if (!deletedCategory) return;
 
+        setDeleting(true);
         try {
             const res = await apiClient(API_ENDPOINTS.CATEGORIES.DETAIL(deletedCategory.categoryId), {
                 method: "DELETE",
             });
 
             if (!res.ok) {
-                showToast("error", "Xóa danh mục thất bại");
+                const data = await res.json().catch(() => null);
+                const message = data?.message || "Xóa danh mục thất bại";
+                setDeleteError(message);
+                showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast("success", "Đã xóa danh mục");
-            setShowDeleteOverlay(false);
+            showToast({ tone: "success", message: "Đã xóa danh mục" });
             setDeletedCategory(null);
+            setDeleteError(undefined);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
-        } catch (err) {
-            console.error(err);
-            showToast("error", "Xóa danh mục thất bại");
+        } catch {
+            setDeleteError("Lỗi kết nối server");
+            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+        } finally {
+            setDeleting(false);
         }
     };
 
-    return (
-        <div>
-            <h2 className="flex items-center text-2xl text-legacy-primary font-semibold mb-4 gap-3">
-                <FolderKanban size={24} aria-hidden="true" />
-                Quản lý danh mục
-            </h2>
+    const columns: TableColumn<Category>[] = [
+        {
+            key: "categoryName",
+            header: "Tên danh mục",
+            render: (category) => <span className="font-medium text-primary">{category.categoryName}</span>,
+        },
+        {
+            key: "courseCount",
+            header: "Số khóa học",
+            render: (category) => (
+                <Badge variant="status" tone="info">
+                    {courseCountByCategory[category.categoryId] ?? 0}
+                </Badge>
+            ),
+        },
+        {
+            key: "actions",
+            header: "Action",
+            render: (category) => (
+                <div className="flex items-center gap-1">
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(category);
+                        }}
+                        className="cursor-pointer p-2 rounded-radius-md text-secondary hover:bg-surface-muted transition-colors"
+                        title="Sửa danh mục"
+                        aria-label={`Sửa danh mục ${category.categoryName}`}
+                    >
+                        <Pencil size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletedCategory(category);
+                            setDeleteError(undefined);
+                        }}
+                        className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
+                        title="Xóa danh mục"
+                        aria-label={`Xóa danh mục ${category.categoryName}`}
+                    >
+                        <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                </div>
+            ),
+        },
+    ];
 
-            <CategoryOverlay
+    return (
+        <div className="space-y-6">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h2 className="flex items-center gap-3 text-h2 text-primary">
+                        <FolderKanban size={24} aria-hidden="true" />
+                        Quản lý danh mục
+                    </h2>
+                </div>
+                <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
+                    Thêm danh mục
+                </Button>
+            </div>
+
+            <Table
+                columns={columns}
+                data={categories}
+                rowKey={(category) => category.categoryId}
+                loading={categoriesQuery.isLoading}
+                emptyState={
+                    <EmptyState
+                        icon={FolderX}
+                        title="Chưa có danh mục nào"
+                        description="Thêm danh mục đầu tiên để phân loại khóa học."
+                        action={
+                            <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
+                                Thêm danh mục
+                            </Button>
+                        }
+                    />
+                }
+            />
+
+            <CategoryFormOverlay
                 open={showAddOverlay}
                 onClose={() => setShowAddOverlay(false)}
                 onSubmit={handleCreate}
+                submitting={formSubmitting}
             />
 
-            <CategoryOverlay
+            <CategoryFormOverlay
                 open={showEditOverlay}
                 onClose={() => {
                     setShowEditOverlay(false);
@@ -140,154 +232,22 @@ const AdminCategories = () => {
                 }}
                 onSubmit={handleSubmitEdit}
                 mode="edit"
-                initialValues={
-                    editingCategory
-                        ? {
-                            categoryName: editingCategory.categoryName,
-                            description: editingCategory.description ?? "",
-                        }
-                        : undefined
-                }
+                submitting={formSubmitting}
+                initialValues={editingCategoryInitialValues}
             />
 
-            {showDeleteOverlay && deletedCategory && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white rounded-card shadow-xl w-[440px] p-6">
-                        <h2 className="text-2xl font-semibold text-legacy-danger mb-3">
-                            Xóa danh mục
-                        </h2>
-                        <p className="text-slate-700 leading-relaxed mb-6">
-                            Bạn sắp xóa danh mục{" "}
-                            <span className="font-semibold text-legacy-danger">
-                                {deletedCategory.categoryName}
-                            </span>
-                            .
-                            <br />
-                            <span className="text-sm text-slate-500">
-                                Hành động này sẽ <b>không thể hoàn tác</b>. Bạn có chắc chắn muốn tiếp tục?
-                            </span>
-                        </p>
-                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteOverlay(false)}
-                                className="cursor-pointer px-5 py-2.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors duration-200"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDelete}
-                                className="cursor-pointer px-5 py-2.5 rounded-lg bg-legacy-danger text-white hover:bg-red-700 transition-colors duration-200"
-                            >
-                                Xóa
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="flex items-center justify-start mb-4">
-                <button
-                    type="button"
-                    onClick={() => setShowAddOverlay(true)}
-                    className="cursor-pointer group flex items-center gap-2 px-3 py-2 rounded-xl bg-legacy-cta
-                                text-white text-sm font-semibold shadow-sm hover:bg-legacy-cta-dark hover:shadow-md
-                                transition-all duration-200"
-                >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors duration-200">
-                        <Plus size={16} aria-hidden="true" />
-                    </span>
-                    Thêm danh mục
-                </button>
-            </div>
-
-            <div className="bg-white rounded-card shadow-sm border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full table-fixed text-sm">
-                        <colgroup>
-                            <col className="w-16" />
-                            <col className="w-56" />
-                            <col className="w-auto" />
-                            <col className="w-40" />
-                            <col className="w-28" />
-                        </colgroup>
-
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr className="text-center text-slate-600">
-                                <th className="px-4 py-3 font-medium">ID</th>
-                                <th className="px-4 py-3 font-medium">Tên danh mục</th>
-                                <th className="px-4 py-3 font-medium">Mô tả</th>
-                                <th className="px-4 py-3 font-medium">Số khóa học</th>
-                                <th className="px-4 py-3 font-medium">Thao tác</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {loading ? (
-                                <SkeletonTable rows={5} columns={5} />
-                            ) : (
-                                categories.map((category) => (
-                                    <tr
-                                        key={category.categoryId}
-                                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-200"
-                                    >
-                                        <td className="text-center px-4 py-3">{category.categoryId}</td>
-                                        <td className="text-center px-4 py-3 font-medium text-legacy-ink truncate">
-                                            {category.categoryName}
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-600 truncate">
-                                            {category.description || "—"}
-                                        </td>
-                                        <td className="text-center px-4 py-3">
-                                            <span className="px-2 py-1 rounded-full text-xs bg-legacy-primary/10 text-legacy-primary">
-                                                {courseCountByCategory[category.categoryId] ?? 0}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleEdit(category)}
-                                                    className="cursor-pointer p-2 rounded-lg text-legacy-primary hover:bg-legacy-primary/10 transition-colors duration-200"
-                                                    title="Sửa danh mục"
-                                                    aria-label="Sửa danh mục"
-                                                >
-                                                    <Pencil size={16} aria-hidden="true" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setDeletedCategory(category);
-                                                        setShowDeleteOverlay(true);
-                                                    }}
-                                                    className="cursor-pointer p-2 rounded-lg text-legacy-danger hover:bg-legacy-danger-light transition-colors duration-200"
-                                                    title="Xóa danh mục"
-                                                    aria-label="Xóa danh mục"
-                                                >
-                                                    <Trash2 size={16} aria-hidden="true" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-
-                    {!loading && categories.length === 0 && (
-                        <div className="p-8">
-                            <EmptyState
-                                icon={FolderX}
-                                title="Chưa có danh mục nào"
-                                description="Thêm danh mục đầu tiên để phân loại khóa học."
-                            />
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {toast && <Toast message={toast.message} type={toast.type} />}
+            <ConfirmDeleteModal
+                open={deletedCategory !== null}
+                onClose={() => {
+                    if (deleting) return;
+                    setDeletedCategory(null);
+                    setDeleteError(undefined);
+                }}
+                onConfirm={handleDelete}
+                itemName={deletedCategory?.categoryName ?? ""}
+                loading={deleting}
+                error={deleteError}
+            />
         </div>
     );
 };

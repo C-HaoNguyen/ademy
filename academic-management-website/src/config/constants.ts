@@ -15,11 +15,9 @@ export const API_ENDPOINTS = {
         ME: "/users/me",
         UPDATE_ME: "/users/me/update",
         LIST: "/admin/users",
-        ADD: "/admin/users/add",
-        DETAIL: (id: number | string) => `/admin/users/${id}`,
+        INVITE_TEACHER: "/admin/teachers",
         LOCK: (id: number | string) => `/admin/users/${id}/lock`,
         UNLOCK: (id: number | string) => `/admin/users/${id}/unlock`,
-        DELETE: "/admin/deleted-user",
     },
 
     // Courses

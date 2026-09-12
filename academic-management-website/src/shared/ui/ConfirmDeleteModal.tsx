@@ -7,9 +7,10 @@ interface ConfirmDeleteModalProps {
     onConfirm: () => void;
     itemName: string;
     loading?: boolean;
+    error?: string;
 }
 
-const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName, loading = false }: ConfirmDeleteModalProps) => {
+const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName, loading = false, error }: ConfirmDeleteModalProps) => {
     return (
         <Modal
             open={open}
@@ -30,6 +31,7 @@ const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName, loading = fals
             <p className="text-body text-secondary">
                 Xóa <span className="font-semibold text-primary">{itemName}</span>? Hành động này không thể hoàn tác.
             </p>
+            {error && <p className="mt-3 text-body-sm text-status-danger-text">{error}</p>}
         </Modal>
     );
 };

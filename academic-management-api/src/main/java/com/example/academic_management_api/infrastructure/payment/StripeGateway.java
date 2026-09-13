@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.RoundingMode;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class StripeGateway implements PaymentGatewayPort {
@@ -58,8 +60,8 @@ public class StripeGateway implements PaymentGatewayPort {
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl(successUrl)
-                .setCancelUrl(cancelUrl)
+                .setSuccessUrl(withRefParam(successUrl, request.transactionRef()))
+                .setCancelUrl(withRefParam(cancelUrl, request.transactionRef()))
                 .setClientReferenceId(request.transactionRef())
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
@@ -80,6 +82,15 @@ public class StripeGateway implements PaymentGatewayPort {
         } catch (StripeException e) {
             throw new BadGatewayException("Không gọi được Stripe để tạo phiên thanh toán");
         }
+    }
+
+    // successUrl/cancelUrl cấu hình tĩnh không tự mang theo transactionRef nào (khác Stripe
+    // {CHECKOUT_SESSION_ID} placeholder — đó là id nội bộ của Stripe, không phải transactionRef của
+    // ta) — nối thêm ?ref= ở đây để Checkout Bước 3 (UI_SPEC §2.10, FE /checkout/result) biết cần
+    // tra trạng thái giao dịch nào qua GET /payments/status?ref=.
+    private static String withRefParam(String url, String transactionRef) {
+        String separator = url.contains("?") ? "&" : "?";
+        return url + separator + "ref=" + URLEncoder.encode(transactionRef, StandardCharsets.UTF_8);
     }
 
     @Override

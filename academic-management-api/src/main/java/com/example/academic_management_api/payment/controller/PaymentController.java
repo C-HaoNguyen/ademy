@@ -9,10 +9,14 @@ import com.example.academic_management_api.payment.dto.CouponValidationRequest;
 import com.example.academic_management_api.payment.dto.MyPaymentDto;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
+import com.example.academic_management_api.payment.dto.PaymentStatusResponse;
 import com.example.academic_management_api.payment.service.PaymentCallbackOutcome;
 import com.example.academic_management_api.payment.service.PaymentService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,17 +40,20 @@ public class PaymentController {
     private final VnPayGateway vnPayGateway;
     private final MomoGateway momoGateway;
     private final StripeGateway stripeGateway;
+    private final String frontendUrl;
 
     public PaymentController(
             PaymentService paymentService,
             VnPayGateway vnPayGateway,
             MomoGateway momoGateway,
-            StripeGateway stripeGateway
+            StripeGateway stripeGateway,
+            @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl
     ) {
         this.paymentService = paymentService;
         this.vnPayGateway = vnPayGateway;
         this.momoGateway = momoGateway;
         this.stripeGateway = stripeGateway;
+        this.frontendUrl = frontendUrl;
     }
 
     @PostMapping("/checkout")
@@ -102,11 +111,45 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.getMyPayments(authentication.getName()));
     }
 
+    // Checkout Bước 3 (UI_SPEC §2.10) — FE gọi sau khi gateway redirect Student quay lại
+    // /checkout/result?ref=... để lấy trạng thái thật (không suy đoán từ query param của gateway).
+    // Route rơi vào anyRequest().authenticated() mặc định, ownership check ở PaymentService.
+    @GetMapping("/status")
+    public ResponseEntity<PaymentStatusResponse> getStatus(
+            @RequestParam("ref") String transactionRef,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(paymentService.getStatusByTransactionRef(transactionRef, authentication.getName()));
+    }
+
     @GetMapping("/callback/vnpay")
     public ResponseEntity<Map<String, String>> vnpayCallback(@RequestParam Map<String, String> params) {
         PaymentGatewayPort.CallbackResult result = vnPayGateway.verifyCallback(
                 new PaymentGatewayPort.CallbackPayload(params, null, null));
         return ResponseEntity.ok(vnpayAck(paymentService.processCallback(result)));
+    }
+
+    // Checkout Bước 3 (UI_SPEC §2.10) — khác Momo/Stripe, VNPay không có URL IPN riêng biệt với URL
+    // đưa trình duyệt Student quay lại (chỉ 1 config "vnp_ReturnUrl") — nên chính endpoint này (đặt ở
+    // vnpay.return-url) vừa phải verify+xử lý kết quả thanh toán (tái dùng processCallback(), idempotent
+    // qua updateStatusIfPending nên gọi thêm lần nữa từ 1 IPN thật riêng, nếu merchant có cấu hình, vẫn
+    // an toàn) vừa phải đưa trình duyệt (không phải machine-to-machine) sang đúng trang FE — khác
+    // /callback/vnpay (trả JSON ack cho gateway, không phải cho trình duyệt).
+    @GetMapping("/return/vnpay")
+    public ResponseEntity<Void> vnpayReturn(@RequestParam Map<String, String> params) {
+        PaymentGatewayPort.CallbackResult result = vnPayGateway.verifyCallback(
+                new PaymentGatewayPort.CallbackPayload(params, null, null));
+        paymentService.processCallback(result);
+        return redirectToCheckoutResult(result.transactionRef());
+    }
+
+    private ResponseEntity<Void> redirectToCheckoutResult(String transactionRef) {
+        String location = transactionRef == null
+                ? frontendUrl + "/checkout/result"
+                : frontendUrl + "/checkout/result?ref=" + URLEncoder.encode(transactionRef, StandardCharsets.UTF_8);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, location)
+                .build();
     }
 
     @PostMapping("/callback/momo")

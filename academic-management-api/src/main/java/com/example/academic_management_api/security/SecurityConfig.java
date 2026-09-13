@@ -62,6 +62,10 @@ public class SecurityConfig {
                         // Student — xác thực ở đây là verify chữ ký/signature riêng của từng gateway
                         // (Phase 21), không phải Spring Security JWT.
                         .requestMatchers("/payments/callback/**").permitAll()
+                        // VNPay không có URL IPN riêng biệt với URL redirect trình duyệt (khác Momo/Stripe) —
+                        // endpoint này là nơi VNPay đưa trình duyệt Student (không mang JWT) quay lại sau khi
+                        // thanh toán; nó tự verify chữ ký VNPay rồi 302 redirect sang FE (Phase 33, UI_SPEC §2.10).
+                        .requestMatchers("/payments/return/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/enrollments/**").hasRole("STUDENT")
                         .requestMatchers("/teacher/**").hasRole("TEACHER")

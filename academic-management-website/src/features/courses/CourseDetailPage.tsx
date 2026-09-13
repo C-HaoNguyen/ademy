@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import EnrollSuccessOverlay from "../payment/components/EnrollSuccessOverlay";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/useAuth";
@@ -52,7 +51,6 @@ const CourseDetail = () => {
 
     const [course, setCourse] = useState<CourseDetailType | null>(null);
     const [loading, setLoading] = useState(true);
-    const [success, setSuccess] = useState(false);
     const [isEnrolled, setIsEnrolled] = useState(false);
 
     const [lessons, setLessons] = useState<LessonPreview[]>([]);
@@ -129,7 +127,10 @@ const CourseDetail = () => {
         }
     }
 
-    const handleRegister = async () => {
+    // Phase 33 — "Mua khóa học" điều hướng sang Checkout Bước 1 (UI_SPEC §2.7/§2.8) thay vì tự
+    // đăng ký thẳng qua /enrollments (luồng miễn phí cũ, bỏ qua Payments — chỉ payment module mới
+    // được tạo enrollment, xem ARCHITECTURE.md §14).
+    const handleBuyClick = () => {
         if (!isLoggedIn) {
             navigate("/login", {
                 state: { from: location.pathname },
@@ -137,24 +138,7 @@ const CourseDetail = () => {
             return;
         }
 
-        try {
-            const res = await apiClient(API_ENDPOINTS.ENROLLMENTS.CREATE, {
-                method: "POST",
-                body: JSON.stringify({
-                    courseId: course?.courseId,
-                }),
-            });
-
-            if (!res.ok) {
-                throw new Error("Enroll failed!");
-            }
-
-            // Đăng ký thành công
-            setSuccess(true);
-        } catch (err) {
-            console.error(err);
-            showToast({ tone: "danger", message: "Đăng ký khóa học thất bại. Vui lòng thử lại." });
-        }
+        navigate(ROUTES.CHECKOUT, { state: { courseId: course?.courseId } });
     };
 
     // Lesson Player chưa tồn tại trong hệ thống (Phase 35, chưa implement) — "Xem thử"
@@ -336,7 +320,7 @@ const CourseDetail = () => {
                                         Vào học ngay
                                     </Button>
                                 ) : (
-                                    <Button variant="cta" size="lg" className="w-full" onClick={handleRegister}>
+                                    <Button variant="cta" size="lg" className="w-full" onClick={handleBuyClick}>
                                         Mua khóa học
                                     </Button>
                                 )}
@@ -349,11 +333,6 @@ const CourseDetail = () => {
                     </motion.div>
                 </div>
             </div>
-
-            <EnrollSuccessOverlay
-                open={success}
-                onClose={() => setSuccess(false)}
-            />
         </>
     );
 };

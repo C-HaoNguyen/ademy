@@ -3,6 +3,7 @@ package com.example.academic_management_api.payment.service;
 import com.example.academic_management_api.application.port.PaymentGatewayPort;
 import com.example.academic_management_api.audit.annotation.Audited;
 import com.example.academic_management_api.common.exception.ConflictException;
+import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.common.exception.ServiceUnavailableException;
 import com.example.academic_management_api.course.entity.Courses;
@@ -14,6 +15,7 @@ import com.example.academic_management_api.payment.dto.CouponPreviewResponse;
 import com.example.academic_management_api.payment.dto.PaymentRequest;
 import com.example.academic_management_api.payment.dto.PaymentResponse;
 import com.example.academic_management_api.payment.dto.MyPaymentDto;
+import com.example.academic_management_api.payment.dto.PaymentStatusResponse;
 import com.example.academic_management_api.payment.entity.PaymentIdempotencyKey;
 import com.example.academic_management_api.payment.entity.PaymentMethod;
 import com.example.academic_management_api.payment.entity.PaymentStatus;
@@ -161,6 +163,29 @@ public class PaymentService {
                 .stream()
                 .map(p -> new MyPaymentDto(p.getPaymentId(), p.getCourse().getCourseId(), p.getStatus()))
                 .toList();
+    }
+
+    // Checkout Bước 3 (UI_SPEC §2.10) — Student tra trạng thái giao dịch sau khi gateway redirect
+    // về, bằng gatewayTransactionRef (= Idempotency-Key của lần checkout, xem initiateGatewaySession()).
+    // @Transactional(readOnly = true) để truy cập student/course qua proxy LAZY an toàn trong lúc map
+    // sang DTO phẳng (payment.getCourse()/getStudent() không JOIN FETCH ở findByGatewayTransactionRef)
+    // — cùng nguyên tắc tránh serialize entity trực tiếp đã áp dụng từ Phase 18.
+    @Transactional(readOnly = true)
+    public PaymentStatusResponse getStatusByTransactionRef(String transactionRef, String username) {
+        Payments payment = paymentRepository.findByGatewayTransactionRef(transactionRef)
+                .orElseThrow(() -> new NotFoundException("Giao dịch không tồn tại"));
+
+        if (!payment.getStudent().getUsername().equals(username)) {
+            throw new ForbiddenException("Bạn không có quyền xem giao dịch này");
+        }
+
+        return new PaymentStatusResponse(
+                payment.getStatus(),
+                payment.getCourse().getCourseId(),
+                payment.getCourse().getTitle(),
+                payment.getAmount(),
+                payment.getGatewayTransactionRef()
+        );
     }
 
     public long getTotalPayments() {

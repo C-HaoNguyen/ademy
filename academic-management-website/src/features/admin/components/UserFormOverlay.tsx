@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { adminUsersQueryKey } from "@/shared/api/queries/useAdminUsersQuery";
 import { useToast } from "@/shared/ui/useToast";
 import Modal from "@/shared/ui/Modal";
@@ -38,11 +38,6 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
         setErrors({});
     }, [open]);
 
-    const handleClose = () => {
-        if (submitting) return;
-        onClose();
-    };
-
     const validate = (): boolean => {
         const nextErrors: Partial<Record<keyof InviteTeacherForm, string>> = {};
         if (!form.username.trim()) nextErrors.username = "Vui lòng nhập tên đăng nhập";
@@ -64,14 +59,14 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
             });
 
             if (!res.ok) {
-                const message = await res.text().catch(() => "");
-                showToast({ tone: "danger", message: message || "Mời Teacher thất bại" });
+                const message = await readErrorMessage(res, "Mời Teacher thất bại");
+                showToast({ tone: "danger", message });
                 return;
             }
 
             showToast({ tone: "success", message: "Đã mời Teacher thành công" });
             queryClient.invalidateQueries({ queryKey: adminUsersQueryKey });
-            handleClose();
+            onClose();
         } catch {
             showToast({ tone: "danger", message: "Lỗi kết nối server" });
         } finally {
@@ -82,12 +77,13 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
     return (
         <Modal
             open={open}
-            onClose={handleClose}
+            onClose={onClose}
+            closeDisabled={submitting}
             title="Mời Teacher"
             size="sm"
             footer={
                 <>
-                    <Button variant="secondary" onClick={handleClose} disabled={submitting}>
+                    <Button variant="secondary" onClick={onClose} disabled={submitting}>
                         Hủy
                     </Button>
                     <Button variant="primary" onClick={handleSubmit} loading={submitting}>

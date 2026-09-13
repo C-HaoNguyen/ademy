@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { adminUsersQueryKey, type AdminUser } from "@/shared/api/queries/useAdminUsersQuery";
 import { useToast } from "@/shared/ui/useToast";
 import Modal from "@/shared/ui/Modal";
@@ -21,11 +21,6 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
 
     const isLocking = user?.active === true;
 
-    const handleClose = () => {
-        if (submitting) return;
-        onClose();
-    };
-
     const handleConfirm = async () => {
         if (!user) return;
 
@@ -36,8 +31,8 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
             const res = await apiClient(url, { method: "PUT" });
 
             if (!res.ok) {
-                const message = await res.text().catch(() => "");
-                showToast({ tone: "danger", message: message || "Thao tác thất bại" });
+                const message = await readErrorMessage(res, "Thao tác thất bại");
+                showToast({ tone: "danger", message });
                 return;
             }
 
@@ -46,7 +41,7 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
                 message: isLocking ? `Đã khóa tài khoản ${user.fullName}` : `Đã mở khóa tài khoản ${user.fullName}`,
             });
             queryClient.invalidateQueries({ queryKey: adminUsersQueryKey });
-            handleClose();
+            onClose();
         } catch {
             showToast({ tone: "danger", message: "Lỗi kết nối server" });
         } finally {
@@ -57,12 +52,13 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
     return (
         <Modal
             open={open}
-            onClose={handleClose}
+            onClose={onClose}
+            closeDisabled={submitting}
             title={isLocking ? "Khóa tài khoản" : "Mở khóa tài khoản"}
             size="sm"
             footer={
                 <>
-                    <Button variant="secondary" onClick={handleClose} disabled={submitting}>
+                    <Button variant="secondary" onClick={onClose} disabled={submitting}>
                         Hủy
                     </Button>
                     <Button

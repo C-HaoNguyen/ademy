@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import { Receipt, ReceiptText } from "lucide-react";
+import { Receipt, ReceiptText, AlertTriangle } from "lucide-react";
 import { useAdminPaymentsQuery, type AdminPayment } from "@/shared/api/queries/useAdminPaymentsQuery";
 import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
 import EmptyState from "@/shared/ui/EmptyState";
 import Table, { type TableColumn } from "@/shared/ui/Table";
 import PaymentDetailModal from "@/features/admin/components/PaymentDetailModal";
-import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE, formatCurrency } from "@/features/admin/orders/paymentStatus";
+import { getPaymentMethodLabel, getPaymentStatusLabel, getPaymentStatusTone, formatCurrency } from "@/features/admin/orders/paymentStatus";
 
 type StatusFilter = "ALL" | "PENDING" | "SUCCESS" | "FAILED";
 
@@ -48,14 +48,14 @@ const AdminOrders = () => {
         {
             key: "paymentMethod",
             header: "Phương thức",
-            render: (payment) => PAYMENT_METHOD_LABEL[payment.paymentMethod] ?? payment.paymentMethod ?? "—",
+            render: (payment) => getPaymentMethodLabel(payment.paymentMethod),
         },
         {
             key: "status",
             header: "Trạng thái",
             render: (payment) => (
-                <Badge variant="status" tone={PAYMENT_STATUS_TONE[payment.status] ?? "info"}>
-                    {PAYMENT_STATUS_LABEL[payment.status] ?? payment.status}
+                <Badge variant="status" tone={getPaymentStatusTone(payment.status)}>
+                    {getPaymentStatusLabel(payment.status)}
                 </Badge>
             ),
         },
@@ -91,14 +91,27 @@ const AdminOrders = () => {
                 ))}
             </div>
 
-            <Table
-                columns={columns}
-                data={filteredPayments}
-                rowKey={(payment) => payment.paymentId}
-                loading={paymentsQuery.isLoading}
-                onRowClick={(payment) => setSelectedPayment(payment)}
-                emptyState={<EmptyState icon={ReceiptText} title="Chưa có đơn thanh toán nào" />}
-            />
+            {paymentsQuery.isError ? (
+                <EmptyState
+                    icon={AlertTriangle}
+                    title="Không thể tải danh sách đơn thanh toán"
+                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    action={
+                        <Button variant="primary" size="sm" onClick={() => paymentsQuery.refetch()}>
+                            Thử lại
+                        </Button>
+                    }
+                />
+            ) : (
+                <Table
+                    columns={columns}
+                    data={filteredPayments}
+                    rowKey={(payment) => payment.paymentId}
+                    loading={paymentsQuery.isLoading}
+                    onRowClick={(payment) => setSelectedPayment(payment)}
+                    emptyState={<EmptyState icon={ReceiptText} title="Chưa có đơn thanh toán nào" />}
+                />
+            )}
 
             <PaymentDetailModal
                 open={selectedPayment !== null}

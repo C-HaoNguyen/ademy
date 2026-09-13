@@ -10,6 +10,8 @@ import Signup from "@/features/auth/Signup";
 import CourseList from "@/features/courses/CourseListPage";
 import CourseDetail from "@/features/courses/CourseDetailPage";
 import Checkout from "@/features/payment/Checkout";
+import CheckoutPayment from "@/features/payment/CheckoutPayment";
+import CheckoutResult from "@/features/payment/CheckoutResult";
 
 import PublicLayout from "@/features/public/components/PublicLayout";
 import StudentLayout from "@/features/student/components/StudentLayout";
@@ -53,6 +55,22 @@ const AppRoutes = () => {
                         element={
                             <ProtectedRoute>
                                 <Checkout />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/checkout/payment"
+                        element={
+                            <ProtectedRoute>
+                                <CheckoutPayment />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/checkout/result"
+                        element={
+                            <ProtectedRoute>
+                                <CheckoutResult />
                             </ProtectedRoute>
                         }
                     />

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderKanban, Pencil, Trash2, Plus, FolderX } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
-import { apiClient } from "@/shared/api/client";
+import { apiClient, readErrorMessage } from "@/shared/api/client";
 import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
 import EmptyState from "@/shared/ui/EmptyState";
@@ -58,8 +58,8 @@ const AdminCategories = () => {
             });
 
             if (!res.ok) {
-                const message = await res.text().catch(() => "");
-                showToast({ tone: "danger", message: message || "Thêm danh mục thất bại" });
+                const message = await readErrorMessage(res, "Thêm danh mục thất bại");
+                showToast({ tone: "danger", message });
                 return;
             }
 
@@ -89,8 +89,8 @@ const AdminCategories = () => {
             });
 
             if (!res.ok) {
-                const message = await res.text().catch(() => "");
-                showToast({ tone: "danger", message: message || "Cập nhật danh mục thất bại" });
+                const message = await readErrorMessage(res, "Cập nhật danh mục thất bại");
+                showToast({ tone: "danger", message });
                 return;
             }
 

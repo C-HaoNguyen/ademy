@@ -45,3 +45,19 @@ export async function apiClient(
 
     return response;
 }
+
+// Đọc message lỗi an toàn bất kể backend trả JSON (`ErrorResponse` từ GlobalExceptionHandler) hay
+// String thô (một số service, ví dụ UserService.createUser()/inviteTeacher(), trả thẳng
+// `ResponseEntity.badRequest().body("...")` — Spring serialize thành text/plain, không phải JSON).
+// Dùng thay cho việc đoán `res.json()`/`res.text()` ở từng call site.
+export async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+    const text = await res.text().catch(() => "");
+    if (!text) return fallback;
+
+    try {
+        const data = JSON.parse(text);
+        return typeof data?.message === "string" && data.message ? data.message : text;
+    } catch {
+        return text;
+    }
+}

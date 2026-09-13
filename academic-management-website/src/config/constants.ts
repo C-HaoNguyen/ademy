@@ -57,6 +57,14 @@ export const API_ENDPOINTS = {
         MY_SUMMARY: "/quiz-attempts/me/summary",
     },
 
+    // Payments (Phase 33 — Checkout 3 bước)
+    PAYMENTS: {
+        CHECKOUT: "/payments/checkout",
+        VALIDATE_COUPON: "/payments/coupons/validate",
+        STATUS: (ref: string) => `/payments/status?ref=${encodeURIComponent(ref)}`,
+        ME: "/payments/me",
+    },
+
     // Admin Stats
     ADMIN: {
         TOTAL_USERS: "/admin/total-users",
@@ -111,8 +119,10 @@ export const ROUTES = {
     TERMS: "/terms",
     PRIVACY: "/privacy",
 
-    // Checkout
+    // Checkout (Phase 33 — 3 bước)
     CHECKOUT: "/checkout",
+    CHECKOUT_PAYMENT: "/checkout/payment",
+    CHECKOUT_RESULT: "/checkout/result",
 
     // Student
     STUDENT: {

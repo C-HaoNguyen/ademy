@@ -40,11 +40,6 @@ const CategoryFormOverlay = ({
 
     const isEdit = mode === "edit";
 
-    const handleClose = () => {
-        if (submitting) return;
-        onClose();
-    };
-
     const handleSubmit = () => {
         if (!form.categoryName.trim()) {
             setError("Tên danh mục không được để trống");
@@ -57,12 +52,13 @@ const CategoryFormOverlay = ({
     return (
         <Modal
             open={open}
-            onClose={handleClose}
+            onClose={onClose}
+            closeDisabled={submitting}
             title={isEdit ? "Sửa danh mục" : "Thêm danh mục"}
             size="sm"
             footer={
                 <>
-                    <Button variant="secondary" onClick={handleClose} disabled={submitting}>
+                    <Button variant="secondary" onClick={onClose} disabled={submitting}>
                         Hủy
                     </Button>
                     <Button variant="primary" onClick={handleSubmit} loading={submitting}>

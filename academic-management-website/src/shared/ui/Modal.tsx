@@ -11,6 +11,10 @@ interface ModalProps {
     children: ReactNode;
     footer?: ReactNode;
     size?: ModalSize;
+    // Chặn đóng modal (Escape, click overlay, nút X) khi đang có thao tác submit dở dang — trước đây
+    // mỗi consumer (UserFormOverlay/CategoryFormOverlay/LockUserModal) tự bọc onClose bằng 1 guard
+    // `if (submitting) return` giống hệt nhau; gộp về đây để không lặp lại và không bị quên ở modal mới.
+    closeDisabled?: boolean;
 }
 
 const sizeClasses: Record<ModalSize, string> = {
@@ -22,13 +26,21 @@ const sizeClasses: Record<ModalSize, string> = {
 const FOCUSABLE_SELECTOR =
     'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalProps) => {
+const Modal = ({ open, onClose, title, children, footer, size = "md", closeDisabled = false }: ModalProps) => {
     const panelRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
     const titleId = useId();
 
-    const onCloseRef = useRef(onClose);
-    onCloseRef.current = onClose;
+    const closeDisabledRef = useRef(closeDisabled);
+    closeDisabledRef.current = closeDisabled;
+
+    const handleClose = () => {
+        if (closeDisabledRef.current) return;
+        onClose();
+    };
+
+    const onCloseRef = useRef(handleClose);
+    onCloseRef.current = handleClose;
 
     const mouseDownOnOverlayRef = useRef(false);
 
@@ -85,7 +97,7 @@ const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalPro
             }}
             onClick={(e) => {
                 if (mouseDownOnOverlayRef.current && e.target === e.currentTarget) {
-                    onClose();
+                    handleClose();
                 }
             }}
         >
@@ -104,7 +116,7 @@ const Modal = ({ open, onClose, title, children, footer, size = "md" }: ModalPro
                     </h2>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         aria-label="Đóng"
                         className="text-tertiary hover:text-primary"
                     >

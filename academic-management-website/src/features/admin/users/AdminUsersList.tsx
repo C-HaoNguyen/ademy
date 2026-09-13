@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Users as UsersIcon, UserPlus, Lock, Unlock } from "lucide-react";
+import { Users as UsersIcon, UserPlus, Lock, Unlock, AlertTriangle } from "lucide-react";
 import { useAdminUsersQuery, type AdminUser } from "@/shared/api/queries/useAdminUsersQuery";
 import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
@@ -114,13 +114,26 @@ const AdminUsersList = () => {
                 ))}
             </div>
 
-            <Table
-                columns={columns}
-                data={filteredUsers}
-                rowKey={(user) => user.userId}
-                loading={usersQuery.isLoading}
-                emptyState={<EmptyState icon={UsersIcon} title="Không có user nào phù hợp" />}
-            />
+            {usersQuery.isError ? (
+                <EmptyState
+                    icon={AlertTriangle}
+                    title="Không thể tải danh sách user"
+                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    action={
+                        <Button variant="primary" size="sm" onClick={() => usersQuery.refetch()}>
+                            Thử lại
+                        </Button>
+                    }
+                />
+            ) : (
+                <Table
+                    columns={columns}
+                    data={filteredUsers}
+                    rowKey={(user) => user.userId}
+                    loading={usersQuery.isLoading}
+                    emptyState={<EmptyState icon={UsersIcon} title="Không có user nào phù hợp" />}
+                />
+            )}
 
             <UserFormOverlay open={showInviteOverlay} onClose={() => setShowInviteOverlay(false)} />
 

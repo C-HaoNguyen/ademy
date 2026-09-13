@@ -15,6 +15,7 @@ const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName, loading = fals
         <Modal
             open={open}
             onClose={onClose}
+            closeDisabled={loading}
             title="Xác nhận xóa"
             size="sm"
             footer={

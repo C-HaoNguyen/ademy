@@ -2,7 +2,7 @@ import Modal from "@/shared/ui/Modal";
 import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
 import type { AdminPayment } from "@/shared/api/queries/useAdminPaymentsQuery";
-import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE, formatCurrency } from "@/features/admin/orders/paymentStatus";
+import { getPaymentMethodLabel, getPaymentStatusLabel, getPaymentStatusTone, formatCurrency } from "@/features/admin/orders/paymentStatus";
 
 interface PaymentDetailModalProps {
     open: boolean;
@@ -37,15 +37,12 @@ const PaymentDetailModal = ({ open, onClose, payment }: PaymentDetailModalProps)
                 <DetailRow label="Học viên" value={payment.student?.fullName ?? "—"} />
                 <DetailRow label="Khóa học" value={payment.course?.title ?? "—"} />
                 <DetailRow label="Số tiền" value={formatCurrency(payment.amount)} />
-                <DetailRow
-                    label="Phương thức"
-                    value={PAYMENT_METHOD_LABEL[payment.paymentMethod] ?? payment.paymentMethod ?? "—"}
-                />
+                <DetailRow label="Phương thức" value={getPaymentMethodLabel(payment.paymentMethod)} />
                 <DetailRow
                     label="Trạng thái"
                     value={
-                        <Badge variant="status" tone={PAYMENT_STATUS_TONE[payment.status] ?? "info"}>
-                            {PAYMENT_STATUS_LABEL[payment.status] ?? payment.status}
+                        <Badge variant="status" tone={getPaymentStatusTone(payment.status)}>
+                            {getPaymentStatusLabel(payment.status)}
                         </Badge>
                     }
                 />

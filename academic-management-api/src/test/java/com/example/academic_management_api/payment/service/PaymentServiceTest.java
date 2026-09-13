@@ -665,4 +665,58 @@ class PaymentServiceTest {
 
         assertThat(result).isEqualByComparingTo(BigDecimal.ZERO);
     }
+
+    // ------------------------------------------------------------------
+    // Phase 33 — Checkout Bước 3 (UI_SPEC §2.10): GET /payments/status?ref=
+    // ------------------------------------------------------------------
+
+    @Test
+    void getStatusByTransactionRef_ownerMatches_returnsStatus() {
+        Users student = student();
+        Courses course = course(new BigDecimal("500000"));
+        course.setTitle("Java cơ bản");
+
+        Payments payment = new Payments();
+        payment.setStudent(student);
+        payment.setCourse(course);
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setAmount(new BigDecimal("500000"));
+        payment.setGatewayTransactionRef("txn-ref-1");
+
+        when(paymentRepository.findByGatewayTransactionRef("txn-ref-1")).thenReturn(Optional.of(payment));
+
+        com.example.academic_management_api.payment.dto.PaymentStatusResponse result =
+                mockModeService.getStatusByTransactionRef("txn-ref-1", "student1");
+
+        assertThat(result.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(result.getCourseId()).isEqualTo(1);
+        assertThat(result.getCourseTitle()).isEqualTo("Java cơ bản");
+        assertThat(result.getAmount()).isEqualByComparingTo("500000");
+        assertThat(result.getGatewayTransactionRef()).isEqualTo("txn-ref-1");
+    }
+
+    @Test
+    void getStatusByTransactionRef_notOwner_throwsForbidden() {
+        Users student = student();
+        Courses course = course(new BigDecimal("500000"));
+
+        Payments payment = new Payments();
+        payment.setStudent(student);
+        payment.setCourse(course);
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setGatewayTransactionRef("txn-ref-1");
+
+        when(paymentRepository.findByGatewayTransactionRef("txn-ref-1")).thenReturn(Optional.of(payment));
+
+        assertThatThrownBy(() -> mockModeService.getStatusByTransactionRef("txn-ref-1", "someone-else"))
+                .isInstanceOf(com.example.academic_management_api.common.exception.ForbiddenException.class);
+    }
+
+    @Test
+    void getStatusByTransactionRef_notFound_throwsNotFound() {
+        when(paymentRepository.findByGatewayTransactionRef("unknown-ref")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mockModeService.getStatusByTransactionRef("unknown-ref", "student1"))
+                .isInstanceOf(NotFoundException.class);
+    }
 }

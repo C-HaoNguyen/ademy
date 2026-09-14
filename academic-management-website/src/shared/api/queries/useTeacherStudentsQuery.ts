@@ -7,6 +7,8 @@ export type EnrolledStudent = {
     studentUsername: string;
     studentFullName: string;
     enrolledAt: string;
+    // Phase 35 — % lesson đã hoàn thành trong course này (trả nợ Phase 18).
+    progressPercent: number;
 };
 
 export const teacherStudentsQueryKey = (courseId: number | string) =>

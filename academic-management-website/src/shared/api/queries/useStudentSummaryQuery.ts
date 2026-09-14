@@ -7,21 +7,27 @@ export type QuizAttemptSummary = {
     averageScore: number | null;
 };
 
-export const totalCoursesQueryKey = ["student", "totalCourses"] as const;
+export type StudentDashboardSummary = {
+    totalCourses: number;
+    // Phase 35 — trung bình % hoàn thành lesson trên các course đã mua có ít nhất 1 lesson; null
+    // nếu chưa course nào đủ điều kiện tính (chưa có lesson nào).
+    averageProgressPercent: number | null;
+};
+
+export const studentDashboardSummaryQueryKey = ["student", "dashboardSummary"] as const;
 export const quizAttemptSummaryQueryKey = ["student", "quizAttemptSummary"] as const;
 
-export function useTotalCoursesQuery() {
+export function useStudentDashboardSummaryQuery() {
     return useQuery({
-        queryKey: totalCoursesQueryKey,
-        queryFn: async (): Promise<number> => {
+        queryKey: studentDashboardSummaryQueryKey,
+        queryFn: async (): Promise<StudentDashboardSummary> => {
             const res = await apiClient(API_ENDPOINTS.ENROLLMENTS.MY_SUMMARY);
 
             if (!res.ok) {
                 throw new Error(`Failed to load student summary (${res.status})`);
             }
 
-            const data = await res.json();
-            return data.totalCourses;
+            return res.json();
         },
     });
 }

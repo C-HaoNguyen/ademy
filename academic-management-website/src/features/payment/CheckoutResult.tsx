@@ -9,7 +9,7 @@ import Skeleton from "@/shared/ui/Skeleton";
 
 type ResultState =
     | { kind: "loading" }
-    | { kind: "success"; courseTitle?: string; amount?: number }
+    | { kind: "success"; courseId?: number; courseTitle?: string; amount?: number }
     | { kind: "failure" }
     | { kind: "unknown" };
 
@@ -37,7 +37,7 @@ const CheckoutResult = () => {
                     // PaymentStatus (backend) serialize chữ THƯỜNG qua @JsonValue (payment/entity/
                     // PaymentStatus.java) — so sánh đúng case, không phải "SUCCESS"/"FAILED".
                     if (data.status === "success") {
-                        setResult({ kind: "success", courseTitle: data.courseTitle, amount: data.amount });
+                        setResult({ kind: "success", courseId: data.courseId, courseTitle: data.courseTitle, amount: data.amount });
                         clearCheckoutSession();
                     } else if (data.status === "failed") {
                         setResult({ kind: "failure" });
@@ -59,7 +59,7 @@ const CheckoutResult = () => {
         const session = getCheckoutSession();
         if (session?.mockOutcome) {
             if (session.mockOutcome.success) {
-                setResult({ kind: "success", courseTitle: session.courseTitle, amount: session.finalAmount });
+                setResult({ kind: "success", courseId: session.courseId, courseTitle: session.courseTitle, amount: session.finalAmount });
                 clearCheckoutSession();
             } else {
                 setResult({ kind: "failure" });
@@ -91,7 +91,17 @@ const CheckoutResult = () => {
                     {typeof result.amount === "number" && (
                         <p className="text-body-lg font-semibold text-primary">{formatPrice(result.amount)}</p>
                     )}
-                    <Button variant="primary" size="lg" onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={() =>
+                            navigate(
+                                result.courseId !== undefined
+                                    ? ROUTES.STUDENT.LEARN(result.courseId)
+                                    : ROUTES.STUDENT.MY_COURSES
+                            )
+                        }
+                    >
                         Vào học ngay
                     </Button>
                 </div>

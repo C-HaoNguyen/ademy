@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -30,8 +31,11 @@ public class EnrollmentController {
 
     @GetMapping("/student/me/summary")
     public ResponseEntity<?> getStudentDashboardSummary(Authentication authentication) {
-        return ResponseEntity.ok(
-                Map.of("totalCourses", enrollmentService.getStudentTotalCourses(authentication.getName()))
-        );
+        long totalCourses = enrollmentService.getStudentTotalCourses(authentication.getName());
+        Integer averageProgressPercent = enrollmentService.getAverageProgressPercent(authentication.getName());
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("totalCourses", totalCourses);
+        summary.put("averageProgressPercent", averageProgressPercent);
+        return ResponseEntity.ok(summary);
     }
 }

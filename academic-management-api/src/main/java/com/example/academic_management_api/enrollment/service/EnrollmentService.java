@@ -5,6 +5,7 @@ import com.example.academic_management_api.common.exception.ConflictException;
 import com.example.academic_management_api.common.exception.ForbiddenException;
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.EnrollRequest;
 import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
@@ -26,15 +27,18 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final LessonService lessonService;
 
     public EnrollmentService(
             EnrollmentRepository enrollmentRepository,
             UserRepository userRepository,
-            CourseRepository courseRepository
+            CourseRepository courseRepository,
+            LessonService lessonService
     ) {
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
+        this.lessonService = lessonService;
     }
 
     public ResponseEntity<?> enroll(EnrollRequest request, String username) {
@@ -131,16 +135,32 @@ public class EnrollmentService {
     }
 
     private List<EnrolledStudentDto> mapToEnrolledStudentDtos(Integer courseId) {
-        return enrollmentRepository.findByCourse_CourseIdWithStudent(courseId)
-                .stream()
+        List<Enrollments> enrollments = enrollmentRepository.findByCourse_CourseIdWithStudent(courseId);
+        List<Integer> studentIds = enrollments.stream().map(e -> e.getStudent().getUserId()).toList();
+        Map<Integer, Integer> progressByStudentId = lessonService.getCompletionPercentByStudentIds(courseId, studentIds);
+
+        return enrollments.stream()
                 .map(e -> new EnrolledStudentDto(
                         e.getEnrollmentId(),
                         e.getStudent().getUsername(),
                         e.getStudent().getFullName(),
                         e.getEnrolledAt(),
-                        e.getAccessRevokedAt()
+                        e.getAccessRevokedAt(),
+                        progressByStudentId.getOrDefault(e.getStudent().getUserId(), 0)
                 ))
                 .toList();
+    }
+
+    // Phase 35 — Dashboard "Tiến độ trung bình" (Phase 28 debt): trung bình % hoàn thành trên mọi
+    // course Student hiện tại đã mua.
+    public Integer getAverageProgressPercent(String username) {
+        Users student = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Student not found"));
+        List<Integer> courseIds = enrollmentRepository.findByStudent_UserId(student.getUserId())
+                .stream()
+                .map(e -> e.getCourse().getCourseId())
+                .toList();
+        return lessonService.getAverageCompletionPercent(student.getUserId(), courseIds);
     }
 
     // Phase 30 — Teacher Dashboard (tổng học viên) + Teacher Courses List (cột Số học viên).

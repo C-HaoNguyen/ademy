@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
+import { ROLES, ROUTES } from "@/config/constants";
 import logo from "../../../assets/logo.svg"
 
 type Tab = {
@@ -10,11 +11,23 @@ type Tab = {
     href: string;
 };
 
+// Header Public hiển thị cho mọi user đã đăng nhập (Student/Teacher/Admin) khi họ đứng trên trang
+// Public — trước đây hardcode cứng route/label của Student, khiến Teacher/Admin bấm "Bắt đầu học"
+// bị ProtectedRoute bounce về "/" (role không khớp /student/**). Map role → dashboard/profile route
+// đúng để CTA và "Chỉnh sửa hồ sơ" luôn trỏ đúng khu vực của role hiện tại.
+const roleHomeByRole: Record<string, { dashboard: string; ctaLabel: string; profile: string }> = {
+    [ROLES.STUDENT]: { dashboard: ROUTES.STUDENT.DASHBOARD, ctaLabel: "Bắt đầu học", profile: ROUTES.STUDENT.PROFILE },
+    [ROLES.TEACHER]: { dashboard: ROUTES.TEACHER.DASHBOARD, ctaLabel: "Bảng điều khiển", profile: ROUTES.TEACHER.PROFILE },
+    [ROLES.ADMIN]: { dashboard: ROUTES.ADMIN.DASHBOARD, ctaLabel: "Bảng điều khiển", profile: ROUTES.ADMIN.PROFILE },
+};
+
 function Header() {
     const navigate = useNavigate();
-    const { isLoggedIn: loggedIn, logout } = useAuth();
+    const { isLoggedIn: loggedIn, role, logout } = useAuth();
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const roleHome = roleHomeByRole[role?.toUpperCase() ?? ""] ?? roleHomeByRole[ROLES.STUDENT];
 
     const tabs: Tab[] = [
         { id: "home", label: "Trang Chủ", href: "/" },
@@ -85,9 +98,9 @@ function Header() {
                             </>
                         ) : (
                             <>
-                                {/* Start learning button */}
+                                {/* Vào khu vực làm việc của role hiện tại */}
                                 <button
-                                    onClick={() => navigate("/student/dashboard")}
+                                    onClick={() => navigate(roleHome.dashboard)}
                                     className="px-4 py-2 rounded-full
                                                 text-sm font-semibold
                                                 text-white bg-legacy-cta
@@ -96,7 +109,7 @@ function Header() {
                                                 shadow-sm cursor-pointer
                                                 active:scale-[0.97]"
                                 >
-                                    Bắt đầu học
+                                    {roleHome.ctaLabel}
                                 </button>
                                 {/* Avatar dropdown */}
                                 <div className="relative" ref={dropdownRef}>
@@ -121,7 +134,7 @@ function Header() {
                                         >
                                             <button
                                                 className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-legacy-surface cursor-pointer"
-                                                onClick={() => navigate("/student/profile")}
+                                                onClick={() => navigate(roleHome.profile)}
                                             >
                                                 <User size={16} />
                                                 Chỉnh sửa hồ sơ

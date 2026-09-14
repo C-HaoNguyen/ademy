@@ -2,6 +2,7 @@ package com.example.academic_management_api.enrollment.service;
 
 import com.example.academic_management_api.common.exception.NotFoundException;
 import com.example.academic_management_api.course.entity.Courses;
+import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.repository.CourseRepository;
 import com.example.academic_management_api.enrollment.dto.EnrolledStudentDto;
 import com.example.academic_management_api.enrollment.dto.MyCourseDto;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,12 +35,14 @@ class EnrollmentServiceTest {
     private UserRepository userRepository;
     @Mock
     private CourseRepository courseRepository;
+    @Mock
+    private LessonService lessonService;
 
     private EnrollmentService enrollmentService;
 
     @BeforeEach
     void setUp() {
-        enrollmentService = new EnrollmentService(enrollmentRepository, userRepository, courseRepository);
+        enrollmentService = new EnrollmentService(enrollmentRepository, userRepository, courseRepository, lessonService);
     }
 
     @Test
@@ -127,6 +131,8 @@ class EnrollmentServiceTest {
         enrollment.setEnrolledAt(enrolledAt);
 
         when(enrollmentRepository.findByCourse_CourseIdWithStudent(1)).thenReturn(List.of(enrollment));
+        when(lessonService.getCompletionPercentByStudentIds(eq(1), anyList())).thenReturn(Map.of(20, 75));
+        student.setUserId(20);
 
         List<EnrolledStudentDto> result = enrollmentService.getStudentsByCourseAsAdmin(1);
 
@@ -137,6 +143,7 @@ class EnrollmentServiceTest {
         assertThat(dto.getStudentFullName()).isEqualTo("Nguyễn Văn B");
         assertThat(dto.getEnrolledAt()).isEqualTo(enrolledAt);
         assertThat(dto.getAccessRevokedAt()).isNull();
+        assertThat(dto.getProgressPercent()).isEqualTo(75);
         verify(courseRepository, never()).findById(anyInt());
     }
 
@@ -146,5 +153,29 @@ class EnrollmentServiceTest {
 
         assertThatThrownBy(() -> enrollmentService.getStudentsByCourseAsAdmin(99))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void getAverageProgressPercent_delegatesToLessonServiceWithOwnCourseIds() {
+        Users student = new Users();
+        student.setUserId(10);
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+
+        Courses course1 = new Courses();
+        course1.setCourseId(1);
+        Courses course2 = new Courses();
+        course2.setCourseId(2);
+
+        Enrollments e1 = new Enrollments();
+        e1.setCourse(course1);
+        Enrollments e2 = new Enrollments();
+        e2.setCourse(course2);
+        when(enrollmentRepository.findByStudent_UserId(10)).thenReturn(List.of(e1, e2));
+
+        when(lessonService.getAverageCompletionPercent(10, List.of(1, 2))).thenReturn(50);
+
+        Integer result = enrollmentService.getAverageProgressPercent("student1");
+
+        assertThat(result).isEqualTo(50);
     }
 }

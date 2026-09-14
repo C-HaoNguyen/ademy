@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { API_ENDPOINTS, ROUTES } from "@/config/constants";
+import { API_ENDPOINTS, ROLES, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/useAuth";
 import { useToast } from "@/shared/ui/useToast";
@@ -46,7 +46,7 @@ const CourseDetail = () => {
     const { courseId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, role } = useAuth();
     const { showToast } = useToast();
 
     const [course, setCourse] = useState<CourseDetailType | null>(null);
@@ -141,10 +141,21 @@ const CourseDetail = () => {
         navigate(ROUTES.CHECKOUT, { state: { courseId: course?.courseId } });
     };
 
-    // Lesson Player chưa tồn tại trong hệ thống (Phase 35, chưa implement) — "Xem thử"
-    // hiện chỉ thông báo, chưa điều hướng vào nội dung thật.
+    // BR-007: "Xem thử" yêu cầu đăng nhập (bất kỳ role) nhưng không yêu cầu đã mua. Backend
+    // (/lessons/course/{id}) cho phép mọi role đã xác thực, nhưng Lesson Player route ở frontend chỉ
+    // gắn trong khu vực Student (ProtectedRoute allowedRoles=[STUDENT]) — Teacher/Admin đăng nhập
+    // vẫn không có route để xem, nên giữ toast báo thay vì điều hướng vào route sẽ bị bounce về "/".
     const handlePreviewLesson = () => {
-        showToast({ tone: "info", message: "Tính năng xem thử sẽ sớm ra mắt." });
+        if (!isLoggedIn) {
+            navigate("/login", { state: { from: location.pathname } });
+            return;
+        }
+        if (role?.toUpperCase() !== ROLES.STUDENT) {
+            showToast({ tone: "info", message: "Tính năng xem thử hiện chỉ dành cho học viên." });
+            return;
+        }
+        if (!course) return;
+        navigate(ROUTES.STUDENT.LEARN(course.courseId));
     };
 
     if (loading) {

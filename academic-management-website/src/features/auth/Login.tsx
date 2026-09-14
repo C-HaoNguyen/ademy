@@ -77,6 +77,11 @@ const Login = () => {
                 return;
             }
 
+            if (data.role === ROLES.TEACHER) {
+                navigate(ROUTES.TEACHER.DASHBOARD, { replace: true });
+                return;
+            }
+
             if (from) {
                 navigate(from, { replace: true });
             } else {

@@ -24,16 +24,19 @@ import LearningProfile from "@/features/student/learning-profile/LearningProfile
 import TestPractice from "@/features/student/test-practice/TestPractice";
 import QuizAttempt from "@/features/student/quiz-attempt/QuizAttempt";
 import Profile from "@/features/student/profile/Profile";
+import LessonPlayer from "@/features/student/lesson-player/LessonPlayer";
 
 import AdminDashboard from "@/features/admin/dashboard/AdminDashboard";
 import AdminUsersList from "@/features/admin/users/AdminUsersList";
 import AdminCourses from "@/features/admin/courses/AdminCourses";
 import AdminCategories from "@/features/admin/categories/AdminCategories";
 import AdminOrders from "@/features/admin/orders/AdminOrders";
+import AdminProfile from "@/features/admin/profile/AdminProfile";
 
 import TeacherDashboard from "@/features/teacher/dashboard/TeacherDashboard";
 import TeacherCoursesList from "@/features/teacher/courses/TeacherCoursesList";
 import CourseEditor from "@/features/teacher/courses/CourseEditor";
+import TeacherProfile from "@/features/teacher/profile/TeacherProfile";
 
 const AppRoutes = () => {
     return (
@@ -95,6 +98,17 @@ const AppRoutes = () => {
                     <Route path="quiz/course/:courseId" element={<QuizAttempt />} />
                 </Route>
 
+                {/* Lesson Player (Phase 35) — layout riêng (LessonPlayerLayout), KHÔNG lồng trong
+                    StudentLayout/AppShellLayout (sidebar toàn cục ẩn theo UI_SPEC §3.3). */}
+                <Route
+                    path="/student/learn/:courseId"
+                    element={
+                        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                            <LessonPlayer />
+                        </ProtectedRoute>
+                    }
+                />
+
                 {/* ===== ADMIN (PRIVATE) ===== */}
                 <Route
                     path="/admin"
@@ -110,6 +124,7 @@ const AppRoutes = () => {
                     <Route path="courses" element={<AdminCourses />} />
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="orders" element={<AdminOrders />} />
+                    <Route path="profile" element={<AdminProfile />} />
                 </Route>
 
                 {/* ===== TEACHER (PRIVATE) ===== */}
@@ -126,6 +141,7 @@ const AppRoutes = () => {
                     <Route path="courses" element={<TeacherCoursesList />} />
                     <Route path="courses/new" element={<CourseEditor />} />
                     <Route path="courses/:courseId/edit" element={<CourseEditor />} />
+                    <Route path="profile" element={<TeacherProfile />} />
                 </Route>
             </Routes>
         </BrowserRouter>

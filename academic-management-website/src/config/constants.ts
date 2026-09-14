@@ -52,10 +52,18 @@ export const API_ENDPOINTS = {
         ADMIN_REVOKE_ACCESS: (id: number | string) => `/admin/enrollments/${id}/revoke-access`,
     },
 
-    // Quizzes (Phase 34 — Test Practice hub + Quiz Attempt)
+    // Quizzes (Phase 34 — Test Practice hub + Quiz Attempt; Phase 35 thêm biến thể lesson-quiz)
     QUIZZES: {
         COURSE_TESTS: "/quizzes/me/course-tests",
         COURSE_QUIZ: (courseId: number | string) => `/quizzes/course/${courseId}`,
+        LESSON_QUIZ: (lessonId: number | string) => `/quizzes/lesson/${lessonId}`,
+    },
+
+    // Lesson Player (Phase 35) — top-level /lessons, KHÔNG dưới /courses/** (nhánh đó permitAll
+    // trong SecurityConfig — xem StudentLessonController).
+    LESSONS: {
+        COURSE_LESSONS: (courseId: number | string) => `/lessons/course/${courseId}`,
+        COMPLETE: (lessonId: number | string) => `/lessons/${lessonId}/complete`,
     },
 
     // Quiz attempts
@@ -140,6 +148,7 @@ export const ROUTES = {
         LEARNING_PROFILE: "/student/learning-profile",
         TEST_PRACTICE: "/student/test-practice",
         QUIZ_COURSE: (courseId: number | string) => `/student/quiz/course/${courseId}`,
+        LEARN: (courseId: number | string) => `/student/learn/${courseId}`,
     },
 
     // Admin
@@ -160,6 +169,7 @@ export const ROUTES = {
         COURSES: "/teacher/courses",
         COURSE_NEW: "/teacher/courses/new",
         COURSE_EDIT: (id: number | string) => `/teacher/courses/${id}/edit`,
+        PROFILE: "/teacher/profile",
     },
 } as const;
 

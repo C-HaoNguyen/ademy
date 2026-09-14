@@ -37,15 +37,31 @@ public class LessonProgress {
         return student;
     }
 
+    public void setStudent(Users student) {
+        this.student = student;
+    }
+
     public Lessons getLesson() {
         return lesson;
+    }
+
+    public void setLesson(Lessons lesson) {
+        this.lesson = lesson;
     }
 
     public Boolean getCompleted() {
         return completed;
     }
 
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
+    }
+
     public LocalDateTime getCompletedAt() {
         return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }

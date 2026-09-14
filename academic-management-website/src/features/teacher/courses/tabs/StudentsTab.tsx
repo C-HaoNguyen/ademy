@@ -26,9 +26,7 @@ const StudentsTab = ({ courseId }: StudentsTabProps) => {
         {
             key: "progress",
             header: "Tiến độ",
-            // Chưa có dữ liệu thật (LessonProgress chỉ có sau Phase 35) — placeholder theo
-            // quyết định đã ghi ở REFACTOR_PLAN.md Phase 30.
-            render: () => <span className="text-tertiary">—</span>,
+            render: (s) => `${s.progressPercent}%`,
         },
         {
             key: "enrolledAt",

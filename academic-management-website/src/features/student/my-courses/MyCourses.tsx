@@ -50,7 +50,7 @@ const MyCourses = () => {
                         variant="primary"
                         size="sm"
                         className="mt-4 w-full"
-                        onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
+                        onClick={() => navigate(ROUTES.STUDENT.LEARN(course.courseId))}
                     >
                         Vào học
                     </Button>

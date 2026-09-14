@@ -2,7 +2,7 @@ import { BookOpen, CheckCircle, TrendingUp, PlayCircle, Zap } from "lucide-react
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/config/constants";
 import { useMyCoursesQuery } from "@/shared/api/queries/useMyCoursesQuery";
-import { useTotalCoursesQuery, useQuizAttemptSummaryQuery } from "@/shared/api/queries/useStudentSummaryQuery";
+import { useStudentDashboardSummaryQuery, useQuizAttemptSummaryQuery } from "@/shared/api/queries/useStudentSummaryQuery";
 import Card from "@/shared/ui/Card";
 import StatCard from "@/shared/ui/StatCard";
 import Button from "@/shared/ui/Button";
@@ -11,9 +11,10 @@ import { SkeletonText } from "@/shared/ui/Skeleton";
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const totalCoursesQuery = useTotalCoursesQuery();
+    const summaryQuery = useStudentDashboardSummaryQuery();
     const quizAttemptSummaryQuery = useQuizAttemptSummaryQuery();
     const myCoursesQuery = useMyCoursesQuery();
+    const averageProgressPercent = summaryQuery.data?.averageProgressPercent;
 
     const recentCourses = [...(myCoursesQuery.data ?? [])]
         .sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())
@@ -32,8 +33,8 @@ const Dashboard = () => {
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
                     label="Khóa học đã đăng ký"
-                    value={totalCoursesQuery.data ?? 0}
-                    loading={totalCoursesQuery.isLoading}
+                    value={summaryQuery.data?.totalCourses ?? 0}
+                    loading={summaryQuery.isLoading}
                 />
                 <StatCard
                     icon={<CheckCircle size={22} aria-hidden="true" />}
@@ -44,7 +45,8 @@ const Dashboard = () => {
                 <StatCard
                     icon={<TrendingUp size={22} aria-hidden="true" />}
                     label="Tiến độ trung bình"
-                    pendingText="Sắp ra mắt"
+                    value={averageProgressPercent != null ? `${averageProgressPercent}%` : "—"}
+                    loading={summaryQuery.isLoading}
                 />
             </div>
 
@@ -87,7 +89,7 @@ const Dashboard = () => {
                                 <Button
                                     variant="primary"
                                     size="sm"
-                                    onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
+                                    onClick={() => navigate(ROUTES.STUDENT.LEARN(course.courseId))}
                                 >
                                     Vào học
                                 </Button>

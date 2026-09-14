@@ -22,6 +22,7 @@ import Dashboard from "@/features/student/dashboard/Dashboard";
 import MyCourses from "@/features/student/my-courses/MyCourses";
 import LearningProfile from "@/features/student/learning-profile/LearningProfile";
 import TestPractice from "@/features/student/test-practice/TestPractice";
+import QuizAttempt from "@/features/student/quiz-attempt/QuizAttempt";
 import Profile from "@/features/student/profile/Profile";
 
 import AdminDashboard from "@/features/admin/dashboard/AdminDashboard";
@@ -91,6 +92,7 @@ const AppRoutes = () => {
                     <Route path="my-courses" element={<MyCourses />} />
                     <Route path="learning-profile" element={<LearningProfile />} />
                     <Route path="test-practice" element={<TestPractice />} />
+                    <Route path="quiz/course/:courseId" element={<QuizAttempt />} />
                 </Route>
 
                 {/* ===== ADMIN (PRIVATE) ===== */}

@@ -13,6 +13,9 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempts, Integ
 
     long countByStudent_UserId(Integer studentId);
 
+    // Phase 34 — Test Practice hub: mọi lần làm bài của Student cho 1 tập quiz (batch, tránh N+1).
+    List<QuizAttempts> findByQuiz_IdInAndStudent_UserId(List<Integer> quizIds, Integer studentId);
+
     // Phase 28 — điểm trung bình mọi lần làm bài của Student (Dashboard/LearningProfile). AVG trả
     // null nếu Student chưa làm bài nào (JPQL không hỗ trợ derived AVG nên phải dùng @Query).
     // Trả về Double (không phải BigDecimal dù QuizAttempts.score là BigDecimal) — theo JPA spec

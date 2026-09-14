@@ -52,9 +52,16 @@ export const API_ENDPOINTS = {
         ADMIN_REVOKE_ACCESS: (id: number | string) => `/admin/enrollments/${id}/revoke-access`,
     },
 
+    // Quizzes (Phase 34 — Test Practice hub + Quiz Attempt)
+    QUIZZES: {
+        COURSE_TESTS: "/quizzes/me/course-tests",
+        COURSE_QUIZ: (courseId: number | string) => `/quizzes/course/${courseId}`,
+    },
+
     // Quiz attempts
     QUIZ_ATTEMPTS: {
         MY_SUMMARY: "/quiz-attempts/me/summary",
+        SUBMIT: "/quiz-attempts",
     },
 
     // Payments (Phase 33 — Checkout 3 bước)
@@ -132,6 +139,7 @@ export const ROUTES = {
         MY_COURSES: "/student/my-courses",
         LEARNING_PROFILE: "/student/learning-profile",
         TEST_PRACTICE: "/student/test-practice",
+        QUIZ_COURSE: (courseId: number | string) => `/student/quiz/course/${courseId}`,
     },
 
     // Admin

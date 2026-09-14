@@ -3,6 +3,7 @@ package com.example.academic_management_api.assessment.service;
 import com.example.academic_management_api.assessment.dto.AnswerRequest;
 import com.example.academic_management_api.assessment.dto.AttemptResultDto;
 import com.example.academic_management_api.assessment.dto.ChoiceRequest;
+import com.example.academic_management_api.assessment.dto.CourseTestSummaryDto;
 import com.example.academic_management_api.assessment.dto.QuestionRequest;
 import com.example.academic_management_api.assessment.dto.QuizRequest;
 import com.example.academic_management_api.assessment.dto.QuizAttemptSummaryDto;
@@ -25,6 +26,7 @@ import com.example.academic_management_api.course.lesson.entity.LessonContentTyp
 import com.example.academic_management_api.course.lesson.entity.Lessons;
 import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.service.CourseService;
+import com.example.academic_management_api.enrollment.dto.MyCourseDto;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import com.example.academic_management_api.user.entity.Role;
 import com.example.academic_management_api.user.entity.Users;
@@ -446,6 +448,78 @@ class QuizServiceTest {
 
         assertThat(summary.getAttemptCount()).isEqualTo(0L);
         assertThat(summary.getAverageScore()).isNull();
+    }
+
+    // ---- Phase 34: Test Practice hub ----
+
+    @Test
+    void getMyCourseTests_returnsOnlyCoursesWithQuiz_andCorrectAttemptedFlag() {
+        Users student = user(5, "student1");
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+
+        MyCourseDto courseWithQuiz = new MyCourseDto(10, "Course A", null, "Teacher A", null);
+        MyCourseDto courseWithoutQuiz = new MyCourseDto(20, "Course B", null, "Teacher B", null);
+        when(enrollmentService.getMyCourses("student1")).thenReturn(List.of(courseWithQuiz, courseWithoutQuiz));
+
+        Quizzes quiz = new Quizzes();
+        quiz.setId(100);
+        quiz.setCourse(course(10));
+        quiz.setTitle("Final test");
+        when(quizRepository.findByCourse_CourseIdIn(List.of(10, 20))).thenReturn(List.of(quiz));
+
+        when(attemptRepository.findByQuiz_IdInAndStudent_UserId(List.of(100), 5)).thenReturn(List.of());
+
+        List<CourseTestSummaryDto> result = quizService.getMyCourseTests("student1");
+
+        assertThat(result).hasSize(1);
+        CourseTestSummaryDto dto = result.get(0);
+        assertThat(dto.getCourseId()).isEqualTo(10);
+        assertThat(dto.getCourseTitle()).isEqualTo("Course A");
+        assertThat(dto.getQuizId()).isEqualTo(100);
+        assertThat(dto.isAttempted()).isFalse();
+        assertThat(dto.getBestScore()).isNull();
+    }
+
+    @Test
+    void getMyCourseTests_multipleAttempts_returnsHighestScore() {
+        Users student = user(5, "student1");
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+
+        MyCourseDto courseWithQuiz = new MyCourseDto(10, "Course A", null, "Teacher A", null);
+        when(enrollmentService.getMyCourses("student1")).thenReturn(List.of(courseWithQuiz));
+
+        Quizzes quiz = new Quizzes();
+        quiz.setId(100);
+        quiz.setCourse(course(10));
+        quiz.setTitle("Final test");
+        when(quizRepository.findByCourse_CourseIdIn(List.of(10))).thenReturn(List.of(quiz));
+
+        QuizAttempts lowerAttempt = new QuizAttempts();
+        lowerAttempt.setQuiz(quiz);
+        lowerAttempt.setScore(BigDecimal.valueOf(60));
+        QuizAttempts higherAttempt = new QuizAttempts();
+        higherAttempt.setQuiz(quiz);
+        higherAttempt.setScore(BigDecimal.valueOf(90));
+        when(attemptRepository.findByQuiz_IdInAndStudent_UserId(List.of(100), 5))
+                .thenReturn(List.of(lowerAttempt, higherAttempt));
+
+        List<CourseTestSummaryDto> result = quizService.getMyCourseTests("student1");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).isAttempted()).isTrue();
+        assertThat(result.get(0).getBestScore()).isEqualByComparingTo(BigDecimal.valueOf(90));
+    }
+
+    @Test
+    void getMyCourseTests_noEnrollments_returnsEmptyListAndDoesNotQueryQuizzes() {
+        Users student = user(5, "student1");
+        when(userRepository.findByUsername("student1")).thenReturn(Optional.of(student));
+        when(enrollmentService.getMyCourses("student1")).thenReturn(List.of());
+
+        List<CourseTestSummaryDto> result = quizService.getMyCourseTests("student1");
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(quizRepository);
     }
 
     private AnswerRequest answer(int questionId, int choiceId) {

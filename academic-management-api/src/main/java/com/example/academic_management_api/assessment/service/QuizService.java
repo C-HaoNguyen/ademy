@@ -18,6 +18,7 @@ import com.example.academic_management_api.course.lesson.entity.LessonContentTyp
 import com.example.academic_management_api.course.lesson.entity.Lessons;
 import com.example.academic_management_api.course.lesson.service.LessonService;
 import com.example.academic_management_api.course.service.CourseService;
+import com.example.academic_management_api.enrollment.dto.MyCourseDto;
 import com.example.academic_management_api.enrollment.service.EnrollmentService;
 import com.example.academic_management_api.user.entity.Users;
 import com.example.academic_management_api.user.repository.UserRepository;
@@ -333,6 +334,53 @@ public class QuizService {
         return attemptRepository.findByQuiz_IdAndStudent_UserIdOrderBySubmittedAtDesc(quizId, student.getUserId())
                 .stream()
                 .map(AttemptResultDto::new)
+                .toList();
+    }
+
+    // Phase 34 — Test Practice hub: mọi bài test tổng khóa học (quiz.course != null) của các khóa
+    // Student đã mua, kèm trạng thái đã làm/chưa làm + điểm cao nhất. Lấy course list qua
+    // EnrollmentService (không đụng EnrollmentRepository trực tiếp, đúng cross-module rule) — dùng
+    // title từ MyCourseDto thay vì quiz.getCourse().getTitle() để tránh chạm lazy proxy Courses
+    // ngoài transaction.
+    public List<CourseTestSummaryDto> getMyCourseTests(String username) {
+        Users student = getUser(username);
+        List<MyCourseDto> myCourses = enrollmentService.getMyCourses(username);
+        if (myCourses.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Integer, String> courseTitleById = myCourses.stream()
+                .collect(Collectors.toMap(MyCourseDto::getCourseId, MyCourseDto::getTitle));
+
+        List<Quizzes> quizzes = quizRepository.findByCourse_CourseIdIn(myCourses.stream()
+                .map(MyCourseDto::getCourseId)
+                .toList());
+        if (quizzes.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> quizIds = quizzes.stream().map(Quizzes::getId).toList();
+        Map<Integer, List<QuizAttempts>> attemptsByQuizId = attemptRepository
+                .findByQuiz_IdInAndStudent_UserId(quizIds, student.getUserId())
+                .stream()
+                .collect(Collectors.groupingBy(a -> a.getQuiz().getId()));
+
+        return quizzes.stream()
+                .map(quiz -> {
+                    List<QuizAttempts> attempts = attemptsByQuizId.getOrDefault(quiz.getId(), List.of());
+                    BigDecimal bestScore = attempts.stream()
+                            .map(QuizAttempts::getScore)
+                            .max(BigDecimal::compareTo)
+                            .orElse(null);
+                    return new CourseTestSummaryDto(
+                            quiz.getCourse().getCourseId(),
+                            courseTitleById.get(quiz.getCourse().getCourseId()),
+                            quiz.getId(),
+                            quiz.getTitle(),
+                            !attempts.isEmpty(),
+                            bestScore
+                    );
+                })
                 .toList();
     }
 

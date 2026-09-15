@@ -92,6 +92,27 @@ export const API_ENDPOINTS = {
         RECENTLY_PUBLISHED_COURSES: "/admin/courses/recently-published",
     },
 
+    // Coupons (Phase 36 — AdminCoupons)
+    COUPONS: {
+        ADMIN_LIST: "/admin/coupons",
+        CREATE: "/admin/coupons",
+        UPDATE: (id: number | string) => `/admin/coupons/${id}`,
+        DEACTIVATE: (id: number | string) => `/admin/coupons/${id}/deactivate`,
+    },
+
+    // Refunds (Phase 36 — AdminRefunds)
+    REFUNDS: {
+        ADMIN_LIST: "/admin/refund-requests",
+        APPROVE: (id: number | string) => `/admin/refund-requests/${id}/approve`,
+        REJECT: (id: number | string) => `/admin/refund-requests/${id}/reject`,
+        MARK_COMPLETED: (id: number | string) => `/admin/refund-requests/${id}/mark-completed`,
+    },
+
+    // Audit Log (Phase 36 — AdminAuditLog)
+    AUDIT_LOGS: {
+        SEARCH: "/admin/audit-logs",
+    },
+
     // Teacher (Phase 30)
     TEACHER: {
         COURSES: "/teacher/courses",
@@ -159,6 +180,9 @@ export const ROUTES = {
         COURSES: "/admin/courses",
         CATEGORIES: "/admin/categories",
         ORDERS: "/admin/orders",
+        COUPONS: "/admin/coupons",
+        REFUNDS: "/admin/refunds",
+        AUDIT_LOG: "/admin/audit-log",
         PROFILE: "/admin/profile",
     },
 

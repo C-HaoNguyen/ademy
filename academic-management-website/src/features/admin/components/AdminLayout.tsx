@@ -4,6 +4,9 @@ import {
     BookOpen,
     Layers,
     CreditCard,
+    Ticket,
+    RotateCcw,
+    ClipboardList,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppShellLayout from "@/shared/layout/AppShellLayout";
@@ -18,6 +21,9 @@ const adminNavItems: SidebarNavItem[] = [
     { to: ROUTES.ADMIN.COURSES, label: "Courses", icon: BookOpen },
     { to: ROUTES.ADMIN.CATEGORIES, label: "Categories", icon: Layers },
     { to: ROUTES.ADMIN.ORDERS, label: "Orders", icon: CreditCard },
+    { to: ROUTES.ADMIN.COUPONS, label: "Coupons", icon: Ticket },
+    { to: ROUTES.ADMIN.REFUNDS, label: "Refunds", icon: RotateCcw },
+    { to: ROUTES.ADMIN.AUDIT_LOG, label: "Audit Log", icon: ClipboardList },
 ];
 
 const AdminLayout = () => {

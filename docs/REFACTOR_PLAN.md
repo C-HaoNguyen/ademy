@@ -1181,6 +1181,10 @@ Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, khô
 - **Tests/verification**: Test tạo coupon, áp dụng đúng ở Checkout (Phase 33); test luồng Admin duyệt refund đầy đủ; test Audit Log filter theo actor/hành động/thời gian (dùng `DateRangeInput`) trả đúng kết quả.
 - **Exit criteria**: 3 trang khớp UI_SPEC §5.6-5.8; toàn bộ Admin Sidebar khớp UI_SPEC §1.4.
 - **Trace**: UI_SPEC §5.6-5.8, PRD-023/024, PRD-025/026, PRD-033/034.
+- **Đã implement**: 3 trang (frontend-only, backend Phase 22/23/25 đã đủ) + `useAdminCouponsQuery`/`useAdminRefundsQuery`/`useAdminAuditLogsQuery`, `CouponFormOverlay`, `RefundDecisionModal`, `AuditLogDetailModal`, `refundStatus.ts`/`auditActions.ts`; 3 route + 3 nav item (Coupons/Refunds/Audit Log, đúng thứ tự UI_SPEC §1.4). `npm run build`/`npm run lint` sạch.
+- **Bug phát hiện + fix khi verify qua API thật (curl, không phải chỉ build)**: `CouponDiscountType`/`RefundBusinessStatus`/`RefundExecutionStatus` serialize bằng `@JsonValue name().toLowerCase()` ở backend — response thật chữ thường (`"percentage"`, `"requested"`...), lệch giả định type union chữ HOA ban đầu. Fix: chuẩn hóa `.toUpperCase()` ngay ở 2 query hook (cùng pattern đã có ở `paymentStatus.ts`).
+- **Blocker phát hiện, KHÔNG fix (ngoài scope Phase 36)**: `GET /admin/audit-logs` trả 500 mọi trường hợp (kể cả không truyền filter nào) — lỗi Postgres `could not determine data type of parameter $7` trên câu query JPQL `(? is null or created_at >= ?)` ở `AuditLogRepository`/`AuditLogService` (Phase 25). Đã xác nhận đây là bug backend Phase 25, tái hiện được trên backend build từ source hiện tại (không phải do FE Phase 36) — `AdminAuditLog.tsx` code đúng theo contract dự kiến nhưng **không gọi được thành công cho tới khi Phase 25/backend fix query này**.
+- **Chưa verify được**: tương tác UI thật qua browser (không có công cụ browser automation trong môi trường này) — chỉ verify qua `npm run build`/lint sạch + gọi trực tiếp API thật (login, list/create/deactivate coupon, list refund, list audit-log) bằng curl.
 
 ---
 

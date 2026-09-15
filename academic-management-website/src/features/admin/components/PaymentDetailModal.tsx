@@ -1,6 +1,7 @@
 import Modal from "@/shared/ui/Modal";
 import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
+import DetailRow from "@/shared/ui/DetailRow";
 import type { AdminPayment } from "@/shared/api/queries/useAdminPaymentsQuery";
 import { getPaymentMethodLabel, getPaymentStatusLabel, getPaymentStatusTone, formatCurrency } from "@/features/admin/orders/paymentStatus";
 
@@ -9,13 +10,6 @@ interface PaymentDetailModalProps {
     onClose: () => void;
     payment: AdminPayment | null;
 }
-
-const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex items-center justify-between py-2 border-b border-default last:border-b-0">
-        <span className="text-body-sm text-secondary">{label}</span>
-        <span className="text-body-sm font-medium text-primary">{value}</span>
-    </div>
-);
 
 // UI_SPEC §5.5 — AdminOrders là read-only, click dòng mở Modal chi tiết (không phải trang riêng).
 const PaymentDetailModal = ({ open, onClose, payment }: PaymentDetailModalProps) => {

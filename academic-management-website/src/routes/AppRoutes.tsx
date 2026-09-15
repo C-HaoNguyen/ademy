@@ -31,6 +31,9 @@ import AdminUsersList from "@/features/admin/users/AdminUsersList";
 import AdminCourses from "@/features/admin/courses/AdminCourses";
 import AdminCategories from "@/features/admin/categories/AdminCategories";
 import AdminOrders from "@/features/admin/orders/AdminOrders";
+import AdminCoupons from "@/features/admin/coupons/AdminCoupons";
+import AdminRefunds from "@/features/admin/refunds/AdminRefunds";
+import AdminAuditLog from "@/features/admin/audit-log/AdminAuditLog";
 import AdminProfile from "@/features/admin/profile/AdminProfile";
 
 import TeacherDashboard from "@/features/teacher/dashboard/TeacherDashboard";
@@ -124,6 +127,9 @@ const AppRoutes = () => {
                     <Route path="courses" element={<AdminCourses />} />
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="orders" element={<AdminOrders />} />
+                    <Route path="coupons" element={<AdminCoupons />} />
+                    <Route path="refunds" element={<AdminRefunds />} />
+                    <Route path="audit-log" element={<AdminAuditLog />} />
                     <Route path="profile" element={<AdminProfile />} />
                 </Route>
 

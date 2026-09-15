@@ -1,8 +1,7 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { CheckCircle, XCircle, AlertTriangle, Info, X, type LucideIcon } from "lucide-react";
 import { ToastContext, type ShowToastInput, type ToastTone } from "./toastContextObject";
-
-const TOAST_DURATION_MS = 3000;
+import { UI } from "@/config";
 
 type ToastItem = ShowToastInput & { id: number };
 
@@ -48,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ({ tone, message }: ShowToastInput) => {
             const id = nextId.current++;
             setToasts((prev) => [...prev, { id, tone, message }]);
-            setTimeout(() => dismissToast(id), TOAST_DURATION_MS);
+            setTimeout(() => dismissToast(id), UI.TOAST_DURATION);
         },
         [dismissToast]
     );

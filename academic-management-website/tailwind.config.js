@@ -10,32 +10,6 @@ export default {
         sans: ['Plus Jakarta Sans', 'sans-serif'],
       },
       colors: {
-        // Legacy tokens (pre-DESIGN_SYSTEM.md) — deprecated, scheduled for removal in
-        // REFACTOR_PLAN.md Phase 37 once no component references them anymore.
-        'legacy-primary': {
-          DEFAULT: '#2563EB',
-          light: '#3B82F6',
-          dark: '#1E3A8A',
-        },
-        'legacy-cta': {
-          DEFAULT: '#F97316',
-          dark: '#EA580C',
-        },
-        'legacy-success': {
-          DEFAULT: '#16A34A',
-          light: '#DCFCE7',
-        },
-        'legacy-danger': {
-          DEFAULT: '#DC2626',
-          light: '#FEE2E2',
-        },
-        'legacy-warning': {
-          DEFAULT: '#D97706',
-          light: '#FEF3C7',
-        },
-        'legacy-surface': '#F8FAFC',
-        'legacy-ink': '#1E293B',
-
         // Semantic tokens — DESIGN_SYSTEM.md §3.2 (Surface & Background, Action, Nav,
         // Progress, Status). Text/Border/Focus tokens live in textColor/borderColor/
         // ringColor below to avoid double-prefixed utility classes (e.g. border-border-*).

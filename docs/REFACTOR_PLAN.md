@@ -1190,18 +1190,28 @@ Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, khô
 
 ## Stage L — Cleanup & Hardening
 
-### Phase 37: Dead code cleanup còn lại
+### Phase 37: Dead code cleanup còn lại — ĐÃ HOÀN TẤT (scope điều chỉnh so với bản gốc)
 
 - **Goal**: Xóa mọi dead code đã xác định, không còn sót.
-- **Scope**: (2 file rỗng `AuthPage.tsx`/`MyCoursesOverview.tsx` đã xóa từ Phase 6 — không còn việc ở đây) dọn `UI.SEARCH_DEBOUNCE`/`UI.TOAST_DURATION`/`UI.DEFAULT_PAGE_SIZE` — wire thật vào nơi cần (search debounce ở CourseListPage, toast duration ở `ToastProvider`, pagination ở Table/list) hoặc xóa nếu xác nhận không cần; xóa token Tailwind cũ (`primary`, `cta`... đã deprecated từ Phase 10) sau khi xác nhận không còn component nào dùng.
-- **Dependencies**: Toàn bộ Stage I-K phải hoàn tất (để chắc chắn không còn nơi dùng token/constant cũ).
-- **Changes required**: Xóa file; wire constants; xóa token cũ khỏi `tailwind.config.js`.
-- **Modules/files**: Như liệt kê ở Scope.
-- **Existing behavior cần preserve**: Toàn bộ UI đã redesign ở Stage I-K không đổi (chỉ dọn phần thực sự không còn dùng).
-- **Migration concerns**: Grep toàn repo trước khi xóa token cũ để chắc chắn 0 reference còn sót — nếu còn, quay lại phase tương ứng chưa hoàn tất trước khi cleanup.
-- **Tests/verification**: Build/lint sạch sau khi xóa; `npm run build` không còn warning unused.
-- **Exit criteria**: Không còn dead file, dead constant, token cũ trong codebase.
-- **Trace**: Gap Analysis U21-U23, audit findings ban đầu.
+- **Scope thực tế đã làm**: (2 file rỗng `AuthPage.tsx`/`MyCoursesOverview.tsx` xác nhận đã xóa từ Phase 6, không còn tồn tại — không còn việc ở đây) wire `UI.TOAST_DURATION` thật vào `ToastProvider.tsx`; migrate 3 file còn dùng token `legacy-*` (`Header.tsx`, `PublicLayout.tsx`, `EmptyState.tsx`) sang token mới; xóa token Tailwind cũ (`legacy-primary/cta/success/danger/warning/surface/ink`) khỏi `tailwind.config.js` sau khi xác nhận 0 reference còn sót.
+- **Assumption sai phát hiện lúc audit trước khi implement (đã báo cáo + chốt hướng xử lý trước khi code)**:
+  1. `UI.SEARCH_DEBOUNCE`/`UI.DEFAULT_PAGE_SIZE` **đã được wire từ Phase 26** (`CourseListPage.tsx`) — không còn việc gì để làm cho 2 constant này, chỉ `UI.TOAST_DURATION` còn dead (`ToastProvider.tsx` tự khai `TOAST_DURATION_MS = 3000` cục bộ thay vì import).
+  2. Token `legacy-*` **chưa an toàn để xóa ngay** — 3 file (`Header.tsx`, `PublicLayout.tsx`, `EmptyState.tsx`) vẫn dùng thật. Lý do: Phase 10 chỉ đổi tên token cũ → `legacy-*` (rename thuần, không migrate), Phase 26 (Public marketing pages redesign) chủ động loại `Header.tsx`/`PublicLayout.tsx` khỏi scope, không phase nào sau đó được giao migrate 2 file này; `EmptyState.tsx` ở Phase 14 chỉ retoken container ngoài, phần icon/title bên trong vẫn sót `legacy-*`. → Đã xin quyết định và chốt: migrate 3 file này trong chính Phase 37 (coi là điều kiện bắt buộc tối thiểu để đạt mục tiêu "xóa token cũ" của phase, không phải mở rộng sang phase khác).
+  3. Bullet "pagination ở Table/list" trong scope gốc **không phải dead-code cleanup** — `shared/ui/Table.tsx` không có bất kỳ khái niệm `page`/`pageSize` nào, và không có trang Admin nào (AdminUsersList/AdminOrders/AdminCourses/AdminCoupons/AdminRefunds/AdminAuditLog) dùng `Table` kèm phân trang. Wire `UI.DEFAULT_PAGE_SIZE` vào đây thực chất là xây pagination mới cho `Table` — feature work, không phải cleanup. → Đã xin quyết định và chốt: **bỏ khỏi Phase 37**, để dành cho phase/backlog riêng nếu cần.
+- **Dependencies**: Toàn bộ Stage I-K phải hoàn tất — tại thời điểm implement, Phase 36 (Stage L, ngay trước) đã được commit (`21f7b88`); backend bug audit-log 500 (JPQL `AuditLogRepository`, ghi nhận ở Phase 36) vẫn chưa fix nhưng thuộc Phase 25, không chặn scope thuần frontend của Phase 37.
+- **Changes đã thực hiện**:
+  - `shared/ui/ToastProvider.tsx`: import `UI` từ `@/config`, xóa `TOAST_DURATION_MS` cục bộ, dùng `UI.TOAST_DURATION`.
+  - `shared/ui/EmptyState.tsx`: `bg-legacy-surface`→`bg-surface-muted`, `text-legacy-primary`→`text-brand`, `text-legacy-ink`→`text-primary` (chỉ đổi màu, giữ nguyên `text-base font-semibold` — không nâng lên `text-h4` theo §10.10 để tránh đổi kích thước hiển thị ngoài scope cleanup).
+  - `features/public/components/PublicLayout.tsx`: `bg-legacy-surface`→`bg-background` (cùng giá trị hex `#F8FAFC`, đúng pattern đã dùng ở Login/Signup/ContactPage/HomePage).
+  - `features/public/components/Header.tsx`: 8 vị trí đổi token theo đúng DESIGN_SYSTEM.md §10.7 (tab active/hover → `nav-selected-bg`/`nav-selected-text`; Login/Signup → class tương đương `Button variant="tertiary"`/`"primary"`; CTA "Bắt đầu học" → class tương đương `Button variant="cta"`; hover dropdown/avatar → `surface-muted` đúng pattern `DropdownMenu.tsx`; icon phụ → `text-tertiary`). Giữ nguyên cấu trúc element (`NavLink`/`button` thô, không đổi sang component `Button`/`DropdownMenu` — ngoài scope đổi token màu).
+  - `tailwind.config.js`: xóa block `legacy-*` (7 token: `legacy-primary/cta/success/danger/warning/surface/ink`) khỏi `colors`.
+- **Modules/files**: `shared/ui/{ToastProvider.tsx,EmptyState.tsx}`, `features/public/components/{Header.tsx,PublicLayout.tsx}`, `tailwind.config.js`.
+- **Existing behavior cần preserve**: Toàn bộ hành vi runtime (routing, auth check, dropdown open/close, click-outside, toast tự đóng sau đúng 3000ms — giá trị không đổi) giữ nguyên, chỉ đổi class token màu. Đã verify bằng `git diff` — 0 thay đổi cấu trúc DOM/logic.
+- **Migration concerns**: Grep `legacy-` toàn repo xác nhận 0 kết quả **trước khi** xóa token khỏi `tailwind.config.js` (đúng thứ tự bắt buộc — Tailwind không báo lỗi build nếu xóa token còn dùng, chỉ mất màu âm thầm).
+- **Tests/verification**: Repo frontend chưa có test tự động (đúng tiền lệ mọi phase trước) — verify qua: `grep -rn "legacy-" src/ tailwind.config.js` → 0 kết quả; `npm run build` (`tsc -b && vite build`) PASS; `npm run lint` → 1 warning (`react-hooks/exhaustive-deps` ở `CourseDetailPage.tsx`, pre-existing baseline, không tăng, không thuộc file Phase 37 đụng tới).
+  - **Chưa verify được**: Visual QA thật qua `npm run dev` trên trình duyệt (không có công cụ browser automation trong môi trường này) — cần verify thủ công trước khi merge: Header ở trạng thái chưa đăng nhập/đã đăng nhập (Student/Teacher/Admin), tab active/hover, avatar dropdown open/hover, PublicLayout background, EmptyState ở ít nhất 1 trang dùng nó (ví dụ CourseListPage kết quả rỗng).
+- **Exit criteria**: Đạt — không còn dead file/dead constant/token cũ; `UI.TOAST_DURATION` dùng thật; token `legacy-*` đã xóa khỏi `tailwind.config.js`, 0 reference còn sót; build/lint sạch, không regression so với baseline.
+- **Trace**: Gap Analysis U21-U23, audit findings ban đầu; DESIGN_SYSTEM.md §3.2, §10.7, §10.8, §10.10.
 
 ### Phase 38: i18n scaffold + code-splitting
 

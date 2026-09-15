@@ -55,7 +55,7 @@ function Header() {
                 <div className="flex h-16 items-center justify-between">
 
                     {/* Logo */}
-                    <div className="text-xl font-bold text-legacy-primary">
+                    <div className="text-xl font-bold text-brand">
                         <img src={logo} alt="Ademy" className="h-12 w-12" />
                     </div>
 
@@ -69,8 +69,8 @@ function Header() {
                                 className={({ isActive }) =>
                                     `relative px-4 py-2.5 text-sm font-semibold rounded-full transition-colors duration-200 cursor-pointer
                                     ${isActive
-                                        ? "bg-legacy-surface text-legacy-primary"
-                                        : "text-legacy-ink/70 hover:bg-legacy-surface hover:text-legacy-primary"}`
+                                        ? "bg-nav-selected-bg text-nav-selected-text"
+                                        : "text-secondary hover:bg-nav-selected-bg hover:text-nav-selected-text"}`
                                 }
                             >
                                 {tab.label}
@@ -84,14 +84,14 @@ function Header() {
                             <>
                                 <NavLink
                                     to="/login"
-                                    className="px-6 py-2 text-sm font-semibold text-legacy-primary rounded-full transition-colors duration-200 cursor-pointer hover:bg-legacy-surface"
+                                    className="px-6 py-2 text-sm font-semibold text-action-tertiary-text rounded-full transition-colors duration-200 cursor-pointer hover:bg-action-tertiary-bg-hover"
                                 >
                                     Đăng nhập
                                 </NavLink>
 
                                 <NavLink
                                     to="/signup"
-                                    className="px-6 py-2 text-sm font-semibold text-white bg-legacy-primary rounded-full transition-colors duration-200 cursor-pointer hover:bg-legacy-primary-dark shadow-sm"
+                                    className="px-6 py-2 text-sm font-semibold text-inverse bg-action-primary-bg rounded-full transition-colors duration-200 cursor-pointer hover:bg-action-primary-bg-hover shadow-sm"
                                 >
                                     Đăng ký
                                 </NavLink>
@@ -103,8 +103,8 @@ function Header() {
                                     onClick={() => navigate(roleHome.dashboard)}
                                     className="px-4 py-2 rounded-full
                                                 text-sm font-semibold
-                                                text-white bg-legacy-cta
-                                                hover:bg-legacy-cta-dark
+                                                text-inverse bg-cta-gradient
+                                                hover:bg-cta-gradient-hover
                                                 transition-colors duration-200
                                                 shadow-sm cursor-pointer
                                                 active:scale-[0.97]"
@@ -115,7 +115,7 @@ function Header() {
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setOpen(!open)}
-                                        className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-legacy-surface transition-colors cursor-pointer"
+                                        className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-surface-muted transition-colors cursor-pointer"
                                     >
                                         <img
                                             src="https://cdn-icons-png.flaticon.com/512/8188/8188362.png"
@@ -124,7 +124,7 @@ function Header() {
                                         />
                                         <ChevronDown
                                             size={16}
-                                            className={`text-legacy-ink/50 transition-transform ${open ? "rotate-180" : ""}`}
+                                            className={`text-tertiary transition-transform ${open ? "rotate-180" : ""}`}
                                         />
                                     </button>
 
@@ -133,7 +133,7 @@ function Header() {
                                             className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden animate-dropdown"
                                         >
                                             <button
-                                                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-legacy-surface cursor-pointer"
+                                                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-surface-muted cursor-pointer"
                                                 onClick={() => navigate(roleHome.profile)}
                                             >
                                                 <User size={16} />

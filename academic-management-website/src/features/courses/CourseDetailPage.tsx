@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS, ROLES, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/useAuth";
@@ -43,6 +44,7 @@ const contentTypeIcon: Record<LessonPreview["contentType"], typeof Video> = {
 };
 
 const CourseDetail = () => {
+    const { t } = useTranslation("courses");
     const { courseId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -151,7 +153,7 @@ const CourseDetail = () => {
             return;
         }
         if (role?.toUpperCase() !== ROLES.STUDENT) {
-            showToast({ tone: "info", message: "Tính năng xem thử hiện chỉ dành cho học viên." });
+            showToast({ tone: "info", message: t("detail.previewStudentOnly") });
             return;
         }
         if (!course) return;
@@ -185,11 +187,11 @@ const CourseDetail = () => {
                 <div className="max-w-md mx-auto">
                     <EmptyState
                         icon={FileQuestion}
-                        title="Không tìm thấy khóa học"
-                        description="Khóa học này có thể đã bị gỡ hoặc đường dẫn không chính xác."
+                        title={t("detail.notFoundTitle")}
+                        description={t("detail.notFoundDescription")}
                         action={
                             <Button variant="secondary" size="sm" onClick={() => navigate("/courses")}>
-                                Xem tất cả khóa học
+                                {t("detail.viewAllCourses")}
                             </Button>
                         }
                     />
@@ -216,7 +218,7 @@ const CourseDetail = () => {
                         <div className="flex flex-wrap items-center gap-3 text-body-sm text-tertiary mb-6">
                             <span className="inline-flex items-center gap-1.5">
                                 <User size={16} aria-hidden="true" />
-                                Giảng viên: {course.instructor.fullName}
+                                {t("detail.instructorLabel")} {course.instructor.fullName}
                             </span>
                             {course.category && (
                                 <Badge variant="neutral">{course.category.categoryName}</Badge>
@@ -229,15 +231,15 @@ const CourseDetail = () => {
 
                         <Card variant="marketing" className="mb-6">
                             <h2 className="text-h3 text-primary mb-4">
-                                Bạn sẽ học được gì?
+                                {t("detail.learnPointsTitle")}
                             </h2>
 
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-secondary">
                                 {[
-                                    "Kiến thức nền tảng & nâng cao",
-                                    "Thực hành theo dự án",
-                                    "Tư duy hệ thống",
-                                    "Chuẩn bị đi làm",
+                                    t("detail.learnPoints.foundation"),
+                                    t("detail.learnPoints.practice"),
+                                    t("detail.learnPoints.systemThinking"),
+                                    t("detail.learnPoints.jobReady"),
                                 ].map((item) => (
                                     <li key={item} className="flex items-start gap-2">
                                         <CheckCircle2 size={18} className="text-status-success-icon shrink-0 mt-0.5" aria-hidden="true" />
@@ -250,7 +252,7 @@ const CourseDetail = () => {
                         {/* ===== Curriculum (PRD-006/007, §2.3) ===== */}
                         <Card variant="marketing">
                             <h2 className="text-h3 text-primary mb-4">
-                                Nội dung khóa học
+                                {t("detail.curriculumTitle")}
                             </h2>
 
                             {lessonsLoading ? (
@@ -261,11 +263,11 @@ const CourseDetail = () => {
                                 </div>
                             ) : lessonsError ? (
                                 <p className="text-body-sm text-status-danger-text">
-                                    Không thể tải nội dung khóa học. Vui lòng thử lại sau.
+                                    {t("detail.curriculumLoadError")}
                                 </p>
                             ) : lessons.length === 0 ? (
                                 <p className="text-body-sm text-tertiary">
-                                    Nội dung đang được cập nhật.
+                                    {t("detail.curriculumEmpty")}
                                 </p>
                             ) : (
                                 <ul className="divide-y divide-default">
@@ -284,7 +286,7 @@ const CourseDetail = () => {
                                                     >
                                                         {lesson.title}
                                                     </button>
-                                                    <Badge variant="neutral">Xem thử</Badge>
+                                                    <Badge variant="neutral">{t("detail.preview")}</Badge>
                                                 </li>
                                             );
                                         })}
@@ -294,7 +296,7 @@ const CourseDetail = () => {
                             {!lessonsLoading && !lessonsError && (
                                 <p className="mt-4 flex items-center gap-1.5 text-caption text-tertiary">
                                     <Lock size={12} aria-hidden="true" />
-                                    Các bài học còn lại sẽ được mở khi bạn mua khóa học.
+                                    {t("detail.remainingLessonsLocked")}
                                 </p>
                             )}
                         </Card>
@@ -318,7 +320,7 @@ const CourseDetail = () => {
                                 <div className="mb-4 text-h1 text-primary">
                                     {course.price
                                         ? `${course.price.toLocaleString()}₫`
-                                        : "Miễn phí"}
+                                        : t("detail.free")}
                                 </div>
 
                                 {isEnrolled ? (
@@ -328,16 +330,16 @@ const CourseDetail = () => {
                                         className="w-full"
                                         onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}
                                     >
-                                        Vào học ngay
+                                        {t("detail.goToLearning")}
                                     </Button>
                                 ) : (
                                     <Button variant="cta" size="lg" className="w-full" onClick={handleBuyClick}>
-                                        Mua khóa học
+                                        {t("detail.buyCourse")}
                                     </Button>
                                 )}
 
                                 <p className="mt-4 text-center text-body-sm text-tertiary">
-                                    Hoàn tiền trong 30 ngày nếu không hài lòng
+                                    {t("detail.refundPolicy")}
                                 </p>
                             </div>
                         </Card>

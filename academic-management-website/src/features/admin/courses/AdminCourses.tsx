@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Notebook, Eye, ShieldOff, UserX, BookX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import { useAdminCoursesQuery, type AdminCourse } from "@/shared/api/queries/useAdminCoursesQuery";
 import Badge from "@/shared/ui/Badge";
 import EmptyState from "@/shared/ui/EmptyState";
 import Table, { type TableColumn } from "@/shared/ui/Table";
-import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
+import { COURSE_STATUS_TONE, getCourseStatusLabel } from "@/shared/ui/courseStatus";
 import ForceUnpublishModal from "../components/ForceUnpublishModal";
 import RevokeAccessModal from "../components/RevokeAccessModal";
 
 type SelectedCourse = { courseId: number; title: string };
 
 const AdminCourses = () => {
+    const { t } = useTranslation(["admin", "common"]);
     const coursesQuery = useAdminCoursesQuery();
     const courses = coursesQuery.data ?? [];
 
@@ -21,37 +23,37 @@ const AdminCourses = () => {
     const columns: TableColumn<AdminCourse>[] = [
         {
             key: "title",
-            header: "Tên khóa học",
+            header: t("courses.columnTitle"),
             render: (course) => <span className="font-medium text-primary">{course.title}</span>,
         },
         {
             key: "instructorFullName",
-            header: "Teacher sở hữu",
+            header: t("courses.columnInstructor"),
             render: (course) => course.instructorFullName,
         },
         {
             key: "status",
-            header: "Trạng thái",
+            header: t("courses.columnStatus"),
             render: (course) => (
                 <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
-                    {COURSE_STATUS_LABEL[course.status] ?? course.status}
+                    {getCourseStatusLabel(course.status, t)}
                 </Badge>
             ),
         },
         {
             key: "studentCount",
-            header: "Số học viên",
+            header: t("courses.columnStudentCount"),
             render: (course) => course.studentCount,
         },
         {
             key: "publishedAt",
-            header: "Ngày publish",
+            header: t("courses.columnPublishedAt"),
             render: (course) =>
                 course.publishedAt ? new Date(course.publishedAt).toLocaleDateString("vi-VN") : "—",
         },
         {
             key: "actions",
-            header: "Action",
+            header: t("courses.columnActions"),
             render: (course) => (
                 <div className="flex items-center gap-1">
                     <a
@@ -60,8 +62,8 @@ const AdminCourses = () => {
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="cursor-pointer p-2 rounded-radius-md text-secondary hover:bg-surface-muted transition-colors"
-                        title="Xem"
-                        aria-label={`Xem khóa học ${course.title}`}
+                        title={t("courses.view")}
+                        aria-label={t("courses.viewAria", { title: course.title })}
                     >
                         <Eye size={16} aria-hidden="true" />
                     </a>
@@ -72,8 +74,8 @@ const AdminCourses = () => {
                             setForceUnpublishCourse({ courseId: course.courseId, title: course.title });
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
-                        title="Force-unpublish"
-                        aria-label={`Force-unpublish khóa học ${course.title}`}
+                        title={t("courses.forceUnpublish")}
+                        aria-label={t("courses.forceUnpublishAria", { title: course.title })}
                     >
                         <ShieldOff size={16} aria-hidden="true" />
                     </button>
@@ -84,8 +86,8 @@ const AdminCourses = () => {
                             setRevokeAccessCourse({ courseId: course.courseId, title: course.title });
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
-                        title="Thu hồi quyền truy cập"
-                        aria-label={`Thu hồi quyền truy cập khóa học ${course.title}`}
+                        title={t("courses.revokeAccess")}
+                        aria-label={t("courses.revokeAccessAria", { title: course.title })}
                     >
                         <UserX size={16} aria-hidden="true" />
                     </button>
@@ -99,10 +101,10 @@ const AdminCourses = () => {
             <div>
                 <h2 className="flex items-center gap-3 text-h2 text-primary">
                     <Notebook size={24} aria-hidden="true" />
-                    Quản lý khóa học
+                    {t("courses.title")}
                 </h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Giám sát toàn bộ khóa học trên nền tảng — Teacher tự tạo/sửa qua Course Editor.
+                    {t("courses.subtitle")}
                 </p>
             </div>
 
@@ -111,7 +113,7 @@ const AdminCourses = () => {
                 data={courses}
                 rowKey={(course) => course.courseId}
                 loading={coursesQuery.isLoading}
-                emptyState={<EmptyState icon={BookX} title="Chưa có khóa học nào trên nền tảng" />}
+                emptyState={<EmptyState icon={BookX} title={t("courses.emptyTitle")} />}
             />
 
             <ForceUnpublishModal

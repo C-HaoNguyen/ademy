@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { adminUsersQueryKey, type AdminUser } from "@/shared/api/queries/useAdminUsersQuery";
@@ -15,6 +16,7 @@ interface LockUserModalProps {
 
 // UI_SPEC §5.2 — action Khóa/Mở khóa cần xác nhận qua Modal (trước đây gọi thẳng API không hỏi lại).
 const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const [submitting, setSubmitting] = useState(false);
@@ -31,19 +33,21 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
             const res = await apiClient(url, { method: "PUT" });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Thao tác thất bại");
+                const message = await readErrorMessage(res, t("lockUserModal.actionFailed"));
                 showToast({ tone: "danger", message });
                 return;
             }
 
             showToast({
                 tone: "success",
-                message: isLocking ? `Đã khóa tài khoản ${user.fullName}` : `Đã mở khóa tài khoản ${user.fullName}`,
+                message: isLocking
+                    ? t("lockUserModal.locked", { fullName: user.fullName })
+                    : t("lockUserModal.unlocked", { fullName: user.fullName }),
             });
             queryClient.invalidateQueries({ queryKey: adminUsersQueryKey });
             onClose();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("lockUserModal.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -54,19 +58,19 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
             open={open}
             onClose={onClose}
             closeDisabled={submitting}
-            title={isLocking ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+            title={isLocking ? t("lockUserModal.lockTitle") : t("lockUserModal.unlockTitle")}
             size="sm"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={submitting}>
-                        Hủy
+                        {t("lockUserModal.cancel")}
                     </Button>
                     <Button
                         variant={isLocking ? "danger" : "primary"}
                         onClick={handleConfirm}
                         loading={submitting}
                     >
-                        {isLocking ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                        {isLocking ? t("lockUserModal.lockTitle") : t("lockUserModal.unlockTitle")}
                     </Button>
                 </>
             }
@@ -74,12 +78,11 @@ const LockUserModal = ({ open, onClose, user }: LockUserModalProps) => {
             <p className="text-body text-secondary">
                 {isLocking ? (
                     <>
-                        Khóa tài khoản <span className="font-semibold text-primary">{user?.fullName}</span>? Người
-                        dùng sẽ không thể đăng nhập cho tới khi được mở khóa lại.
+                        {t("lockUserModal.lockConfirmPrefix")} <span className="font-semibold text-primary">{user?.fullName}</span>{t("lockUserModal.lockConfirmSuffix")}
                     </>
                 ) : (
                     <>
-                        Mở khóa tài khoản <span className="font-semibold text-primary">{user?.fullName}</span>?
+                        {t("lockUserModal.unlockConfirmPrefix")} <span className="font-semibold text-primary">{user?.fullName}</span>?
                     </>
                 )}
             </p>

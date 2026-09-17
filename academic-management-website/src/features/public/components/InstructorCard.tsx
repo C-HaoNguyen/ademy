@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import Card from "@/shared/ui/Card";
 
 export type Instructor = {
@@ -14,6 +15,7 @@ type InstructorCardProps = {
 };
 
 const InstructorCard = ({ instructor, index = 0, onClick }: InstructorCardProps) => {
+    const { t } = useTranslation("public");
     const initials = instructor.fullName
         .split(" ")
         .filter(Boolean)
@@ -46,7 +48,7 @@ const InstructorCard = ({ instructor, index = 0, onClick }: InstructorCardProps)
                     </h3>
 
                     <p className="mt-1 text-body-sm text-brand">
-                        {instructor.courseCount} khóa học đang dạy
+                        {t("instructorCard.coursesTaught", { count: instructor.courseCount })}
                     </p>
                 </button>
             </Card>

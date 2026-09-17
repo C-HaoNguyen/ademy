@@ -1,5 +1,6 @@
 import { BookOpen, Users, FileEdit, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import { useTeacherCoursesQuery, useTeacherStudentCountsQuery } from "@/shared/api/queries/useTeacherCoursesQuery";
 import Card from "@/shared/ui/Card";
@@ -10,6 +11,7 @@ import EmptyState from "@/shared/ui/EmptyState";
 import { SkeletonText } from "@/shared/ui/Skeleton";
 
 const TeacherDashboard = () => {
+    const { t } = useTranslation("teacher");
     const navigate = useNavigate();
 
     const coursesQuery = useTeacherCoursesQuery();
@@ -23,16 +25,16 @@ const TeacherDashboard = () => {
         return (
             <div className="space-y-8">
                 <div>
-                    <h2 className="text-h2 text-primary">Teacher Dashboard</h2>
-                    <p className="text-body-sm text-secondary mt-1">Tổng quan hoạt động giảng dạy</p>
+                    <h2 className="text-h2 text-primary">{t("dashboard.title")}</h2>
+                    <p className="text-body-sm text-secondary mt-1">{t("dashboard.subtitle")}</p>
                 </div>
                 <EmptyState
                     icon={BookOpen}
-                    title="Bạn chưa có khóa học nào"
-                    description="Tạo khóa học đầu tiên để bắt đầu giảng dạy."
+                    title={t("dashboard.emptyTitle")}
+                    description={t("dashboard.emptyDescription")}
                     action={
                         <Button variant="primary" iconLeft={Plus} onClick={() => navigate(ROUTES.TEACHER.COURSE_NEW)}>
-                            Tạo khóa học đầu tiên
+                            {t("dashboard.createFirstCourse")}
                         </Button>
                     }
                 />
@@ -43,26 +45,26 @@ const TeacherDashboard = () => {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-h2 text-primary">Teacher Dashboard</h2>
-                <p className="text-body-sm text-secondary mt-1">Tổng quan hoạt động giảng dạy</p>
+                <h2 className="text-h2 text-primary">{t("dashboard.title")}</h2>
+                <p className="text-body-sm text-secondary mt-1">{t("dashboard.subtitle")}</p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
-                    label="Tổng khóa học"
+                    label={t("dashboard.statTotalCourses")}
                     value={coursesQuery.isError ? "—" : courses.length}
                     loading={coursesQuery.isLoading}
                 />
                 <StatCard
                     icon={<Users size={22} aria-hidden="true" />}
-                    label="Tổng học viên"
+                    label={t("dashboard.statTotalStudents")}
                     value={studentCountsQuery.isError ? "—" : totalStudents}
                     loading={studentCountsQuery.isLoading}
                 />
                 <StatCard
                     icon={<FileEdit size={22} aria-hidden="true" />}
-                    label="Khóa học đang Draft"
+                    label={t("dashboard.statDraftCourses")}
                     value={coursesQuery.isError ? "—" : draftCourses.length}
                     loading={coursesQuery.isLoading}
                 />
@@ -72,10 +74,10 @@ const TeacherDashboard = () => {
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-primary flex items-center gap-2">
                         <FileEdit size={18} aria-hidden="true" />
-                        Khóa học cần chú ý
+                        {t("dashboard.coursesNeedAttention")}
                     </h3>
                     <Button variant="tertiary" size="sm" onClick={() => navigate(ROUTES.TEACHER.COURSES)}>
-                        Xem tất cả
+                        {t("dashboard.viewAll")}
                     </Button>
                 </div>
 
@@ -84,7 +86,7 @@ const TeacherDashboard = () => {
                 ) : coursesQuery.isError ? (
                     <p className="text-body-sm text-secondary">—</p>
                 ) : draftCourses.length === 0 ? (
-                    <EmptyState icon={FileEdit} title="Không có khóa học nào đang chờ publish" />
+                    <EmptyState icon={FileEdit} title={t("dashboard.noPendingPublish")} />
                 ) : (
                     <ul className="space-y-3">
                         {draftCourses.map((course) => (
@@ -97,7 +99,7 @@ const TeacherDashboard = () => {
                                     <p className="text-body font-medium text-primary truncate">{course.title}</p>
                                 </div>
                                 <Badge variant="status" tone="warning">
-                                    Draft
+                                    {t("courseStatus.draft")}
                                 </Badge>
                             </li>
                         ))}

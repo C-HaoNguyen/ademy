@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, Users } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
@@ -28,6 +29,7 @@ interface RevokeAccessModalProps {
 // từng học viên: bước 1 chọn học viên trong danh sách của course, bước 2 nhập lý do bắt buộc rồi
 // xác nhận riêng cho đúng học viên đó (PRD-027 "hành động tường minh riêng").
 const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const [selectedStudent, setSelectedStudent] = useState<AdminEnrolledStudent | null>(null);
@@ -54,7 +56,7 @@ const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) =>
     const handleConfirm = async () => {
         if (!selectedStudent || !course) return;
         if (!reason.trim()) {
-            setError("Vui lòng nhập lý do thu hồi");
+            setError(t("revokeAccessModal.reasonRequired"));
             return;
         }
 
@@ -67,16 +69,16 @@ const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) =>
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Thu hồi quyền truy cập thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("revokeAccessModal.failed") });
                 return;
             }
 
-            showToast({ tone: "success", message: `Đã thu hồi quyền truy cập của ${selectedStudent.studentFullName}` });
+            showToast({ tone: "success", message: t("revokeAccessModal.success", { fullName: selectedStudent.studentFullName }) });
             queryClient.invalidateQueries({ queryKey: adminCourseStudentsQueryKey(course.courseId) });
             queryClient.invalidateQueries({ queryKey: adminCoursesQueryKey });
             handleBack();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("revokeAccessModal.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -88,27 +90,27 @@ const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) =>
         <Modal
             open={open}
             onClose={handleClose}
-            title={reasonStep ? `Thu hồi quyền truy cập — ${selectedStudent.studentFullName}` : "Thu hồi quyền truy cập"}
+            title={reasonStep ? t("revokeAccessModal.titleWithStudent", { fullName: selectedStudent.studentFullName }) : t("revokeAccessModal.title")}
             size="md"
             footer={
                 reasonStep ? (
                     <>
                         <Button variant="secondary" iconLeft={ChevronLeft} onClick={handleBack} disabled={submitting}>
-                            Quay lại
+                            {t("revokeAccessModal.back")}
                         </Button>
                         <Button variant="danger" onClick={handleConfirm} loading={submitting}>
-                            Xác nhận thu hồi
+                            {t("revokeAccessModal.confirm")}
                         </Button>
                     </>
                 ) : (
                     <Button variant="secondary" onClick={handleClose}>
-                        Đóng
+                        {t("revokeAccessModal.close")}
                     </Button>
                 )
             }
         >
             {reasonStep ? (
-                <FormField label="Lý do thu hồi" required error={error}>
+                <FormField label={t("revokeAccessModal.reasonLabel")} required error={error}>
                     <Textarea
                         rows={3}
                         value={reason}
@@ -116,13 +118,13 @@ const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) =>
                             setReason(e.target.value);
                             if (error) setError(undefined);
                         }}
-                        placeholder="Mô tả lý do thu hồi quyền truy cập"
+                        placeholder={t("revokeAccessModal.reasonPlaceholder")}
                     />
                 </FormField>
             ) : studentsQuery.isLoading ? (
                 <SkeletonText lines={4} />
             ) : students.length === 0 ? (
-                <EmptyState icon={Users} title="Chưa có học viên đăng ký" />
+                <EmptyState icon={Users} title={t("revokeAccessModal.emptyTitle")} />
             ) : (
                 <ul className="divide-y divide-default">
                     {students.map((s) => (
@@ -133,11 +135,11 @@ const RevokeAccessModal = ({ open, onClose, course }: RevokeAccessModalProps) =>
                             </div>
                             {s.accessRevokedAt ? (
                                 <Badge variant="status" tone="danger">
-                                    Đã thu hồi
+                                    {t("revokeAccessModal.revoked")}
                                 </Badge>
                             ) : (
                                 <Button variant="danger" size="sm" onClick={() => setSelectedStudent(s)}>
-                                    Thu hồi
+                                    {t("revokeAccessModal.revoke")}
                                 </Button>
                             )}
                         </li>

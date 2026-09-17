@@ -1,0 +1,107 @@
+{
+    "home": {
+        "heroBadge": "Nền tảng học tập thế hệ mới",
+        "heroTitleLine1": "Học tập & quản lý",
+        "heroTitleHighlight": "trực tuyến toàn diện",
+        "heroSubtitle": "Ademy giúp bạn theo dõi tiến trình học tập, quản lý khóa học và nâng cao hiệu quả học tập với trải nghiệm hiện đại, nhanh chóng và thông minh.",
+        "ctaExplore": "Khám phá khóa học",
+        "ctaSignupFree": "Bắt đầu miễn phí",
+        "studentsJoined": "2,100+ học viên đã tham gia",
+        "scrollLeft": "Cuộn sang trái",
+        "scrollRight": "Cuộn sang phải",
+        "emptyTitle": "Chưa có khóa học nào",
+        "emptyDescription": "Khóa học sẽ sớm xuất hiện tại đây.",
+        "featuresTitle": "Vì sao chọn Ademy?",
+        "features": {
+            "courseManagement": {
+                "title": "Quản lý khóa học thông minh",
+                "desc": "Tạo, chỉnh sửa và theo dõi khóa học dễ dàng."
+            },
+            "progressTracking": {
+                "title": "Theo dõi tiến độ học tập",
+                "desc": "Thống kê, báo cáo chi tiết cho từng học viên."
+            },
+            "modernExperience": {
+                "title": "Trải nghiệm học tập hiện đại",
+                "desc": "Giao diện tối ưu cho mọi thiết bị."
+            }
+        },
+        "statsStudents": "Học viên",
+        "statsCourses": "Khóa học",
+        "statsInstructors": "Giảng viên",
+        "statsRating": "Đánh giá",
+        "finalCtaTitle": "Sẵn sàng bắt đầu hành trình học tập?",
+        "finalCtaSubtitle": "Tham gia Ademy ngay hôm nay để quản lý và học tập hiệu quả hơn.",
+        "finalCtaButton": "Đăng ký miễn phí"
+    },
+    "lecturer": {
+        "heroTitle": "Đội ngũ giảng viên",
+        "heroSubtitle": "Những giảng viên đang trực tiếp giảng dạy trên Ademy, đồng hành cùng bạn trong hành trình học tập và phát triển.",
+        "errorTitle": "Không thể tải danh sách giảng viên",
+        "errorDescription": "Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "emptyTitle": "Chưa có giảng viên nào",
+        "emptyDescription": "Đội ngũ giảng viên sẽ sớm xuất hiện tại đây.",
+        "ctaTitle": "Học cùng giảng viên hàng đầu",
+        "ctaSubtitle": "Khám phá các khóa học được thiết kế bài bản bởi đội ngũ giảng viên giàu kinh nghiệm của Ademy.",
+        "ctaButton": "Xem khóa học"
+    },
+    "contact": {
+        "heroTitle": "Liên hệ với chúng tôi",
+        "heroSubtitle": "Có câu hỏi hoặc cần hỗ trợ? Đội ngũ Ademy luôn sẵn sàng lắng nghe và đồng hành cùng bạn.",
+        "infoTitle": "Thông tin liên hệ",
+        "infoDescription": "Nếu bạn cần tư vấn khóa học, hỗ trợ kỹ thuật hoặc hợp tác, hãy liên hệ với chúng tôi qua các kênh sau.",
+        "addressLabel": "Địa chỉ:",
+        "addressValue": "123 Nguyễn Văn Cừ, TP. Hồ Chí Minh",
+        "emailLabel": "Email:",
+        "hotlineLabel": "Hotline:",
+        "hotlineValue": "0123 456 789",
+        "formTitle": "Gửi tin nhắn cho chúng tôi",
+        "fullNameLabel": "Họ và tên",
+        "emailFieldLabel": "Email",
+        "messageLabel": "Nội dung liên hệ",
+        "submit": "Gửi liên hệ",
+        "submitSuccess": "Đã gửi liên hệ thành công",
+        "validation": {
+            "fullNameRequired": "Vui lòng nhập họ và tên",
+            "emailRequired": "Vui lòng nhập email",
+            "emailInvalid": "Email không hợp lệ",
+            "messageRequired": "Vui lòng nhập nội dung liên hệ"
+        },
+        "ctaTitle": "Sẵn sàng bắt đầu học tập cùng Ademy?",
+        "ctaSubtitle": "Đăng ký tài khoản để trải nghiệm hệ thống học tập và quản lý khóa học toàn diện.",
+        "ctaButton": "Đăng ký ngay"
+    },
+    "header": {
+        "ctaStartLearning": "Bắt đầu học",
+        "ctaDashboard": "Bảng điều khiển",
+        "tabHome": "Trang Chủ",
+        "tabCourses": "Các Khóa Học",
+        "tabLecturer": "Đội Ngũ",
+        "tabContact": "Liên Hệ",
+        "login": "Đăng nhập",
+        "signup": "Đăng ký",
+        "editProfile": "Chỉnh sửa hồ sơ",
+        "logout": "Đăng xuất",
+        "avatarAlt": "avatar"
+    },
+    "footer": {
+        "brandDescription": "Ademy là nền tảng giúp học viên và giảng viên quản lý việc học tập hiệu quả trong thời đại số.",
+        "aboutTitle": "Về Ademy",
+        "aboutCourses": "Các khóa học",
+        "aboutInstructors": "Đội ngũ giảng dạy",
+        "aboutContact": "Liên hệ",
+        "servicesTitle": "Dịch vụ",
+        "servicesSupport": "Trung tâm hỗ trợ",
+        "servicesPrivacy": "Chính sách bảo mật",
+        "servicesTerms": "Điều khoản dịch vụ",
+        "contactTitle": "Liên hệ",
+        "emailLine": "Email: support@ademy.edu",
+        "phoneLine": "Phone: +84 869 066 421",
+        "websiteAlt": "Website",
+        "copyright": "© {{year}} Ademy. All rights reserved."
+    },
+    "instructorCard": {
+        "coursesTaught": "{{count}} khóa học đang dạy"
+    }
+}

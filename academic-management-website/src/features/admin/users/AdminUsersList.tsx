@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Users as UsersIcon, UserPlus, Lock, Unlock, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAdminUsersQuery, type AdminUser } from "@/shared/api/queries/useAdminUsersQuery";
 import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
@@ -10,15 +11,16 @@ import LockUserModal from "@/features/admin/components/LockUserModal";
 
 type RoleFilter = "ALL" | "STUDENT" | "TEACHER" | "ADMIN";
 
-const ROLE_FILTERS: { key: RoleFilter; label: string }[] = [
-    { key: "ALL", label: "Tất cả" },
-    { key: "STUDENT", label: "Student" },
-    { key: "TEACHER", label: "Teacher" },
-    { key: "ADMIN", label: "Admin" },
-];
-
 const AdminUsersList = () => {
+    const { t } = useTranslation("admin");
     const usersQuery = useAdminUsersQuery();
+
+    const ROLE_FILTERS: { key: RoleFilter; label: string }[] = [
+        { key: "ALL", label: t("users.filterAll") },
+        { key: "STUDENT", label: t("users.filterStudent") },
+        { key: "TEACHER", label: t("users.filterTeacher") },
+        { key: "ADMIN", label: t("users.filterAdmin") },
+    ];
 
     const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
     const [showInviteOverlay, setShowInviteOverlay] = useState(false);
@@ -33,17 +35,17 @@ const AdminUsersList = () => {
     const columns: TableColumn<AdminUser>[] = [
         {
             key: "fullName",
-            header: "Tên",
+            header: t("users.columnName"),
             render: (user) => <span className="font-medium text-primary">{user.fullName}</span>,
         },
         {
             key: "email",
-            header: "Email",
+            header: t("users.columnEmail"),
             render: (user) => user.email,
         },
         {
             key: "role",
-            header: "Role",
+            header: t("users.columnRole"),
             render: (user) => (
                 <Badge variant="status" tone="info">
                     {user.role}
@@ -52,21 +54,21 @@ const AdminUsersList = () => {
         },
         {
             key: "active",
-            header: "Trạng thái",
+            header: t("users.columnStatus"),
             render: (user) => (
                 <Badge variant="status" tone={user.active ? "success" : "danger"}>
-                    {user.active ? "Active" : "Locked"}
+                    {user.active ? t("users.statusActive") : t("users.statusLocked")}
                 </Badge>
             ),
         },
         {
             key: "createdAt",
-            header: "Ngày tạo",
+            header: t("users.columnCreatedAt"),
             render: (user) => new Date(user.createdAt).toLocaleDateString("vi-VN"),
         },
         {
             key: "actions",
-            header: "Action",
+            header: t("users.columnActions"),
             render: (user) => (
                 <Button
                     variant={user.active ? "danger" : "secondary"}
@@ -76,9 +78,9 @@ const AdminUsersList = () => {
                         e.stopPropagation();
                         setLockingUser(user);
                     }}
-                    aria-label={user.active ? `Khóa tài khoản ${user.fullName}` : `Mở khóa tài khoản ${user.fullName}`}
+                    aria-label={user.active ? t("users.lockAria", { fullName: user.fullName }) : t("users.unlockAria", { fullName: user.fullName })}
                 >
-                    {user.active ? "Khóa" : "Mở khóa"}
+                    {user.active ? t("users.lock") : t("users.unlock")}
                 </Button>
             ),
         },
@@ -90,14 +92,14 @@ const AdminUsersList = () => {
                 <div>
                     <h2 className="flex items-center gap-3 text-h2 text-primary">
                         <UsersIcon size={24} aria-hidden="true" />
-                        Quản lý người dùng
+                        {t("users.title")}
                     </h2>
                     <p className="text-body-sm text-secondary mt-1">
-                        Xem toàn bộ tài khoản trên nền tảng, khóa/mở khóa hoặc mời Teacher mới.
+                        {t("users.subtitle")}
                     </p>
                 </div>
                 <Button variant="primary" iconLeft={UserPlus} onClick={() => setShowInviteOverlay(true)}>
-                    Mời Teacher
+                    {t("users.inviteTeacher")}
                 </Button>
             </div>
 
@@ -117,11 +119,11 @@ const AdminUsersList = () => {
             {usersQuery.isError ? (
                 <EmptyState
                     icon={AlertTriangle}
-                    title="Không thể tải danh sách user"
-                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    title={t("users.loadErrorTitle")}
+                    description={t("users.loadErrorDescription")}
                     action={
                         <Button variant="primary" size="sm" onClick={() => usersQuery.refetch()}>
-                            Thử lại
+                            {t("users.retry")}
                         </Button>
                     }
                 />
@@ -131,7 +133,7 @@ const AdminUsersList = () => {
                     data={filteredUsers}
                     rowKey={(user) => user.userId}
                     loading={usersQuery.isLoading}
-                    emptyState={<EmptyState icon={UsersIcon} title="Không có user nào phù hợp" />}
+                    emptyState={<EmptyState icon={UsersIcon} title={t("users.emptyTitle")} />}
                 />
             )}
 

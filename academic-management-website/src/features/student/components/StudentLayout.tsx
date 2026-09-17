@@ -6,26 +6,28 @@ import {
     BarChart3,
     ArrowLeft,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import AppShellLayout from "@/shared/layout/AppShellLayout";
 import type { SidebarNavItem } from "@/shared/ui/SidebarNav";
 import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
 import { useAuth } from "@/shared/auth/useAuth";
 import { ROUTES } from "@/config/constants";
 
-const studentNavItems: SidebarNavItem[] = [
-    { to: ROUTES.STUDENT.DASHBOARD, label: "Tổng quan", icon: LayoutDashboard },
-    { to: ROUTES.STUDENT.MY_COURSES, label: "Khóa học của tôi", icon: BookOpen },
-    { to: ROUTES.STUDENT.TEST_PRACTICE, label: "Luyện đề", icon: FileText },
-    { to: ROUTES.STUDENT.LEARNING_PROFILE, label: "Hồ sơ học tập", icon: BarChart3 },
-];
-
 const StudentLayout = () => {
+    const { t } = useTranslation("student");
     const navigate = useNavigate();
     const { logout } = useAuth();
 
+    const studentNavItems: SidebarNavItem[] = [
+        { to: ROUTES.STUDENT.DASHBOARD, label: t("layout.navDashboard"), icon: LayoutDashboard },
+        { to: ROUTES.STUDENT.MY_COURSES, label: t("layout.navMyCourses"), icon: BookOpen },
+        { to: ROUTES.STUDENT.TEST_PRACTICE, label: t("layout.navTestPractice"), icon: FileText },
+        { to: ROUTES.STUDENT.LEARNING_PROFILE, label: t("layout.navLearningProfile"), icon: BarChart3 },
+    ];
+
     const menuItems: DropdownMenuItem[] = [
-        { label: "Chỉnh sửa hồ sơ", onClick: () => navigate(ROUTES.STUDENT.PROFILE) },
-        { label: "Đăng xuất", onClick: () => logout(), destructive: true },
+        { label: t("layout.editProfile"), onClick: () => navigate(ROUTES.STUDENT.PROFILE) },
+        { label: t("layout.logout"), onClick: () => logout(), destructive: true },
     ];
 
     return (
@@ -50,7 +52,7 @@ const StudentLayout = () => {
                             size={22}
                             className="transition-transform duration-200 group-hover:-translate-x-1"
                         />
-                        Trở về trang chủ
+                        {t("layout.backToHome")}
                     </button>
                 </Link>
             }

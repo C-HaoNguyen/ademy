@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, Sparkles, Users, GraduationCap, Star } from "lucide-react";
 import { useCoursesQuery } from "@/shared/api/queries/useCoursesQuery";
 import CourseCard from "@/features/courses/components/CourseCard";
@@ -9,6 +10,7 @@ import Button from "@/shared/ui/Button";
 import EmptyState from "@/shared/ui/EmptyState";
 
 const HomePage = () => {
+    const { t } = useTranslation("public");
     const scrollRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const coursesQuery = useCoursesQuery();
@@ -39,28 +41,26 @@ const HomePage = () => {
                     >
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-radius-full bg-surface-brand-muted text-brand text-body-sm font-medium mb-6">
                             <Sparkles size={16} aria-hidden="true" />
-                            Nền tảng học tập thế hệ mới
+                            {t("home.heroBadge")}
                         </div>
 
                         <h1 className="text-h1 md:text-[40px] md:leading-[48px] text-primary">
-                            Học tập & quản lý <br />
+                            {t("home.heroTitleLine1")} <br />
                             <span className="text-brand">
-                                trực tuyến toàn diện
+                                {t("home.heroTitleHighlight")}
                             </span>
                         </h1>
 
                         <p className="mt-6 text-body-lg text-secondary max-w-xl">
-                            Ademy giúp bạn theo dõi tiến trình học tập, quản lý khóa học
-                            và nâng cao hiệu quả học tập với trải nghiệm hiện đại,
-                            nhanh chóng và thông minh.
+                            {t("home.heroSubtitle")}
                         </p>
 
                         <div className="mt-8 flex flex-wrap gap-4">
                             <Button variant="cta" size="lg" onClick={() => navigate("/courses")}>
-                                Khám phá khóa học
+                                {t("home.ctaExplore")}
                             </Button>
                             <Button variant="secondary" size="lg" onClick={() => navigate("/signup")}>
-                                Bắt đầu miễn phí
+                                {t("home.ctaSignupFree")}
                             </Button>
                         </div>
 
@@ -69,7 +69,7 @@ const HomePage = () => {
                             yêu cầu ROLE_ADMIN). Thay bằng số liệu thật khi có endpoint public. */}
                         <div className="mt-10 flex items-center gap-2 text-body-sm text-tertiary">
                             <Users size={18} className="text-brand" aria-hidden="true" />
-                            <span>2,100+ học viên đã tham gia</span>
+                            <span>{t("home.studentsJoined")}</span>
                         </div>
                     </motion.div>
 
@@ -91,7 +91,7 @@ const HomePage = () => {
                 <button
                     type="button"
                     onClick={() => scroll("left")}
-                    aria-label="Cuộn sang trái"
+                    aria-label={t("home.scrollLeft")}
                     className="hidden sm:flex cursor-pointer absolute -left-4 top-1/2 -translate-y-1/2 z-sticky
                    bg-surface shadow-elevated rounded-radius-full w-10 h-10
                    items-center justify-center hover:bg-surface-muted transition-colors duration-200
@@ -104,7 +104,7 @@ const HomePage = () => {
                 <button
                     type="button"
                     onClick={() => scroll("right")}
-                    aria-label="Cuộn sang phải"
+                    aria-label={t("home.scrollRight")}
                     className="hidden sm:flex cursor-pointer absolute -right-4 top-1/2 -translate-y-1/2 z-sticky
                    bg-surface shadow-elevated rounded-radius-full w-10 h-10
                    items-center justify-center hover:bg-surface-muted transition-colors duration-200
@@ -124,8 +124,8 @@ const HomePage = () => {
                     ) : featuredCourses.length === 0 ? (
                         <EmptyState
                             icon={GraduationCap}
-                            title="Chưa có khóa học nào"
-                            description="Khóa học sẽ sớm xuất hiện tại đây."
+                            title={t("home.emptyTitle")}
+                            description={t("home.emptyDescription")}
                         />
                     ) : (
                         <div
@@ -152,25 +152,25 @@ const HomePage = () => {
                         transition={{ duration: 0.5 }}
                         className="text-h2 text-center text-primary"
                     >
-                        Vì sao chọn Ademy?
+                        {t("home.featuresTitle")}
                     </motion.h2>
 
                     <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
                             {
                                 icon: GraduationCap,
-                                title: "Quản lý khóa học thông minh",
-                                desc: "Tạo, chỉnh sửa và theo dõi khóa học dễ dàng."
+                                title: t("home.features.courseManagement.title"),
+                                desc: t("home.features.courseManagement.desc")
                             },
                             {
                                 icon: Sparkles,
-                                title: "Theo dõi tiến độ học tập",
-                                desc: "Thống kê, báo cáo chi tiết cho từng học viên."
+                                title: t("home.features.progressTracking.title"),
+                                desc: t("home.features.progressTracking.desc")
                             },
                             {
                                 icon: Star,
-                                title: "Trải nghiệm học tập hiện đại",
-                                desc: "Giao diện tối ưu cho mọi thiết bị."
+                                title: t("home.features.modernExperience.title"),
+                                desc: t("home.features.modernExperience.desc")
                             },
                         ].map((item, index) => (
                             <motion.div
@@ -206,10 +206,10 @@ const HomePage = () => {
                         // Giảng viên có thể derive từ /courses như LecturerPage nhưng chưa nối ở đây
                         // để tránh 2 cách tính khác nhau cho cùng 1 khái niệm trong 1 lần redesign).
                         // "Khóa học" đã là số liệu thật (totalCourses, từ GET /courses).
-                        { value: "2,000+", label: "Học viên" },
-                        { value: totalCourses === null ? null : totalCourses, label: "Khóa học" },
-                        { value: "35+", label: "Giảng viên" },
-                        { value: "4.8★", label: "Đánh giá" },
+                        { value: "2,000+", label: t("home.statsStudents") },
+                        { value: totalCourses === null ? null : totalCourses, label: t("home.statsCourses") },
+                        { value: "35+", label: t("home.statsInstructors") },
+                        { value: "4.8★", label: t("home.statsRating") },
                     ].map((stat, index) => (
                         <motion.div
                             key={index}
@@ -243,14 +243,14 @@ const HomePage = () => {
                     className="mx-auto max-w-3xl px-6 text-center"
                 >
                     <h2 className="text-h2 text-primary">
-                        Sẵn sàng bắt đầu hành trình học tập?
+                        {t("home.finalCtaTitle")}
                     </h2>
                     <p className="mt-4 text-secondary">
-                        Tham gia Ademy ngay hôm nay để quản lý và học tập hiệu quả hơn.
+                        {t("home.finalCtaSubtitle")}
                     </p>
                     <div className="mt-8">
                         <Button variant="primary" onClick={() => navigate("/signup")}>
-                            Đăng ký miễn phí
+                            {t("home.finalCtaButton")}
                         </Button>
                     </div>
                 </motion.div>

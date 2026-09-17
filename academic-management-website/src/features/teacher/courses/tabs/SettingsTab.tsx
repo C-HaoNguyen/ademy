@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { TeacherCourse } from "@/shared/api/queries/useTeacherCoursesQuery";
 import Card from "@/shared/ui/Card";
 import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
 import ConfirmDeleteModal from "@/shared/ui/ConfirmDeleteModal";
-import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
+import { COURSE_STATUS_TONE, getCourseStatusLabel } from "@/shared/ui/courseStatus";
 
 interface SettingsTabProps {
     course: TeacherCourse;
@@ -16,15 +17,16 @@ interface SettingsTabProps {
 }
 
 const SettingsTab = ({ course, changingStatus, onChangeStatus, deleting, onDelete }: SettingsTabProps) => {
+    const { t } = useTranslation(["teacher", "common"]);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     return (
         <div className="space-y-6">
             <Card variant="app">
-                <h3 className="font-semibold text-primary mb-4">Trạng thái khóa học</h3>
+                <h3 className="font-semibold text-primary mb-4">{t("settingsTab.statusTitle")}</h3>
                 <div className="flex items-center gap-4">
                     <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
-                        {COURSE_STATUS_LABEL[course.status] ?? course.status}
+                        {getCourseStatusLabel(course.status, t)}
                     </Badge>
                     <div className="flex gap-2">
                         <Button
@@ -34,7 +36,7 @@ const SettingsTab = ({ course, changingStatus, onChangeStatus, deleting, onDelet
                             disabled={course.status === "draft"}
                             onClick={() => onChangeStatus("draft")}
                         >
-                            Draft
+                            {t("common:courseStatus.draft")}
                         </Button>
                         <Button
                             variant={course.status === "published" ? "primary" : "secondary"}
@@ -43,7 +45,7 @@ const SettingsTab = ({ course, changingStatus, onChangeStatus, deleting, onDelet
                             disabled={course.status === "published"}
                             onClick={() => onChangeStatus("published")}
                         >
-                            Publish
+                            {t("common:courseStatus.published")}
                         </Button>
                         <Button
                             variant={course.status === "archived" ? "primary" : "secondary"}
@@ -52,19 +54,19 @@ const SettingsTab = ({ course, changingStatus, onChangeStatus, deleting, onDelet
                             disabled={course.status === "archived"}
                             onClick={() => onChangeStatus("archived")}
                         >
-                            Archive
+                            {t("common:courseStatus.archived")}
                         </Button>
                     </div>
                 </div>
             </Card>
 
             <Card variant="app">
-                <h3 className="font-semibold text-primary mb-4">Vùng nguy hiểm</h3>
+                <h3 className="font-semibold text-primary mb-4">{t("settingsTab.dangerZoneTitle")}</h3>
                 <p className="text-body-sm text-secondary mb-4">
-                    Xóa khóa học sẽ xóa toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.
+                    {t("settingsTab.deleteWarning")}
                 </p>
                 <Button variant="danger" iconLeft={Trash2} onClick={() => setConfirmDelete(true)}>
-                    Xóa khóa học
+                    {t("settingsTab.deleteCourse")}
                 </Button>
             </Card>
 

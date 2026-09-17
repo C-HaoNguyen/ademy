@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Receipt, ReceiptText, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAdminPaymentsQuery, type AdminPayment } from "@/shared/api/queries/useAdminPaymentsQuery";
 import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
@@ -10,15 +11,16 @@ import { getPaymentMethodLabel, getPaymentStatusLabel, getPaymentStatusTone, for
 
 type StatusFilter = "ALL" | "PENDING" | "SUCCESS" | "FAILED";
 
-const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-    { key: "ALL", label: "Tất cả" },
-    { key: "PENDING", label: "Đang xử lý" },
-    { key: "SUCCESS", label: "Thành công" },
-    { key: "FAILED", label: "Thất bại" },
-];
-
 const AdminOrders = () => {
+    const { t } = useTranslation(["admin", "common"]);
     const paymentsQuery = useAdminPaymentsQuery();
+
+    const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+        { key: "ALL", label: t("orders.filterAll") },
+        { key: "PENDING", label: t("common:paymentStatus.pending") },
+        { key: "SUCCESS", label: t("common:paymentStatus.success") },
+        { key: "FAILED", label: t("common:paymentStatus.failed") },
+    ];
 
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
     const [selectedPayment, setSelectedPayment] = useState<AdminPayment | null>(null);
@@ -32,36 +34,36 @@ const AdminOrders = () => {
     const columns: TableColumn<AdminPayment>[] = [
         {
             key: "student",
-            header: "Học viên",
+            header: t("orders.columnStudent"),
             render: (payment) => payment.student?.fullName ?? "—",
         },
         {
             key: "course",
-            header: "Khóa học",
+            header: t("orders.columnCourse"),
             render: (payment) => payment.course?.title ?? "—",
         },
         {
             key: "amount",
-            header: "Số tiền",
+            header: t("orders.columnAmount"),
             render: (payment) => <span className="font-medium text-primary">{formatCurrency(payment.amount)}</span>,
         },
         {
             key: "paymentMethod",
-            header: "Phương thức",
+            header: t("orders.columnMethod"),
             render: (payment) => getPaymentMethodLabel(payment.paymentMethod),
         },
         {
             key: "status",
-            header: "Trạng thái",
+            header: t("orders.columnStatus"),
             render: (payment) => (
                 <Badge variant="status" tone={getPaymentStatusTone(payment.status)}>
-                    {getPaymentStatusLabel(payment.status)}
+                    {getPaymentStatusLabel(payment.status, t)}
                 </Badge>
             ),
         },
         {
             key: "createdAt",
-            header: "Ngày giao dịch",
+            header: t("orders.columnCreatedAt"),
             render: (payment) => new Date(payment.createdAt).toLocaleDateString("vi-VN"),
         },
     ];
@@ -71,10 +73,10 @@ const AdminOrders = () => {
             <div>
                 <h2 className="flex items-center gap-3 text-h2 text-primary">
                     <Receipt size={24} aria-hidden="true" />
-                    Quản lý đơn thanh toán
+                    {t("orders.title")}
                 </h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Xem toàn bộ giao dịch thanh toán trên nền tảng — chỉ xem, xử lý hoàn tiền ở trang Refunds.
+                    {t("orders.subtitle")}
                 </p>
             </div>
 
@@ -94,11 +96,11 @@ const AdminOrders = () => {
             {paymentsQuery.isError ? (
                 <EmptyState
                     icon={AlertTriangle}
-                    title="Không thể tải danh sách đơn thanh toán"
-                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    title={t("orders.loadErrorTitle")}
+                    description={t("orders.loadErrorDescription")}
                     action={
                         <Button variant="primary" size="sm" onClick={() => paymentsQuery.refetch()}>
-                            Thử lại
+                            {t("orders.retry")}
                         </Button>
                     }
                 />
@@ -109,7 +111,7 @@ const AdminOrders = () => {
                     rowKey={(payment) => payment.paymentId}
                     loading={paymentsQuery.isLoading}
                     onRowClick={(payment) => setSelectedPayment(payment)}
-                    emptyState={<EmptyState icon={ReceiptText} title="Chưa có đơn thanh toán nào" />}
+                    emptyState={<EmptyState icon={ReceiptText} title={t("orders.emptyTitle")} />}
                 />
             )}
 

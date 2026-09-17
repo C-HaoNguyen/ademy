@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Plus, ArrowUp, ArrowDown, Pencil, Trash2, Video, FileText, HelpCircle, ListVideo, ListChecks } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
@@ -19,13 +20,18 @@ import LessonFormModal from "./LessonFormModal";
 import LessonQuizModal from "./LessonQuizModal";
 
 const contentTypeIcon = { video: Video, document: FileText, quiz: HelpCircle } as const;
-const contentTypeLabel = { video: "Video", document: "Tài liệu", quiz: "Quiz" } as const;
 
 interface CurriculumTabProps {
     courseId: number;
 }
 
 const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
+    const { t } = useTranslation("teacher");
+    const contentTypeLabel = {
+        video: t("curriculumTab.contentTypeVideo"),
+        document: t("curriculumTab.contentTypeDocument"),
+        quiz: t("curriculumTab.contentTypeQuiz"),
+    } as const;
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const lessonsQuery = useTeacherLessonsQuery(courseId);
@@ -59,14 +65,14 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
             });
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                showToast({ tone: "danger", message: data?.message || "Xóa lesson thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("curriculumTab.deleteLessonFailed") });
                 return;
             }
-            showToast({ tone: "success", message: "Đã xóa lesson" });
+            showToast({ tone: "success", message: t("curriculumTab.lessonDeleted") });
             setDeletingLesson(null);
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("curriculumTab.connectionError") });
         } finally {
             setDeleting(false);
         }
@@ -105,13 +111,13 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
             ]);
 
             if (!resA.ok || !resB.ok) {
-                showToast({ tone: "danger", message: "Đổi thứ tự thất bại, vui lòng thử lại" });
+                showToast({ tone: "danger", message: t("curriculumTab.reorderFailed") });
                 return;
             }
 
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("curriculumTab.connectionError") });
         } finally {
             setReordering(false);
         }
@@ -129,18 +135,18 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
         <div className="space-y-4">
             <div className="flex justify-end">
                 <Button variant="primary" iconLeft={Plus} onClick={handleAdd}>
-                    Thêm lesson
+                    {t("curriculumTab.addLesson")}
                 </Button>
             </div>
 
             {lessons.length === 0 ? (
                 <EmptyState
                     icon={ListVideo}
-                    title="Chưa có lesson nào"
-                    description="Thêm lesson đầu tiên để bắt đầu xây dựng nội dung khóa học."
+                    title={t("curriculumTab.emptyTitle")}
+                    description={t("curriculumTab.emptyDescription")}
                     action={
                         <Button variant="primary" iconLeft={Plus} onClick={handleAdd}>
-                            Thêm lesson
+                            {t("curriculumTab.addLesson")}
                         </Button>
                     }
                 />
@@ -158,7 +164,7 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                                 disabled={index === 0 || reordering}
                                                 onClick={() => swapOrder(index, -1)}
                                                 className="text-tertiary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                                                aria-label="Di chuyển lên"
+                                                aria-label={t("curriculumTab.moveUp")}
                                             >
                                                 <ArrowUp size={16} />
                                             </button>
@@ -167,7 +173,7 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                                 disabled={index === lessons.length - 1 || reordering}
                                                 onClick={() => swapOrder(index, 1)}
                                                 className="text-tertiary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                                                aria-label="Di chuyển xuống"
+                                                aria-label={t("curriculumTab.moveDown")}
                                             >
                                                 <ArrowDown size={16} />
                                             </button>
@@ -183,13 +189,13 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                             </p>
                                             <p className="text-caption text-secondary">
                                                 {contentTypeLabel[lesson.contentType]}
-                                                {lesson.duration ? ` · ${lesson.duration} phút` : ""}
+                                                {lesson.duration ? ` · ${t("curriculumTab.durationMinutes", { duration: lesson.duration })}` : ""}
                                             </p>
                                         </div>
 
                                         {lesson.preview && (
                                             <Badge variant="status" tone="info">
-                                                Xem thử
+                                                {t("curriculumTab.preview")}
                                             </Badge>
                                         )}
 
@@ -199,8 +205,8 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                                     type="button"
                                                     onClick={() => setQuizLesson(lesson)}
                                                     className="cursor-pointer p-2 rounded-radius-md text-brand hover:bg-surface-brand-muted transition-colors"
-                                                    aria-label={`Quản lý quiz cho lesson ${lesson.title}`}
-                                                    title="Quản lý quiz"
+                                                    aria-label={t("curriculumTab.manageQuizAria", { title: lesson.title })}
+                                                    title={t("curriculumTab.manageQuiz")}
                                                 >
                                                     <ListChecks size={16} aria-hidden="true" />
                                                 </button>
@@ -209,7 +215,7 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                                 type="button"
                                                 onClick={() => handleEdit(lesson)}
                                                 className="cursor-pointer p-2 rounded-radius-md text-brand hover:bg-surface-brand-muted transition-colors"
-                                                aria-label={`Sửa lesson ${lesson.title}`}
+                                                aria-label={t("curriculumTab.editLessonAria", { title: lesson.title })}
                                             >
                                                 <Pencil size={16} aria-hidden="true" />
                                             </button>
@@ -217,7 +223,7 @@ const CurriculumTab = ({ courseId }: CurriculumTabProps) => {
                                                 type="button"
                                                 onClick={() => setDeletingLesson(lesson)}
                                                 className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
-                                                aria-label={`Xóa lesson ${lesson.title}`}
+                                                aria-label={t("curriculumTab.deleteLessonAria", { title: lesson.title })}
                                             >
                                                 <Trash2 size={16} aria-hidden="true" />
                                             </button>

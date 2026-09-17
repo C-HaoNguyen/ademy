@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCircle, XCircle, AlertTriangle, Info, X, type LucideIcon } from "lucide-react";
 import { ToastContext, type ShowToastInput, type ToastTone } from "./toastContextObject";
 import { UI } from "@/config";
@@ -36,6 +37,7 @@ const toneConfig: Record<
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+    const { t } = useTranslation("common");
     const [toasts, setToasts] = useState<ToastItem[]>([]);
     const nextId = useRef(0);
 
@@ -69,7 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                             <button
                                 type="button"
                                 onClick={() => dismissToast(toast.id)}
-                                aria-label="Đóng thông báo"
+                                aria-label={t("toast.closeAria")}
                                 className="ml-2 shrink-0 text-tertiary hover:text-primary"
                             >
                                 <X size={16} />

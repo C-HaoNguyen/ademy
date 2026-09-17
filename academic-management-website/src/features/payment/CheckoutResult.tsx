@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { getCheckoutSession, setCheckoutSession, clearCheckoutSession, resetForRetry } from "./checkoutSession";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
@@ -16,6 +17,7 @@ type ResultState =
 const formatPrice = (price: number) => price.toLocaleString("vi-VN") + "₫";
 
 const CheckoutResult = () => {
+    const { t } = useTranslation("courses");
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [result, setResult] = useState<ResultState>({ kind: "loading" });
@@ -86,7 +88,7 @@ const CheckoutResult = () => {
             <div className="bg-background">
                 <div className="mx-auto max-w-md px-6 py-24 text-center space-y-4">
                     <CheckCircle2 size={48} className="mx-auto text-status-success-icon" aria-hidden="true" />
-                    <h1 className="text-h2 text-primary">Thanh toán thành công!</h1>
+                    <h1 className="text-h2 text-primary">{t("checkoutResult.successTitle")}</h1>
                     {result.courseTitle && <p className="text-secondary">{result.courseTitle}</p>}
                     {typeof result.amount === "number" && (
                         <p className="text-body-lg font-semibold text-primary">{formatPrice(result.amount)}</p>
@@ -102,7 +104,7 @@ const CheckoutResult = () => {
                             )
                         }
                     >
-                        Vào học ngay
+                        {t("checkoutResult.goToLearning")}
                     </Button>
                 </div>
             </div>
@@ -114,9 +116,9 @@ const CheckoutResult = () => {
             <div className="bg-background">
                 <div className="mx-auto max-w-md px-6 py-24 text-center space-y-4">
                     <XCircle size={48} className="mx-auto text-status-danger-icon" aria-hidden="true" />
-                    <h1 className="text-h2 text-primary">Thanh toán thất bại</h1>
+                    <h1 className="text-h2 text-primary">{t("checkoutResult.failureTitle")}</h1>
                     <Button variant="secondary" size="lg" onClick={() => navigate(ROUTES.CHECKOUT_PAYMENT)}>
-                        Thử lại
+                        {t("checkoutResult.retry")}
                     </Button>
                 </div>
             </div>
@@ -129,12 +131,12 @@ const CheckoutResult = () => {
         <div className="bg-background">
             <div className="mx-auto max-w-md px-6 py-24 text-center space-y-4">
                 <Clock size={48} className="mx-auto text-status-info-icon" aria-hidden="true" />
-                <h1 className="text-h2 text-primary">Đang xử lý</h1>
+                <h1 className="text-h2 text-primary">{t("checkoutResult.pendingTitle")}</h1>
                 <p className="text-secondary">
-                    Đang xử lý, vui lòng kiểm tra lại ở Khóa học của tôi sau ít phút.
+                    {t("checkoutResult.pendingDescription")}
                 </p>
                 <Button variant="secondary" size="lg" onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}>
-                    Khóa học của tôi
+                    {t("checkoutResult.myCourses")}
                 </Button>
             </div>
         </div>

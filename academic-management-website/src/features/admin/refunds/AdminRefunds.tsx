@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { RotateCcw, Inbox, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAdminRefundsQuery, type AdminRefund, type RefundBusinessStatus } from "@/shared/api/queries/useAdminRefundsQuery";
 import { useAdminUsersQuery } from "@/shared/api/queries/useAdminUsersQuery";
 import Badge from "@/shared/ui/Badge";
@@ -17,15 +18,16 @@ import {
 
 type StatusFilter = "ALL" | RefundBusinessStatus;
 
-const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-    { key: "ALL", label: "Tất cả" },
-    { key: "REQUESTED", label: "Đang chờ" },
-    { key: "APPROVED", label: "Đã duyệt" },
-    { key: "REJECTED", label: "Đã từ chối" },
-];
-
 const AdminRefunds = () => {
+    const { t } = useTranslation(["admin", "common"]);
     const refundsQuery = useAdminRefundsQuery();
+
+    const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+        { key: "ALL", label: t("refunds.filterAll") },
+        { key: "REQUESTED", label: t("common:refundBusinessStatus.requested") },
+        { key: "APPROVED", label: t("common:refundBusinessStatus.approved") },
+        { key: "REJECTED", label: t("common:refundBusinessStatus.rejected") },
+    ];
     const usersQuery = useAdminUsersQuery();
 
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -48,44 +50,44 @@ const AdminRefunds = () => {
     const columns: TableColumn<AdminRefund>[] = [
         {
             key: "student",
-            header: "Học viên",
+            header: t("refunds.columnStudent"),
             render: (refund) => getStudentName(refund.studentId),
         },
         {
             key: "course",
-            header: "Khóa học",
+            header: t("refunds.columnCourse"),
             render: (refund) => refund.courseTitle,
         },
         {
             key: "amount",
-            header: "Số tiền",
+            header: t("refunds.columnAmount"),
             render: (refund) => <span className="font-medium text-primary">{formatCurrency(refund.amount)}</span>,
         },
         {
             key: "reason",
-            header: "Lý do",
+            header: t("refunds.columnReason"),
             render: (refund) => <span className="line-clamp-1 max-w-xs">{refund.reason}</span>,
         },
         {
             key: "requestedAt",
-            header: "Ngày yêu cầu",
+            header: t("refunds.columnRequestedAt"),
             render: (refund) => new Date(refund.requestedAt).toLocaleDateString("vi-VN"),
         },
         {
             key: "businessStatus",
-            header: "Trạng thái nghiệp vụ",
+            header: t("refunds.columnBusinessStatus"),
             render: (refund) => (
                 <Badge variant="status" tone={getBusinessStatusTone(refund.businessStatus)}>
-                    {getBusinessStatusLabel(refund.businessStatus)}
+                    {getBusinessStatusLabel(refund.businessStatus, t)}
                 </Badge>
             ),
         },
         {
             key: "executionStatus",
-            header: "Trạng thái xử lý",
+            header: t("refunds.columnExecutionStatus"),
             render: (refund) => (
                 <Badge variant="status" tone={getExecutionStatusTone(refund.executionStatus)}>
-                    {getExecutionStatusLabel(refund.executionStatus)}
+                    {getExecutionStatusLabel(refund.executionStatus, t)}
                 </Badge>
             ),
         },
@@ -96,10 +98,10 @@ const AdminRefunds = () => {
             <div>
                 <h2 className="flex items-center gap-3 text-h2 text-primary">
                     <RotateCcw size={24} aria-hidden="true" />
-                    Quản lý hoàn tiền
+                    {t("refunds.title")}
                 </h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Xem xét, duyệt/từ chối yêu cầu hoàn tiền — sau khi duyệt, đánh dấu đã hoàn tiền thủ công.
+                    {t("refunds.subtitle")}
                 </p>
             </div>
 
@@ -119,11 +121,11 @@ const AdminRefunds = () => {
             {refundsQuery.isError ? (
                 <EmptyState
                     icon={AlertTriangle}
-                    title="Không thể tải danh sách yêu cầu hoàn tiền"
-                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    title={t("refunds.loadErrorTitle")}
+                    description={t("refunds.loadErrorDescription")}
                     action={
                         <Button variant="primary" size="sm" onClick={() => refundsQuery.refetch()}>
-                            Thử lại
+                            {t("refunds.retry")}
                         </Button>
                     }
                 />
@@ -134,7 +136,7 @@ const AdminRefunds = () => {
                     rowKey={(refund) => refund.id}
                     loading={refundsQuery.isLoading}
                     onRowClick={(refund) => setSelectedRefund(refund)}
-                    emptyState={<EmptyState icon={Inbox} title="Không có yêu cầu nào đang chờ duyệt" />}
+                    emptyState={<EmptyState icon={Inbox} title={t("refunds.emptyTitle")} />}
                 />
             )}
 

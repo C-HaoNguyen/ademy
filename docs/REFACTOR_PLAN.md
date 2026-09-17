@@ -1213,7 +1213,7 @@ Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, khô
 - **Exit criteria**: Đạt — không còn dead file/dead constant/token cũ; `UI.TOAST_DURATION` dùng thật; token `legacy-*` đã xóa khỏi `tailwind.config.js`, 0 reference còn sót; build/lint sạch, không regression so với baseline.
 - **Trace**: Gap Analysis U21-U23, audit findings ban đầu; DESIGN_SYSTEM.md §3.2, §10.7, §10.8, §10.10.
 
-### Phase 38: i18n scaffold + code-splitting
+### Phase 38: i18n scaffold + code-splitting — ĐÃ HOÀN TẤT
 
 - **Goal**: Đặt nền móng Phase 2 (i18n) và tối ưu tải trang cho Teacher area vừa thêm.
 - **Scope**: Cài `react-i18next`, tách chuỗi text hiện có ra translation key (chỉ tiếng Việt, chưa dịch tiếng Anh — đúng ADR-023); `React.lazy` cho từng nhóm route (public/student/teacher/admin).
@@ -1225,6 +1225,13 @@ Quyết định #4 lúc implement (giữ Login/Signup đứng độc lập, khô
 - **Tests/verification**: Test build production, xác nhận bundle Teacher/Admin không load khi Student dùng app; visual QA không có text bị thiếu do sai key.
 - **Exit criteria**: Mọi text qua translation key; route chia bundle theo audience.
 - **Trace**: ADR-022, ADR-023, NFR-006.
+- **Đã implement**:
+  - i18n scaffold: `react-i18next`/`i18next` cài mới; `src/i18n/config.ts` init với 7 namespace theo audience (`common`/`public`/`auth`/`courses`/`student`/`teacher`/`admin`), load tĩnh từ `src/i18n/locales/vi/*.json`; import 1 lần ở `main.tsx` trước `<App/>`. `tsconfig.app.json` thêm `resolveJsonModule: true`.
+  - Code-splitting: toàn bộ page component trong `AppRoutes.tsx` chuyển sang `React.lazy`; 1 `<Suspense>` bọc quanh `<Routes>` (không bọc từng route riêng — đúng quyết định đã chốt trước khi code, vì react-router `createRoutesFromChildren` chỉ chấp nhận `Route`/`Fragment` làm con trực tiếp của `<Routes>`, không chấp nhận `Suspense` chen giữa từng nhóm). Fallback dùng `shared/ui/PageLoadingFallback.tsx` (component mới, tái dùng `Skeleton` có sẵn). Kết quả: bundle chính giảm từ 634KB → ~489KB, mỗi trang tách chunk riêng (xác nhận qua `vite build` output, không cần thêm visualizer).
+  - Text migration: toàn bộ `features/**` (64 file) + phần dùng chung trong `shared/ui/` (`Modal`, `ToastProvider`, `ConfirmDeleteModal`, `DateRangeInput`) và `shared/layout/LessonPlayerLayout.tsx` đã wrap `t()`, làm tuần tự theo area (public → auth → courses+payment → student → teacher → admin) đúng "Migration concerns". 3 module có label tra theo status/enum (`shared/ui/courseStatus.ts`, `features/admin/orders/paymentStatus.ts`, `features/admin/refunds/refundStatus.ts`, `features/admin/audit-log/auditActions.ts`) đổi từ map hằng số sang hàm nhận `t` làm tham số (label chỉ có tại thời điểm render, không thể để ở module scope).
+  - Nội dung tiếng Việt giữ nguyên 100% — kể cả 2 chỗ tiếng Anh cố ý (`"Student Dashboard"`, `"Teacher Dashboard"`, `"Quick Actions"`, copyright footer `"All rights reserved."`) cũng giữ nguyên qua key, không tự dịch/chuẩn hóa sang tiếng Việt.
+- **Deviation so với REFACTOR_PLAN gốc**: Không có — scope thực hiện đúng như đã duyệt (không mở rộng, không cắt bớt).
+- **Chưa verify được**: Visual QA thật qua `npm run dev` trên trình duyệt (không có công cụ browser automation trong môi trường này) — chỉ verify qua `npm run build`/`npm run lint` sạch (0 error, 1 warning baseline pre-existing không đổi) + review diff thủ công từng area. Cần verify thủ công trước khi merge: mọi trang không hiện key thô (`namespace.key`) thay vì text, page-transition fallback (`PageLoadingFallback`) hiển thị hợp lý khi chuyển route lần đầu.
 
 ### Phase 39: Test hardening
 

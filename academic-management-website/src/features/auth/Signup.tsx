@@ -2,6 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import logo from "../../assets/logo.svg";
@@ -12,6 +13,7 @@ import Input from "@/shared/ui/Input";
 import { useToast } from "@/shared/ui/useToast";
 
 const Signup = () => {
+    const { t } = useTranslation(["auth", "common"]);
     const navigate = useNavigate();
     const { showToast } = useToast();
 
@@ -25,9 +27,9 @@ const Signup = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const passwordError = passwordTouched && password.trim() === "" ? "Mật khẩu không được để trống" : undefined;
+    const passwordError = passwordTouched && password.trim() === "" ? t("signup.validation.passwordRequired") : undefined;
     const confirmPasswordError =
-        confirmPassword && password.trim() !== confirmPassword.trim() ? "Mật khẩu xác nhận không khớp" : undefined;
+        confirmPassword && password.trim() !== confirmPassword.trim() ? t("signup.validation.passwordMismatch") : undefined;
 
     const isFormValid =
         fullName.trim() !== "" &&
@@ -52,18 +54,18 @@ const Signup = () => {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                showToast({ tone: "danger", message: errorText || "Đăng ký thất bại" });
+                showToast({ tone: "danger", message: errorText || t("signup.signupFailed") });
                 return;
             }
 
             showToast({
                 tone: "success",
-                message: "Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập.",
+                message: t("signup.signupSuccess"),
             });
             navigate(ROUTES.LOGIN);
         } catch (error) {
             console.error("Signup error:", error);
-            showToast({ tone: "danger", message: "Không thể kết nối server" });
+            showToast({ tone: "danger", message: t("signup.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -82,9 +84,9 @@ const Signup = () => {
                         <Link to={ROUTES.HOME}>
                             <img src={logo} alt="Ademy" className="h-12 w-12" />
                         </Link>
-                        <h1 className="mt-4 text-h3 text-primary">Đăng ký tài khoản</h1>
+                        <h1 className="mt-4 text-h3 text-primary">{t("signup.title")}</h1>
                         <p className="mt-1 text-body-sm text-secondary">
-                            Tạo tài khoản Student để bắt đầu học tập
+                            {t("signup.subtitle")}
                         </p>
                     </div>
 
@@ -93,43 +95,43 @@ const Signup = () => {
                         noValidate
                         className="mt-6 space-y-4"
                     >
-                        <FormField label="Họ và tên" required>
+                        <FormField label={t("signup.fullNameLabel")} required>
                             <Input
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 autoComplete="name"
-                                placeholder="Nguyễn Văn A"
+                                placeholder={t("signup.fullNamePlaceholder")}
                             />
                         </FormField>
 
-                        <FormField label="Tên đăng nhập" required>
+                        <FormField label={t("signup.usernameLabel")} required>
                             <Input
                                 value={username}
                                 onChange={(e) => setUserName(e.target.value)}
                                 autoComplete="username"
-                                placeholder="Tên đăng nhập"
+                                placeholder={t("signup.usernamePlaceholder")}
                             />
                         </FormField>
 
-                        <FormField label="Email" required>
+                        <FormField label={t("signup.emailLabel")} required>
                             <Input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
-                                placeholder="example@gmail.com"
+                                placeholder={t("signup.emailPlaceholder")}
                             />
                         </FormField>
 
                         <FormField
-                            label="Mật khẩu"
+                            label={t("signup.passwordLabel")}
                             required
                             error={passwordError}
                             endAdornment={
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((s) => !s)}
-                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    aria-label={showPassword ? t("common:hidePassword") : t("common:showPassword")}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -142,20 +144,20 @@ const Signup = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 onBlur={() => setPasswordTouched(true)}
                                 autoComplete="new-password"
-                                placeholder="Nhập mật khẩu"
+                                placeholder={t("signup.passwordPlaceholder")}
                                 className="pr-10"
                             />
                         </FormField>
 
                         <FormField
-                            label="Xác nhận mật khẩu"
+                            label={t("signup.confirmPasswordLabel")}
                             required
                             error={confirmPasswordError}
                             endAdornment={
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword((s) => !s)}
-                                    aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    aria-label={showConfirmPassword ? t("common:hidePassword") : t("common:showPassword")}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
                                 >
                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -167,7 +169,7 @@ const Signup = () => {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 autoComplete="new-password"
-                                placeholder="Nhập lại mật khẩu"
+                                placeholder={t("signup.confirmPasswordPlaceholder")}
                                 className="pr-10"
                             />
                         </FormField>
@@ -180,13 +182,13 @@ const Signup = () => {
                                 className="mt-1 rounded border-default"
                             />
                             <span>
-                                Tôi đồng ý với{" "}
+                                {t("signup.agreeTermsPrefix")}{" "}
                                 <Link to={ROUTES.TERMS} target="_blank" className="text-brand hover:underline">
-                                    Điều khoản sử dụng
+                                    {t("signup.termsOfUse")}
                                 </Link>{" "}
-                                và{" "}
+                                {t("signup.and")}{" "}
                                 <Link to={ROUTES.PRIVACY} target="_blank" className="text-brand hover:underline">
-                                    Chính sách bảo mật
+                                    {t("signup.privacyPolicy")}
                                 </Link>
                             </span>
                         </label>
@@ -199,14 +201,14 @@ const Signup = () => {
                             onClick={handleSignup}
                             className="w-full"
                         >
-                            Đăng ký
+                            {t("signup.submit")}
                         </Button>
                     </form>
 
                     <p className="mt-6 text-body-sm text-center text-secondary">
-                        Đã có tài khoản?{" "}
+                        {t("signup.hasAccount")}{" "}
                         <Link to={ROUTES.LOGIN} className="font-medium text-brand hover:underline">
-                            Đăng nhập
+                            {t("signup.loginNow")}
                         </Link>
                     </p>
                 </Card>

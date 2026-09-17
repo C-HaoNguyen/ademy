@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { useCourseQuizQuery } from "@/shared/api/queries/useCourseQuizQuery";
@@ -21,6 +22,7 @@ type AttemptResult = {
 };
 
 const QuizAttempt = () => {
+    const { t } = useTranslation("student");
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -39,7 +41,7 @@ const QuizAttempt = () => {
     const handleSubmit = async () => {
         if (!quiz) return;
         if (Object.keys(answers).length === 0) {
-            showToast({ tone: "danger", message: "Vui lòng chọn ít nhất 1 đáp án trước khi nộp bài" });
+            showToast({ tone: "danger", message: t("quizAttempt.atLeastOneAnswer") });
             return;
         }
         setSubmitting(true);
@@ -56,13 +58,13 @@ const QuizAttempt = () => {
             });
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: await readErrorMessage(res, "Nộp bài thất bại") });
+                showToast({ tone: "danger", message: await readErrorMessage(res, t("quizAttempt.submitFailed")) });
                 return;
             }
 
             setResult(await res.json());
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("quizAttempt.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -80,11 +82,11 @@ const QuizAttempt = () => {
         return (
             <EmptyState
                 icon={AlertCircle}
-                title="Không thể tải bài kiểm tra"
-                description="Bạn có thể chưa mua khóa học này, hoặc khóa học chưa có bài kiểm tra."
+                title={t("quizAttempt.loadErrorTitle")}
+                description={t("quizAttempt.loadErrorDescription")}
                 action={
                     <Button variant="primary" onClick={() => navigate(ROUTES.STUDENT.TEST_PRACTICE)}>
-                        Quay lại
+                        {t("quizAttempt.back")}
                     </Button>
                 }
             />
@@ -95,13 +97,13 @@ const QuizAttempt = () => {
         return (
             <Card variant="app" className="max-w-xl mx-auto text-center space-y-4">
                 <h1 className="text-h2 text-primary" aria-live="polite">
-                    Kết quả: {result.score.toFixed(1)} điểm
+                    {t("quizAttempt.resultTitle", { score: result.score.toFixed(1) })}
                 </h1>
                 <p className="text-body text-secondary">
-                    Đúng {result.correctCount}/{result.totalQuestions} câu
+                    {t("quizAttempt.resultCorrect", { correct: result.correctCount, total: result.totalQuestions })}
                 </p>
                 <Button variant="primary" onClick={() => navigate(ROUTES.STUDENT.TEST_PRACTICE)}>
-                    Quay lại
+                    {t("quizAttempt.back")}
                 </Button>
             </Card>
         );
@@ -112,7 +114,7 @@ const QuizAttempt = () => {
             <div>
                 <h1 className="text-h2 text-primary">{quiz.title}</h1>
                 <p className="text-body-sm text-secondary mt-1" aria-live="polite">
-                    Câu {questionIndex + 1}/{total}
+                    {t("quizAttempt.questionProgress", { current: questionIndex + 1, total })}
                 </p>
             </div>
 
@@ -147,17 +149,17 @@ const QuizAttempt = () => {
                     disabled={questionIndex === 0}
                     onClick={() => setQuestionIndex((i) => Math.max(0, i - 1))}
                 >
-                    Câu trước
+                    {t("quizAttempt.prevQuestion")}
                 </Button>
                 <Button
                     variant="secondary"
                     disabled={questionIndex === total - 1}
                     onClick={() => setQuestionIndex((i) => Math.min(total - 1, i + 1))}
                 >
-                    Câu sau
+                    {t("quizAttempt.nextQuestion")}
                 </Button>
                 <Button variant="cta" loading={submitting} onClick={handleSubmit}>
-                    Nộp bài
+                    {t("quizAttempt.submit")}
                 </Button>
             </div>
         </div>

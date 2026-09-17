@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { useLessonQuizQuery } from "@/shared/api/queries/useLessonQuizQuery";
@@ -20,6 +21,7 @@ interface LessonContentViewerProps {
 // biệt, chỉ hiện điểm số ngay trong content area rồi để Student tự bấm "Đánh dấu hoàn thành & tiếp
 // tục" ở footer layout để qua lesson kế tiếp.
 const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
+    const { t } = useTranslation("student");
     const { showToast } = useToast();
     const quizQuery = useLessonQuizQuery(lessonId);
 
@@ -36,7 +38,7 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
     const handleSubmit = async () => {
         if (!quiz) return;
         if (Object.keys(answers).length === 0) {
-            showToast({ tone: "danger", message: "Vui lòng chọn ít nhất 1 đáp án trước khi nộp bài" });
+            showToast({ tone: "danger", message: t("quizAttempt.atLeastOneAnswer") });
             return;
         }
         setSubmitting(true);
@@ -53,13 +55,13 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
             });
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: await readErrorMessage(res, "Nộp bài thất bại") });
+                showToast({ tone: "danger", message: await readErrorMessage(res, t("quizAttempt.submitFailed")) });
                 return;
             }
 
             setResult(await res.json());
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("quizAttempt.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -77,8 +79,8 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
         return (
             <EmptyState
                 icon={AlertCircle}
-                title="Không thể tải bài kiểm tra"
-                description="Lesson này chưa có bài kiểm tra."
+                title={t("quizAttempt.loadErrorTitle")}
+                description={t("lessonPlayer.lessonQuizNoQuizDescription")}
             />
         );
     }
@@ -87,10 +89,10 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
         return (
             <Card variant="app" className="max-w-xl mx-auto text-center space-y-3">
                 <h2 className="text-h3 text-primary" aria-live="polite">
-                    Kết quả: {result.score.toFixed(1)} điểm
+                    {t("quizAttempt.resultTitle", { score: result.score.toFixed(1) })}
                 </h2>
                 <p className="text-body text-secondary">
-                    Đúng {result.correctCount}/{result.totalQuestions} câu
+                    {t("quizAttempt.resultCorrect", { correct: result.correctCount, total: result.totalQuestions })}
                 </p>
             </Card>
         );
@@ -101,7 +103,7 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
             <div>
                 <h2 className="text-h3 text-primary">{quiz.title}</h2>
                 <p className="text-body-sm text-secondary mt-1" aria-live="polite">
-                    Câu {questionIndex + 1}/{total}
+                    {t("quizAttempt.questionProgress", { current: questionIndex + 1, total })}
                 </p>
             </div>
 
@@ -136,17 +138,17 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
                     disabled={questionIndex === 0}
                     onClick={() => setQuestionIndex((i) => Math.max(0, i - 1))}
                 >
-                    Câu trước
+                    {t("quizAttempt.prevQuestion")}
                 </Button>
                 <Button
                     variant="secondary"
                     disabled={questionIndex === total - 1}
                     onClick={() => setQuestionIndex((i) => Math.min(total - 1, i + 1))}
                 >
-                    Câu sau
+                    {t("quizAttempt.nextQuestion")}
                 </Button>
                 <Button variant="cta" loading={submitting} onClick={handleSubmit}>
-                    Nộp bài
+                    {t("quizAttempt.submit")}
                 </Button>
             </div>
         </div>
@@ -155,6 +157,7 @@ const LessonQuizViewer = ({ lessonId }: { lessonId: number }) => {
 
 // UI_SPEC §3.3 mục 3 — render theo loại lesson: video player, tài liệu/text, hoặc quiz nhúng.
 const LessonContentViewer = ({ lesson }: LessonContentViewerProps) => {
+    const { t } = useTranslation("student");
     // Lỗi tải khác lỗi dữ liệu (videoUrl rỗng ở nhánh dưới) — đây là lỗi runtime của thẻ <video>
     // (link hỏng, mạng lỗi...), cần nút "Tải lại" riêng theo UI_SPEC §3.3 Error state.
     const [videoLoadFailed, setVideoLoadFailed] = useState(false);
@@ -165,21 +168,21 @@ const LessonContentViewer = ({ lesson }: LessonContentViewerProps) => {
         return (
             <div className="space-y-4">
                 {!lesson.videoUrl ? (
-                    <EmptyState icon={AlertCircle} title="Không tải được video" description="Vui lòng thử lại sau." />
+                    <EmptyState icon={AlertCircle} title={t("lessonPlayer.videoUnavailableTitle")} description={t("lessonPlayer.videoUnavailableDescription")} />
                 ) : videoLoadFailed ? (
                     <EmptyState
                         icon={AlertCircle}
-                        title="Không thể tải video"
-                        description="Đã có lỗi khi tải video này, vui lòng thử lại."
+                        title={t("lessonPlayer.videoLoadFailedTitle")}
+                        description={t("lessonPlayer.videoLoadFailedDescription")}
                         action={
                             <Button
                                 variant="secondary"
                                 onClick={() => {
                                     setVideoLoadFailed(false);
-                                    setVideoReloadToken((t) => t + 1);
+                                    setVideoReloadToken((prev) => prev + 1);
                                 }}
                             >
-                                Tải lại
+                                {t("lessonPlayer.videoReload")}
                             </Button>
                         }
                     />
@@ -203,7 +206,7 @@ const LessonContentViewer = ({ lesson }: LessonContentViewerProps) => {
     return (
         <Card variant="app">
             <p className="text-body text-primary whitespace-pre-wrap">
-                {lesson.content || "Nội dung đang được cập nhật."}
+                {lesson.content || t("lessonPlayer.contentUpdating")}
             </p>
         </Card>
     );

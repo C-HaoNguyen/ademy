@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 interface DateRange {
@@ -16,8 +17,6 @@ interface DateRangeInputProps {
     hasError?: boolean;
     required?: boolean;
 }
-
-const WEEKDAY_LABELS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 const formatDate = (date: Date | null) => {
     if (!date) return "";
@@ -44,12 +43,22 @@ const buildMonthGrid = (monthAnchor: Date): (Date | null)[] => {
 const DateRangeInput = ({
     value,
     onChange,
-    placeholder = "Chọn khoảng thời gian",
+    placeholder,
     id,
     "aria-describedby": ariaDescribedBy,
     hasError = false,
     required = false,
 }: DateRangeInputProps) => {
+    const { t } = useTranslation("common");
+    const WEEKDAY_LABELS = [
+        t("dateRangeInput.weekdayMon"),
+        t("dateRangeInput.weekdayTue"),
+        t("dateRangeInput.weekdayWed"),
+        t("dateRangeInput.weekdayThu"),
+        t("dateRangeInput.weekdayFri"),
+        t("dateRangeInput.weekdaySat"),
+        t("dateRangeInput.weekdaySun"),
+    ];
     const [open, setOpen] = useState(false);
     const [monthAnchor, setMonthAnchor] = useState(() => value.from ?? new Date());
     const [focusedDate, setFocusedDate] = useState(() => value.from ?? new Date());
@@ -170,7 +179,7 @@ const DateRangeInput = ({
                 }`}
             >
                 <span className={displayText ? "text-primary" : "text-placeholder"}>
-                    {displayText || placeholder}
+                    {displayText || placeholder || t("dateRangeInput.defaultPlaceholder")}
                 </span>
                 <CalendarIcon size={16} className="text-tertiary" aria-hidden="true" />
             </button>
@@ -178,14 +187,14 @@ const DateRangeInput = ({
             {open && (
                 <div
                     role="dialog"
-                    aria-label="Chọn khoảng ngày"
+                    aria-label={t("dateRangeInput.dialogAria")}
                     onKeyDown={handleKeyDown}
                     className="absolute z-dropdown mt-2 w-72 rounded-radius-md bg-surface p-3 shadow-elevated"
                 >
                     <div className="mb-2 flex items-center justify-between">
                         <button
                             type="button"
-                            aria-label="Tháng trước"
+                            aria-label={t("dateRangeInput.prevMonth")}
                             onClick={() => changeMonth(-1)}
                             className="rounded-radius-sm px-2 py-1 text-body-sm text-secondary hover:bg-surface-muted"
                         >
@@ -196,7 +205,7 @@ const DateRangeInput = ({
                         </span>
                         <button
                             type="button"
-                            aria-label="Tháng sau"
+                            aria-label={t("dateRangeInput.nextMonth")}
                             onClick={() => changeMonth(1)}
                             className="rounded-radius-sm px-2 py-1 text-body-sm text-secondary hover:bg-surface-muted"
                         >

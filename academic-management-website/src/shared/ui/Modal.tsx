@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 type ModalSize = "sm" | "md" | "lg";
@@ -27,6 +28,7 @@ const FOCUSABLE_SELECTOR =
     'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const Modal = ({ open, onClose, title, children, footer, size = "md", closeDisabled = false }: ModalProps) => {
+    const { t } = useTranslation("common");
     const panelRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
     const titleId = useId();
@@ -117,7 +119,7 @@ const Modal = ({ open, onClose, title, children, footer, size = "md", closeDisab
                     <button
                         type="button"
                         onClick={handleClose}
-                        aria-label="Đóng"
+                        aria-label={t("modal.closeAria")}
                         className="text-tertiary hover:text-primary"
                     >
                         <X size={20} />

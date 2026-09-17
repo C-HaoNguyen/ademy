@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import logo from "../../assets/logo.svg";
 import { API_ENDPOINTS, ROLES, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
@@ -22,6 +23,7 @@ type FormErrors = Partial<Record<keyof FormValues, string>>;
 const initialValues: FormValues = { username: "", password: "" };
 
 const Login = () => {
+    const { t } = useTranslation(["auth", "common"]);
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
@@ -35,8 +37,8 @@ const Login = () => {
 
     const validate = (): FormErrors => {
         const next: FormErrors = {};
-        if (!values.username.trim()) next.username = "Vui lòng nhập tên đăng nhập";
-        if (!values.password.trim()) next.password = "Vui lòng nhập mật khẩu";
+        if (!values.username.trim()) next.username = t("login.validation.usernameRequired");
+        if (!values.password.trim()) next.password = t("login.validation.passwordRequired");
         return next;
     };
 
@@ -59,7 +61,7 @@ const Login = () => {
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-                showToast({ tone: "danger", message: errorMessage || "Sai tên đăng nhập hoặc mật khẩu" });
+                showToast({ tone: "danger", message: errorMessage || t("login.invalidCredentials") });
                 return;
             }
 
@@ -89,7 +91,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error("Login error:", error);
-            showToast({ tone: "danger", message: "Không thể kết nối server" });
+            showToast({ tone: "danger", message: t("login.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -108,14 +110,14 @@ const Login = () => {
                         <Link to={ROUTES.HOME}>
                             <img src={logo} alt="Ademy" className="h-12 w-12" />
                         </Link>
-                        <h1 className="mt-4 text-h3 text-primary">Đăng nhập vào Ademy</h1>
+                        <h1 className="mt-4 text-h3 text-primary">{t("login.title")}</h1>
                         <p className="mt-1 text-body-sm text-secondary">
-                            Chào mừng bạn quay lại
+                            {t("login.subtitle")}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-                        <FormField label="Tên đăng nhập" required error={errors.username}>
+                        <FormField label={t("login.usernameLabel")} required error={errors.username}>
                             <Input
                                 value={values.username}
                                 onChange={(e) => {
@@ -123,19 +125,19 @@ const Login = () => {
                                     setErrors((err) => (err.username ? { ...err, username: undefined } : err));
                                 }}
                                 autoComplete="username"
-                                placeholder="Nhập tên đăng nhập"
+                                placeholder={t("login.usernamePlaceholder")}
                             />
                         </FormField>
 
                         <FormField
-                            label="Mật khẩu"
+                            label={t("login.passwordLabel")}
                             required
                             error={errors.password}
                             endAdornment={
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((s) => !s)}
-                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    aria-label={showPassword ? t("common:hidePassword") : t("common:showPassword")}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -150,26 +152,26 @@ const Login = () => {
                                     setErrors((err) => (err.password ? { ...err, password: undefined } : err));
                                 }}
                                 autoComplete="current-password"
-                                placeholder="Nhập mật khẩu"
+                                placeholder={t("login.passwordPlaceholder")}
                                 className="pr-10"
                             />
                         </FormField>
 
                         <div className="flex justify-end text-body-sm">
                             <Link to={ROUTES.FORGOT_PASSWORD} className="font-medium text-brand hover:underline">
-                                Quên mật khẩu?
+                                {t("login.forgotPassword")}
                             </Link>
                         </div>
 
                         <Button type="submit" variant="primary" loading={submitting} className="w-full">
-                            Đăng nhập
+                            {t("login.submit")}
                         </Button>
                     </form>
 
                     <p className="mt-6 text-body-sm text-center text-secondary">
-                        Bạn mới biết đến Ademy?{" "}
+                        {t("login.noAccount")}{" "}
                         <Link to={ROUTES.SIGNUP} className="font-medium text-brand hover:underline">
-                            Đăng ký ngay
+                            {t("login.signupNow")}
                         </Link>
                     </p>
                 </Card>

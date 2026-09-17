@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/auth/useAuth";
 import { ROLES, ROUTES } from "@/config/constants";
 import logo from "../../../assets/logo.svg"
@@ -15,13 +16,14 @@ type Tab = {
 // Public — trước đây hardcode cứng route/label của Student, khiến Teacher/Admin bấm "Bắt đầu học"
 // bị ProtectedRoute bounce về "/" (role không khớp /student/**). Map role → dashboard/profile route
 // đúng để CTA và "Chỉnh sửa hồ sơ" luôn trỏ đúng khu vực của role hiện tại.
-const roleHomeByRole: Record<string, { dashboard: string; ctaLabel: string; profile: string }> = {
-    [ROLES.STUDENT]: { dashboard: ROUTES.STUDENT.DASHBOARD, ctaLabel: "Bắt đầu học", profile: ROUTES.STUDENT.PROFILE },
-    [ROLES.TEACHER]: { dashboard: ROUTES.TEACHER.DASHBOARD, ctaLabel: "Bảng điều khiển", profile: ROUTES.TEACHER.PROFILE },
-    [ROLES.ADMIN]: { dashboard: ROUTES.ADMIN.DASHBOARD, ctaLabel: "Bảng điều khiển", profile: ROUTES.ADMIN.PROFILE },
+const roleHomeByRole: Record<string, { dashboard: string; ctaLabelKey: string; profile: string }> = {
+    [ROLES.STUDENT]: { dashboard: ROUTES.STUDENT.DASHBOARD, ctaLabelKey: "header.ctaStartLearning", profile: ROUTES.STUDENT.PROFILE },
+    [ROLES.TEACHER]: { dashboard: ROUTES.TEACHER.DASHBOARD, ctaLabelKey: "header.ctaDashboard", profile: ROUTES.TEACHER.PROFILE },
+    [ROLES.ADMIN]: { dashboard: ROUTES.ADMIN.DASHBOARD, ctaLabelKey: "header.ctaDashboard", profile: ROUTES.ADMIN.PROFILE },
 };
 
 function Header() {
+    const { t } = useTranslation("public");
     const navigate = useNavigate();
     const { isLoggedIn: loggedIn, role, logout } = useAuth();
     const [open, setOpen] = useState(false);
@@ -30,10 +32,10 @@ function Header() {
     const roleHome = roleHomeByRole[role?.toUpperCase() ?? ""] ?? roleHomeByRole[ROLES.STUDENT];
 
     const tabs: Tab[] = [
-        { id: "home", label: "Trang Chủ", href: "/" },
-        { id: "courses", label: "Các Khóa Học", href: "/courses" },
-        { id: "leturer", label: "Đội Ngũ", href: "/lecturer" },
-        { id: "contact", label: "Liên Hệ", href: "/contact" },
+        { id: "home", label: t("header.tabHome"), href: "/" },
+        { id: "courses", label: t("header.tabCourses"), href: "/courses" },
+        { id: "leturer", label: t("header.tabLecturer"), href: "/lecturer" },
+        { id: "contact", label: t("header.tabContact"), href: "/contact" },
     ];
 
     useEffect(() => {
@@ -86,14 +88,14 @@ function Header() {
                                     to="/login"
                                     className="px-6 py-2 text-sm font-semibold text-action-tertiary-text rounded-full transition-colors duration-200 cursor-pointer hover:bg-action-tertiary-bg-hover"
                                 >
-                                    Đăng nhập
+                                    {t("header.login")}
                                 </NavLink>
 
                                 <NavLink
                                     to="/signup"
                                     className="px-6 py-2 text-sm font-semibold text-inverse bg-action-primary-bg rounded-full transition-colors duration-200 cursor-pointer hover:bg-action-primary-bg-hover shadow-sm"
                                 >
-                                    Đăng ký
+                                    {t("header.signup")}
                                 </NavLink>
                             </>
                         ) : (
@@ -109,7 +111,7 @@ function Header() {
                                                 shadow-sm cursor-pointer
                                                 active:scale-[0.97]"
                                 >
-                                    {roleHome.ctaLabel}
+                                    {t(roleHome.ctaLabelKey)}
                                 </button>
                                 {/* Avatar dropdown */}
                                 <div className="relative" ref={dropdownRef}>
@@ -119,7 +121,7 @@ function Header() {
                                     >
                                         <img
                                             src="https://cdn-icons-png.flaticon.com/512/8188/8188362.png"
-                                            alt="avatar"
+                                            alt={t("header.avatarAlt")}
                                             className="w-8 h-8 rounded-full object-cover"
                                         />
                                         <ChevronDown
@@ -137,7 +139,7 @@ function Header() {
                                                 onClick={() => navigate(roleHome.profile)}
                                             >
                                                 <User size={16} />
-                                                Chỉnh sửa hồ sơ
+                                                {t("header.editProfile")}
                                             </button>
 
                                             <div className="h-px bg-slate-100" />
@@ -147,7 +149,7 @@ function Header() {
                                                 onClick={() => logout()}
                                             >
                                                 <LogOut size={16} />
-                                                Đăng xuất
+                                                {t("header.logout")}
                                             </button>
                                         </div>
                                     )}

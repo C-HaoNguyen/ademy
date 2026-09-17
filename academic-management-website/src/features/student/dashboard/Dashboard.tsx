@@ -1,5 +1,6 @@
 import { BookOpen, CheckCircle, TrendingUp, PlayCircle, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import { useMyCoursesQuery } from "@/shared/api/queries/useMyCoursesQuery";
 import { useStudentDashboardSummaryQuery, useQuizAttemptSummaryQuery } from "@/shared/api/queries/useStudentSummaryQuery";
@@ -10,6 +11,7 @@ import EmptyState from "@/shared/ui/EmptyState";
 import { SkeletonText } from "@/shared/ui/Skeleton";
 
 const Dashboard = () => {
+    const { t } = useTranslation("student");
     const navigate = useNavigate();
     const summaryQuery = useStudentDashboardSummaryQuery();
     const quizAttemptSummaryQuery = useQuizAttemptSummaryQuery();
@@ -23,28 +25,28 @@ const Dashboard = () => {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-h2 text-primary">Student Dashboard</h2>
+                <h2 className="text-h2 text-primary">{t("dashboard.title")}</h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Theo dõi tiến độ học tập và hoạt động gần đây
+                    {t("dashboard.subtitle")}
                 </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
-                    label="Khóa học đã đăng ký"
+                    label={t("dashboard.statEnrolledCourses")}
                     value={summaryQuery.data?.totalCourses ?? 0}
                     loading={summaryQuery.isLoading}
                 />
                 <StatCard
                     icon={<CheckCircle size={22} aria-hidden="true" />}
-                    label="Bài test đã làm"
+                    label={t("dashboard.statQuizAttempts")}
                     value={quizAttemptSummaryQuery.data?.attemptCount ?? 0}
                     loading={quizAttemptSummaryQuery.isLoading}
                 />
                 <StatCard
                     icon={<TrendingUp size={22} aria-hidden="true" />}
-                    label="Tiến độ trung bình"
+                    label={t("dashboard.statAverageProgress")}
                     value={averageProgressPercent != null ? `${averageProgressPercent}%` : "—"}
                     loading={summaryQuery.isLoading}
                 />
@@ -53,7 +55,7 @@ const Dashboard = () => {
             <Card variant="app">
                 <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                     <PlayCircle size={18} aria-hidden="true" />
-                    Tiếp tục học
+                    {t("dashboard.continueLearning")}
                 </h3>
 
                 {myCoursesQuery.isLoading ? (
@@ -61,11 +63,11 @@ const Dashboard = () => {
                 ) : recentCourses.length === 0 ? (
                     <EmptyState
                         icon={BookOpen}
-                        title="Bạn chưa có khóa học nào"
-                        description="Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn."
+                        title={t("dashboard.emptyTitle")}
+                        description={t("dashboard.emptyDescription")}
                         action={
                             <Button variant="primary" onClick={() => navigate(ROUTES.COURSES)}>
-                                Khám phá khóa học
+                                {t("dashboard.exploreCourses")}
                             </Button>
                         }
                     />
@@ -91,7 +93,7 @@ const Dashboard = () => {
                                     size="sm"
                                     onClick={() => navigate(ROUTES.STUDENT.LEARN(course.courseId))}
                                 >
-                                    Vào học
+                                    {t("dashboard.goToLearning")}
                                 </Button>
                             </li>
                         ))}
@@ -102,18 +104,18 @@ const Dashboard = () => {
             <Card variant="app">
                 <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                     <Zap size={18} aria-hidden="true" />
-                    Quick Actions
+                    {t("dashboard.quickActions")}
                 </h3>
 
                 <div className="flex flex-wrap gap-3">
                     <Button variant="primary" onClick={() => navigate(ROUTES.STUDENT.MY_COURSES)}>
-                        Tiếp tục học
+                        {t("dashboard.continueLearning")}
                     </Button>
                     <Button variant="cta" onClick={() => navigate(ROUTES.COURSES)}>
-                        Khám phá khóa học
+                        {t("dashboard.exploreCourses")}
                     </Button>
                     <Button variant="secondary" onClick={() => navigate(ROUTES.STUDENT.PROFILE)}>
-                        Hồ sơ cá nhân
+                        {t("dashboard.personalProfile")}
                     </Button>
                 </div>
             </Card>

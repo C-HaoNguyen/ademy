@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { FolderKanban, Pencil, Trash2, Plus, FolderX } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
@@ -14,6 +15,7 @@ import { useAdminCategoriesQuery, adminCategoriesQueryKey, type AdminCategory as
 import { useAdminCoursesQuery } from "@/shared/api/queries/useAdminCoursesQuery";
 
 const AdminCategories = () => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
 
@@ -58,16 +60,16 @@ const AdminCategories = () => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Thêm danh mục thất bại");
+                const message = await readErrorMessage(res, t("categories.createFailed"));
                 showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã thêm danh mục mới" });
+            showToast({ tone: "success", message: t("categories.created") });
             setShowAddOverlay(false);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("categories.connectionError") });
         } finally {
             setFormSubmitting(false);
         }
@@ -89,17 +91,17 @@ const AdminCategories = () => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Cập nhật danh mục thất bại");
+                const message = await readErrorMessage(res, t("categories.updateFailed"));
                 showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã cập nhật danh mục" });
+            showToast({ tone: "success", message: t("categories.updated") });
             setShowEditOverlay(false);
             setEditingCategory(null);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("categories.connectionError") });
         } finally {
             setFormSubmitting(false);
         }
@@ -116,19 +118,19 @@ const AdminCategories = () => {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                const message = data?.message || "Xóa danh mục thất bại";
+                const message = data?.message || t("categories.deleteFailed");
                 setDeleteError(message);
                 showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã xóa danh mục" });
+            showToast({ tone: "success", message: t("categories.deleted") });
             setDeletedCategory(null);
             setDeleteError(undefined);
             queryClient.invalidateQueries({ queryKey: adminCategoriesQueryKey });
         } catch {
-            setDeleteError("Lỗi kết nối server");
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            setDeleteError(t("categories.connectionError"));
+            showToast({ tone: "danger", message: t("categories.connectionError") });
         } finally {
             setDeleting(false);
         }
@@ -137,12 +139,12 @@ const AdminCategories = () => {
     const columns: TableColumn<Category>[] = [
         {
             key: "categoryName",
-            header: "Tên danh mục",
+            header: t("categories.columnName"),
             render: (category) => <span className="font-medium text-primary">{category.categoryName}</span>,
         },
         {
             key: "courseCount",
-            header: "Số khóa học",
+            header: t("categories.columnCourseCount"),
             render: (category) => (
                 <Badge variant="status" tone="info">
                     {courseCountByCategory[category.categoryId] ?? 0}
@@ -151,7 +153,7 @@ const AdminCategories = () => {
         },
         {
             key: "actions",
-            header: "Action",
+            header: t("categories.columnActions"),
             render: (category) => (
                 <div className="flex items-center gap-1">
                     <button
@@ -161,8 +163,8 @@ const AdminCategories = () => {
                             handleEdit(category);
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-secondary hover:bg-surface-muted transition-colors"
-                        title="Sửa danh mục"
-                        aria-label={`Sửa danh mục ${category.categoryName}`}
+                        title={t("categories.edit")}
+                        aria-label={t("categories.editAria", { name: category.categoryName })}
                     >
                         <Pencil size={16} aria-hidden="true" />
                     </button>
@@ -174,8 +176,8 @@ const AdminCategories = () => {
                             setDeleteError(undefined);
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
-                        title="Xóa danh mục"
-                        aria-label={`Xóa danh mục ${category.categoryName}`}
+                        title={t("categories.delete")}
+                        aria-label={t("categories.deleteAria", { name: category.categoryName })}
                     >
                         <Trash2 size={16} aria-hidden="true" />
                     </button>
@@ -190,11 +192,11 @@ const AdminCategories = () => {
                 <div>
                     <h2 className="flex items-center gap-3 text-h2 text-primary">
                         <FolderKanban size={24} aria-hidden="true" />
-                        Quản lý danh mục
+                        {t("categories.title")}
                     </h2>
                 </div>
                 <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
-                    Thêm danh mục
+                    {t("categories.addCategory")}
                 </Button>
             </div>
 
@@ -206,11 +208,11 @@ const AdminCategories = () => {
                 emptyState={
                     <EmptyState
                         icon={FolderX}
-                        title="Chưa có danh mục nào"
-                        description="Thêm danh mục đầu tiên để phân loại khóa học."
+                        title={t("categories.emptyTitle")}
+                        description={t("categories.emptyDescription")}
                         action={
                             <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
-                                Thêm danh mục
+                                {t("categories.addCategory")}
                             </Button>
                         }
                     />

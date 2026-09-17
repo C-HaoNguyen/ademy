@@ -1,0 +1,102 @@
+{
+    "layout": {
+        "navDashboard": "Tổng quan",
+        "navMyCourses": "Khóa học của tôi",
+        "navTestPractice": "Luyện đề",
+        "navLearningProfile": "Hồ sơ học tập",
+        "editProfile": "Chỉnh sửa hồ sơ",
+        "logout": "Đăng xuất",
+        "backToHome": "Trở về trang chủ"
+    },
+    "dashboard": {
+        "title": "Student Dashboard",
+        "subtitle": "Theo dõi tiến độ học tập và hoạt động gần đây",
+        "statEnrolledCourses": "Khóa học đã đăng ký",
+        "statQuizAttempts": "Bài test đã làm",
+        "statAverageProgress": "Tiến độ trung bình",
+        "continueLearning": "Tiếp tục học",
+        "emptyTitle": "Bạn chưa có khóa học nào",
+        "emptyDescription": "Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn.",
+        "exploreCourses": "Khám phá khóa học",
+        "goToLearning": "Vào học",
+        "quickActions": "Quick Actions",
+        "personalProfile": "Hồ sơ cá nhân"
+    },
+    "myCourses": {
+        "emptyTitle": "Bạn chưa mua khóa học nào",
+        "emptyDescription": "Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn.",
+        "exploreCourses": "Khám phá khóa học",
+        "purchasedDate": "Ngày mua:",
+        "goToLearning": "Vào học"
+    },
+    "learningProfile": {
+        "title": "Hồ sơ học tập",
+        "statTotalCourses": "Tổng số khóa học",
+        "statTotalQuizAttempts": "Tổng bài test đã làm",
+        "statAverageScore": "Điểm trung bình",
+        "detailByCourseTitle": "Chi tiết theo khóa học"
+    },
+    "profile": {
+        "noData": "Không có dữ liệu",
+        "updateFailed": "Cập nhật thất bại",
+        "saveSuccess": "Đã lưu thay đổi",
+        "connectionError": "Lỗi kết nối server",
+        "avatarAlt": "Ảnh đại diện của {{fullName}}",
+        "edit": "Chỉnh sửa",
+        "cancel": "Hủy",
+        "saveChanges": "Lưu thay đổi",
+        "emailLabel": "Email",
+        "fullNameLabel": "Họ và tên",
+        "usernameLabel": "Username"
+    },
+    "testPractice": {
+        "title": "Bài kiểm tra",
+        "subtitle": "Danh sách bài kiểm tra tổng khóa học từ các khóa bạn đã mua",
+        "loadErrorToast": "Không thể tải danh sách bài kiểm tra",
+        "loadErrorTitle": "Không thể tải danh sách bài kiểm tra",
+        "loadErrorDescription": "Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "emptyTitle": "Bạn chưa có bài kiểm tra nào",
+        "emptyDescription": "Mua khóa học có bài kiểm tra tổng để bắt đầu luyện tập.",
+        "exploreCourses": "Khám phá khóa học",
+        "completedWithScore": "Đã hoàn thành — điểm {{score}}",
+        "notAttempted": "Chưa làm",
+        "viewResult": "Xem kết quả",
+        "startTest": "Làm bài"
+    },
+    "quizAttempt": {
+        "atLeastOneAnswer": "Vui lòng chọn ít nhất 1 đáp án trước khi nộp bài",
+        "submitFailed": "Nộp bài thất bại",
+        "connectionError": "Lỗi kết nối server",
+        "loadErrorTitle": "Không thể tải bài kiểm tra",
+        "loadErrorDescription": "Bạn có thể chưa mua khóa học này, hoặc khóa học chưa có bài kiểm tra.",
+        "back": "Quay lại",
+        "resultTitle": "Kết quả: {{score}} điểm",
+        "resultCorrect": "Đúng {{correct}}/{{total}} câu",
+        "questionProgress": "Câu {{current}}/{{total}}",
+        "prevQuestion": "Câu trước",
+        "nextQuestion": "Câu sau",
+        "submit": "Nộp bài"
+    },
+    "lessonPlayer": {
+        "updateProgressFailed": "Không thể cập nhật tiến độ",
+        "lessonCompletedAnnouncement": "Đã hoàn thành: {{title}}",
+        "courseCompleted": "Bạn đã hoàn thành khóa học!",
+        "connectionError": "Lỗi kết nối server",
+        "loadErrorTitle": "Không thể tải khóa học",
+        "loadErrorDescription": "Đã có lỗi xảy ra, vui lòng thử lại sau.",
+        "back": "Quay lại",
+        "needPurchaseTitle": "Bạn cần mua khóa học để xem nội dung này",
+        "viewCourseDetail": "Xem chi tiết khóa học",
+        "contentUpdating": "Nội dung đang được cập nhật",
+        "markComplete": "Đánh dấu hoàn thành & tiếp tục",
+        "lessonListLabel": "Danh sách bài học",
+        "lessonQuizNoQuizDescription": "Lesson này chưa có bài kiểm tra.",
+        "videoUnavailableTitle": "Không tải được video",
+        "videoUnavailableDescription": "Vui lòng thử lại sau.",
+        "videoLoadFailedTitle": "Không thể tải video",
+        "videoLoadFailedDescription": "Đã có lỗi khi tải video này, vui lòng thử lại.",
+        "videoReload": "Tải lại",
+        "exit": "Thoát"
+    }
+}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Ticket, TicketX, Pencil, Ban, Plus, AlertTriangle } from "lucide-react";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
@@ -44,6 +45,7 @@ const toRequestBody = (form: CouponPayload) => ({
 });
 
 const AdminCoupons = () => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
 
@@ -77,16 +79,16 @@ const AdminCoupons = () => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Tạo coupon thất bại");
+                const message = await readErrorMessage(res, t("coupons.createFailed"));
                 setFormError(message);
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã tạo coupon mới" });
+            showToast({ tone: "success", message: t("coupons.created") });
             setShowAddOverlay(false);
             queryClient.invalidateQueries({ queryKey: adminCouponsQueryKey });
         } catch {
-            setFormError("Lỗi kết nối server");
+            setFormError(t("coupons.connectionError"));
         } finally {
             setFormSubmitting(false);
         }
@@ -104,16 +106,16 @@ const AdminCoupons = () => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Cập nhật coupon thất bại");
+                const message = await readErrorMessage(res, t("coupons.updateFailed"));
                 setFormError(message);
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã cập nhật coupon" });
+            showToast({ tone: "success", message: t("coupons.updated") });
             setEditingCoupon(null);
             queryClient.invalidateQueries({ queryKey: adminCouponsQueryKey });
         } catch {
-            setFormError("Lỗi kết nối server");
+            setFormError(t("coupons.connectionError"));
         } finally {
             setFormSubmitting(false);
         }
@@ -129,16 +131,16 @@ const AdminCoupons = () => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Vô hiệu hóa coupon thất bại");
+                const message = await readErrorMessage(res, t("coupons.deactivateFailed"));
                 showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast({ tone: "success", message: `Đã vô hiệu hóa coupon ${deactivatingCoupon.code}` });
+            showToast({ tone: "success", message: t("coupons.deactivated", { code: deactivatingCoupon.code }) });
             setDeactivatingCoupon(null);
             queryClient.invalidateQueries({ queryKey: adminCouponsQueryKey });
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("coupons.connectionError") });
         } finally {
             setDeactivating(false);
         }
@@ -147,54 +149,54 @@ const AdminCoupons = () => {
     const columns: TableColumn<AdminCoupon>[] = [
         {
             key: "code",
-            header: "Mã coupon",
+            header: t("coupons.columnCode"),
             render: (coupon) => <span className="font-medium text-primary">{coupon.code}</span>,
         },
         {
             key: "discount",
-            header: "Loại giảm",
+            header: t("coupons.columnDiscountType"),
             render: (coupon) => formatDiscount(coupon),
         },
         {
             key: "scope",
-            header: "Phạm vi",
-            render: (coupon) => coupon.courseTitle ?? "Toàn nền tảng",
+            header: t("coupons.columnScope"),
+            render: (coupon) => coupon.courseTitle ?? t("coupons.scopePlatformWide"),
         },
         {
             key: "expiresAt",
-            header: "Hạn dùng",
-            render: (coupon) => (coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString("vi-VN") : "Không giới hạn"),
+            header: t("coupons.columnExpiresAt"),
+            render: (coupon) => (coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString("vi-VN") : t("coupons.unlimited")),
         },
         {
             key: "redemptionCount",
-            header: "Số lượt đã dùng",
+            header: t("coupons.columnRedemptionCount"),
             render: (coupon) => `${coupon.redemptionCount}${coupon.maxRedemptions !== null ? ` / ${coupon.maxRedemptions}` : ""}`,
         },
         {
             key: "status",
-            header: "Trạng thái",
+            header: t("coupons.columnStatus"),
             render: (coupon) =>
                 coupon.active && !isExpired(coupon) ? (
                     <Badge variant="status" tone="success">
-                        Đang hoạt động
+                        {t("coupons.statusActive")}
                     </Badge>
                 ) : (
                     <Badge variant="status" tone="danger">
-                        {isExpired(coupon) ? "Hết hạn" : "Đã vô hiệu hóa"}
+                        {isExpired(coupon) ? t("coupons.statusExpired") : t("coupons.statusDeactivated")}
                     </Badge>
                 ),
         },
         {
             key: "actions",
-            header: "Action",
+            header: t("coupons.columnActions"),
             render: (coupon) => (
                 <div className="flex items-center gap-1">
                     <button
                         type="button"
                         onClick={() => setEditingCoupon(coupon)}
                         className="cursor-pointer p-2 rounded-radius-md text-secondary hover:bg-surface-muted transition-colors"
-                        title="Sửa coupon"
-                        aria-label={`Sửa coupon ${coupon.code}`}
+                        title={t("coupons.edit")}
+                        aria-label={t("coupons.editAria", { code: coupon.code })}
                     >
                         <Pencil size={16} aria-hidden="true" />
                     </button>
@@ -203,8 +205,8 @@ const AdminCoupons = () => {
                             type="button"
                             onClick={() => setDeactivatingCoupon(coupon)}
                             className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors"
-                            title="Vô hiệu hóa coupon"
-                            aria-label={`Vô hiệu hóa coupon ${coupon.code}`}
+                            title={t("coupons.deactivate")}
+                            aria-label={t("coupons.deactivateAria", { code: coupon.code })}
                         >
                             <Ban size={16} aria-hidden="true" />
                         </button>
@@ -220,22 +222,22 @@ const AdminCoupons = () => {
                 <div>
                     <h2 className="flex items-center gap-3 text-h2 text-primary">
                         <Ticket size={24} aria-hidden="true" />
-                        Quản lý coupon
+                        {t("coupons.title")}
                     </h2>
                 </div>
                 <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
-                    Tạo coupon
+                    {t("coupons.createCoupon")}
                 </Button>
             </div>
 
             {couponsQuery.isError ? (
                 <EmptyState
                     icon={AlertTriangle}
-                    title="Không thể tải danh sách coupon"
-                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    title={t("coupons.loadErrorTitle")}
+                    description={t("coupons.loadErrorDescription")}
                     action={
                         <Button variant="primary" size="sm" onClick={() => couponsQuery.refetch()}>
-                            Thử lại
+                            {t("coupons.retry")}
                         </Button>
                     }
                 />
@@ -248,10 +250,10 @@ const AdminCoupons = () => {
                     emptyState={
                         <EmptyState
                             icon={TicketX}
-                            title="Chưa có coupon nào"
+                            title={t("coupons.emptyTitle")}
                             action={
                                 <Button variant="primary" iconLeft={Plus} onClick={() => setShowAddOverlay(true)}>
-                                    Tạo coupon
+                                    {t("coupons.createCoupon")}
                                 </Button>
                             }
                         />
@@ -290,22 +292,22 @@ const AdminCoupons = () => {
                     setDeactivatingCoupon(null);
                 }}
                 closeDisabled={deactivating}
-                title="Vô hiệu hóa coupon"
+                title={t("coupons.deactivateModalTitle")}
                 size="sm"
                 footer={
                     <>
                         <Button variant="secondary" onClick={() => setDeactivatingCoupon(null)} disabled={deactivating}>
-                            Hủy
+                            {t("coupons.cancel")}
                         </Button>
                         <Button variant="danger" onClick={handleDeactivate} loading={deactivating}>
-                            Vô hiệu hóa
+                            {t("coupons.deactivate")}
                         </Button>
                     </>
                 }
             >
                 <p className="text-body text-secondary">
-                    Vô hiệu hóa coupon <span className="font-semibold text-primary">{deactivatingCoupon?.code}</span>?
-                    Coupon sẽ không thể áp dụng ở Checkout nữa. Hành động này không thể hoàn tác.
+                    {t("coupons.deactivateConfirmPrefix")} <span className="font-semibold text-primary">{deactivatingCoupon?.code}</span>
+                    {t("coupons.deactivateConfirmSuffix")}
                 </p>
             </Modal>
         </div>

@@ -1,0 +1,94 @@
+{
+    "level": {
+        "beginner": "Cơ bản",
+        "intermediate": "Trung cấp",
+        "advanced": "Nâng cao"
+    },
+    "list": {
+        "heroTitle": "Khám phá khóa học của chúng tôi!",
+        "heroSubtitle": "Học hỏi kỹ năng mới, nâng cấp bản thân và phát triển sự nghiệp",
+        "searchLabel": "Tìm kiếm khóa học",
+        "searchPlaceholder": "Tìm kiếm khóa học...",
+        "filterLabel": "Lọc:",
+        "categoryPlaceholder": "Phân loại",
+        "noCategoryOption": "Không có danh mục",
+        "levelPlaceholder": "Trình độ",
+        "noLevelOption": "Không có trình độ",
+        "sortPopular": "Phổ biến nhất",
+        "sortNewest": "Mới nhất",
+        "sortPriceAsc": "Giá tăng dần",
+        "sortPriceDesc": "Giá giảm dần",
+        "loadErrorTitle": "Không thể tải danh sách khóa học",
+        "loadErrorDescription": "Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "emptyTitle": "Không tìm thấy khóa học phù hợp",
+        "emptyDescription": "Hãy thử điều chỉnh từ khóa hoặc bộ lọc để xem thêm kết quả.",
+        "clearFilters": "Xóa bộ lọc",
+        "prevPage": "Trang trước",
+        "nextPage": "Trang sau"
+    },
+    "card": {
+        "instructorLabel": "Giảng viên:",
+        "instructorUnknown": "Đang cập nhật",
+        "free": "Miễn phí",
+        "viewDetail": "Xem chi tiết"
+    },
+    "detail": {
+        "notFoundTitle": "Không tìm thấy khóa học",
+        "notFoundDescription": "Khóa học này có thể đã bị gỡ hoặc đường dẫn không chính xác.",
+        "viewAllCourses": "Xem tất cả khóa học",
+        "instructorLabel": "Giảng viên:",
+        "learnPointsTitle": "Bạn sẽ học được gì?",
+        "learnPoints": {
+            "foundation": "Kiến thức nền tảng & nâng cao",
+            "practice": "Thực hành theo dự án",
+            "systemThinking": "Tư duy hệ thống",
+            "jobReady": "Chuẩn bị đi làm"
+        },
+        "curriculumTitle": "Nội dung khóa học",
+        "curriculumLoadError": "Không thể tải nội dung khóa học. Vui lòng thử lại sau.",
+        "curriculumEmpty": "Nội dung đang được cập nhật.",
+        "preview": "Xem thử",
+        "remainingLessonsLocked": "Các bài học còn lại sẽ được mở khi bạn mua khóa học.",
+        "free": "Miễn phí",
+        "goToLearning": "Vào học ngay",
+        "buyCourse": "Mua khóa học",
+        "refundPolicy": "Hoàn tiền trong 30 ngày nếu không hài lòng",
+        "previewStudentOnly": "Tính năng xem thử hiện chỉ dành cho học viên."
+    },
+    "checkout": {
+        "invalidCoupon": "Mã giảm giá không hợp lệ",
+        "couponApplyFailed": "Không thể áp dụng mã giảm giá, vui lòng thử lại",
+        "couponApplyFailedToast": "Không thể áp dụng mã giảm giá",
+        "emptyTitle": "Không có khóa học để thanh toán",
+        "emptyDescription": "Vui lòng chọn một khóa học trước khi tiến hành thanh toán.",
+        "viewCourses": "Xem danh sách khóa học",
+        "title": "Xác nhận đơn hàng",
+        "continue": "Tiếp tục"
+    },
+    "orderSummary": {
+        "title": "Chi tiết thanh toán",
+        "instructorLabel": "Giảng viên:",
+        "couponPlaceholder": "Nhập mã giảm giá",
+        "applyCoupon": "Áp dụng",
+        "couponAppliedBadge": "Đã áp dụng",
+        "originalPrice": "Giá gốc",
+        "discount": "Giảm giá",
+        "total": "Tổng cộng"
+    },
+    "checkoutPayment": {
+        "title": "Chọn phương thức thanh toán",
+        "initFailed": "Không thể khởi tạo giao dịch, vui lòng thử lại",
+        "confirm": "Xác nhận thanh toán",
+        "back": "Quay lại"
+    },
+    "checkoutResult": {
+        "successTitle": "Thanh toán thành công!",
+        "goToLearning": "Vào học ngay",
+        "failureTitle": "Thanh toán thất bại",
+        "retry": "Thử lại",
+        "pendingTitle": "Đang xử lý",
+        "pendingDescription": "Đang xử lý, vui lòng kiểm tra lại ở Khóa học của tôi sau ít phút.",
+        "myCourses": "Khóa học của tôi"
+    }
+}

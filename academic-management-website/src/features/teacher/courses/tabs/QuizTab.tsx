@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useTeacherCourseQuizQuery, teacherCourseQuizQueryKey } from "@/shared/api/queries/useTeacherQuizQuery";
@@ -13,6 +14,7 @@ interface QuizTabProps {
 }
 
 const QuizTab = ({ courseId }: QuizTabProps) => {
+    const { t } = useTranslation("teacher");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const quizQuery = useTeacherCourseQuizQuery(courseId);
@@ -30,13 +32,13 @@ const QuizTab = ({ courseId }: QuizTabProps) => {
             });
             const data = await res.json().catch(() => null);
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Lưu quiz thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("quizTab.saveFailed") });
                 return;
             }
-            showToast({ tone: "success", message: "Đã lưu bài kiểm tra" });
+            showToast({ tone: "success", message: t("quizTab.saved") });
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("quizTab.connectionError") });
         } finally {
             setSaving(false);
         }
@@ -48,13 +50,13 @@ const QuizTab = ({ courseId }: QuizTabProps) => {
             const res = await apiClient(API_ENDPOINTS.TEACHER.COURSE_QUIZ(courseId), { method: "DELETE" });
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                showToast({ tone: "danger", message: data?.message || "Xóa quiz thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("quizTab.deleteFailed") });
                 return;
             }
-            showToast({ tone: "success", message: "Đã xóa bài kiểm tra" });
+            showToast({ tone: "success", message: t("quizTab.deleted") });
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("quizTab.connectionError") });
         } finally {
             setDeleting(false);
         }

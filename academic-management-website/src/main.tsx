@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { queryClient } from './shared/api/queryClient'
 import { AuthProvider } from './shared/auth/AuthContext'
 import { ToastProvider } from './shared/ui/ToastProvider'
+import './i18n/config'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

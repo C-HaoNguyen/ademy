@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, BookOpen, Lock } from "lucide-react";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
@@ -14,6 +15,7 @@ import EmptyState from "@/shared/ui/EmptyState";
 import Skeleton, { SkeletonText } from "@/shared/ui/Skeleton";
 
 const LessonPlayer = () => {
+    const { t } = useTranslation("student");
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -49,22 +51,22 @@ const LessonPlayer = () => {
             });
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: await readErrorMessage(res, "Không thể cập nhật tiến độ") });
+                showToast({ tone: "danger", message: await readErrorMessage(res, t("lessonPlayer.updateProgressFailed")) });
                 return;
             }
 
             await queryClient.invalidateQueries({ queryKey: lessonPlayerQueryKey(courseId) });
-            setCompletionAnnouncement(`Đã hoàn thành: ${selectedLesson.title}`);
+            setCompletionAnnouncement(t("lessonPlayer.lessonCompletedAnnouncement", { title: selectedLesson.title }));
 
             const currentIndex = lessons.findIndex((l) => l.lessonId === selectedLesson.lessonId);
             const next = lessons[currentIndex + 1];
             if (next) {
                 setSelectedLessonId(next.lessonId);
             } else {
-                showToast({ tone: "success", message: "Bạn đã hoàn thành khóa học!" });
+                showToast({ tone: "success", message: t("lessonPlayer.courseCompleted") });
             }
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("lessonPlayer.connectionError") });
         } finally {
             setCompleting(false);
         }
@@ -89,11 +91,11 @@ const LessonPlayer = () => {
             <div className="min-h-screen bg-surface-muted flex items-center justify-center p-6">
                 <EmptyState
                     icon={AlertCircle}
-                    title="Không thể tải khóa học"
-                    description="Đã có lỗi xảy ra, vui lòng thử lại sau."
+                    title={t("lessonPlayer.loadErrorTitle")}
+                    description={t("lessonPlayer.loadErrorDescription")}
                     action={
                         <Button variant="primary" onClick={handleExit}>
-                            Quay lại
+                            {t("lessonPlayer.back")}
                         </Button>
                     }
                 />
@@ -108,10 +110,10 @@ const LessonPlayer = () => {
             <div className="min-h-screen bg-surface-muted flex items-center justify-center p-6">
                 <EmptyState
                     icon={Lock}
-                    title="Bạn cần mua khóa học để xem nội dung này"
+                    title={t("lessonPlayer.needPurchaseTitle")}
                     action={
                         <Button variant="primary" onClick={() => navigate(ROUTES.COURSE_DETAIL(String(data.courseId)))}>
-                            Xem chi tiết khóa học
+                            {t("lessonPlayer.viewCourseDetail")}
                         </Button>
                     }
                 />
@@ -137,7 +139,7 @@ const LessonPlayer = () => {
             </div>
 
             {lessons.length === 0 ? (
-                <EmptyState icon={BookOpen} title="Nội dung đang được cập nhật" />
+                <EmptyState icon={BookOpen} title={t("lessonPlayer.contentUpdating")} />
             ) : selectedLesson ? (
                 <div className="space-y-6">
                     <div>
@@ -146,7 +148,7 @@ const LessonPlayer = () => {
                     <LessonContentViewer key={selectedLesson.lessonId} lesson={selectedLesson} />
                     <div className="flex justify-end sticky bottom-0 py-3 bg-surface-muted lg:static lg:bg-transparent lg:py-0">
                         <Button variant="primary" loading={completing} onClick={handleMarkComplete}>
-                            Đánh dấu hoàn thành & tiếp tục
+                            {t("lessonPlayer.markComplete")}
                         </Button>
                     </div>
                 </div>

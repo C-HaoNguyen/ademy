@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Globe, Twitter, Facebook } from "lucide-react";
 
 const Footer = () => {
+    const { t } = useTranslation("public");
     return (
         <motion.footer
             initial={{ opacity: 0, y: 30 }}
@@ -18,40 +20,40 @@ const Footer = () => {
                         Ademy
                     </h2>
                     <p className="text-sm leading-relaxed text-slate-400">
-                        Ademy là nền tảng giúp học viên và giảng viên quản lý việc học tập hiệu quả trong thời đại số.
+                        {t("footer.brandDescription")}
                     </p>
                 </div>
 
                 {/* Links */}
                 <div>
-                    <h3 className="text-white font-semibold mb-4">Về Ademy</h3>
+                    <h3 className="text-white font-semibold mb-4">{t("footer.aboutTitle")}</h3>
                     <ul className="space-y-2 text-sm">
-                        <li className="hover:text-white transition cursor-pointer">Các khóa học</li>
-                        <li className="hover:text-white transition cursor-pointer">Đội ngũ giảng dạy</li>
-                        <li className="hover:text-white transition cursor-pointer">Liên hệ</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.aboutCourses")}</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.aboutInstructors")}</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.aboutContact")}</li>
                     </ul>
                 </div>
 
                 <div>
-                    <h3 className="text-white font-semibold mb-4">Dịch vụ</h3>
+                    <h3 className="text-white font-semibold mb-4">{t("footer.servicesTitle")}</h3>
                     <ul className="space-y-2 text-sm">
-                        <li className="hover:text-white transition cursor-pointer">Trung tâm hỗ trợ</li>
-                        <li className="hover:text-white transition cursor-pointer">Chính sách bảo mật</li>
-                        <li className="hover:text-white transition cursor-pointer">Điều khoản dịch vụ</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.servicesSupport")}</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.servicesPrivacy")}</li>
+                        <li className="hover:text-white transition cursor-pointer">{t("footer.servicesTerms")}</li>
                     </ul>
                 </div>
 
                 {/* Contact */}
                 <div>
-                    <h3 className="text-white font-semibold mb-4">Liên hệ</h3>
+                    <h3 className="text-white font-semibold mb-4">{t("footer.contactTitle")}</h3>
                     <ul className="space-y-2 text-sm">
-                        <li>Email: support@ademy.edu</li>
-                        <li>Phone: +84 869 066 421</li>
+                        <li>{t("footer.emailLine")}</li>
+                        <li>{t("footer.phoneLine")}</li>
                         <li className="flex gap-4 mt-4">
                             <Link
                                 to="https://academic-management-website.onrender.com/"
                                 target="_blank"
-                                aria-label="Website"
+                                aria-label={t("footer.websiteAlt")}
                                 className="hover:text-white cursor-pointer transition"
                             >
                                 <Globe size={18} />
@@ -69,7 +71,7 @@ const Footer = () => {
 
             {/* Bottom */}
             <div className="border-t border-slate-700 py-4 text-center text-sm text-slate-400">
-                © {new Date().getFullYear()} Ademy. All rights reserved.
+                {t("footer.copyright", { year: new Date().getFullYear() })}
             </div>
         </motion.footer>
     );

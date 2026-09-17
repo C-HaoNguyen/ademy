@@ -1,45 +1,55 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import { ROLES } from "@/config/constants";
+import PageLoadingFallback from "@/shared/ui/PageLoadingFallback";
 
-import HomePage from "@/features/public/home/HomePage";
-import LecturerPage from "@/features/public/lecturer/LecturerPage";
-import ContactPage from "@/features/public/about/ContactPage";
-import Login from "@/features/auth/Login";
-import Signup from "@/features/auth/Signup";
-import CourseList from "@/features/courses/CourseListPage";
-import CourseDetail from "@/features/courses/CourseDetailPage";
-import Checkout from "@/features/payment/Checkout";
-import CheckoutPayment from "@/features/payment/CheckoutPayment";
-import CheckoutResult from "@/features/payment/CheckoutResult";
-
+// Layouts render immediately (shell chrome) — not lazy-loaded. Each layout wraps its own
+// <Outlet/> in a <Suspense> (see AppShellLayout.tsx / PublicLayout.tsx) so only the content
+// area shows the loading fallback on a first visit to a lazy page — the shell chrome
+// (sidebar/header) stays mounted instead of the whole route tree flashing to fallback.
 import PublicLayout from "@/features/public/components/PublicLayout";
 import StudentLayout from "@/features/student/components/StudentLayout";
 import AdminLayout from "@/features/admin/components/AdminLayout";
 import TeacherLayout from "@/features/teacher/components/TeacherLayout";
 
-import Dashboard from "@/features/student/dashboard/Dashboard";
-import MyCourses from "@/features/student/my-courses/MyCourses";
-import LearningProfile from "@/features/student/learning-profile/LearningProfile";
-import TestPractice from "@/features/student/test-practice/TestPractice";
-import QuizAttempt from "@/features/student/quiz-attempt/QuizAttempt";
-import Profile from "@/features/student/profile/Profile";
-import LessonPlayer from "@/features/student/lesson-player/LessonPlayer";
+// ===== PUBLIC =====
+const HomePage = lazy(() => import("@/features/public/home/HomePage"));
+const LecturerPage = lazy(() => import("@/features/public/lecturer/LecturerPage"));
+const ContactPage = lazy(() => import("@/features/public/about/ContactPage"));
+const Login = lazy(() => import("@/features/auth/Login"));
+const Signup = lazy(() => import("@/features/auth/Signup"));
+const CourseList = lazy(() => import("@/features/courses/CourseListPage"));
+const CourseDetail = lazy(() => import("@/features/courses/CourseDetailPage"));
+const Checkout = lazy(() => import("@/features/payment/Checkout"));
+const CheckoutPayment = lazy(() => import("@/features/payment/CheckoutPayment"));
+const CheckoutResult = lazy(() => import("@/features/payment/CheckoutResult"));
 
-import AdminDashboard from "@/features/admin/dashboard/AdminDashboard";
-import AdminUsersList from "@/features/admin/users/AdminUsersList";
-import AdminCourses from "@/features/admin/courses/AdminCourses";
-import AdminCategories from "@/features/admin/categories/AdminCategories";
-import AdminOrders from "@/features/admin/orders/AdminOrders";
-import AdminCoupons from "@/features/admin/coupons/AdminCoupons";
-import AdminRefunds from "@/features/admin/refunds/AdminRefunds";
-import AdminAuditLog from "@/features/admin/audit-log/AdminAuditLog";
-import AdminProfile from "@/features/admin/profile/AdminProfile";
+// ===== STUDENT =====
+const Dashboard = lazy(() => import("@/features/student/dashboard/Dashboard"));
+const MyCourses = lazy(() => import("@/features/student/my-courses/MyCourses"));
+const LearningProfile = lazy(() => import("@/features/student/learning-profile/LearningProfile"));
+const TestPractice = lazy(() => import("@/features/student/test-practice/TestPractice"));
+const QuizAttempt = lazy(() => import("@/features/student/quiz-attempt/QuizAttempt"));
+const Profile = lazy(() => import("@/features/student/profile/Profile"));
+const LessonPlayer = lazy(() => import("@/features/student/lesson-player/LessonPlayer"));
 
-import TeacherDashboard from "@/features/teacher/dashboard/TeacherDashboard";
-import TeacherCoursesList from "@/features/teacher/courses/TeacherCoursesList";
-import CourseEditor from "@/features/teacher/courses/CourseEditor";
-import TeacherProfile from "@/features/teacher/profile/TeacherProfile";
+// ===== ADMIN =====
+const AdminDashboard = lazy(() => import("@/features/admin/dashboard/AdminDashboard"));
+const AdminUsersList = lazy(() => import("@/features/admin/users/AdminUsersList"));
+const AdminCourses = lazy(() => import("@/features/admin/courses/AdminCourses"));
+const AdminCategories = lazy(() => import("@/features/admin/categories/AdminCategories"));
+const AdminOrders = lazy(() => import("@/features/admin/orders/AdminOrders"));
+const AdminCoupons = lazy(() => import("@/features/admin/coupons/AdminCoupons"));
+const AdminRefunds = lazy(() => import("@/features/admin/refunds/AdminRefunds"));
+const AdminAuditLog = lazy(() => import("@/features/admin/audit-log/AdminAuditLog"));
+const AdminProfile = lazy(() => import("@/features/admin/profile/AdminProfile"));
+
+// ===== TEACHER =====
+const TeacherDashboard = lazy(() => import("@/features/teacher/dashboard/TeacherDashboard"));
+const TeacherCoursesList = lazy(() => import("@/features/teacher/courses/TeacherCoursesList"));
+const CourseEditor = lazy(() => import("@/features/teacher/courses/CourseEditor"));
+const TeacherProfile = lazy(() => import("@/features/teacher/profile/TeacherProfile"));
 
 const AppRoutes = () => {
     return (
@@ -102,12 +112,15 @@ const AppRoutes = () => {
                 </Route>
 
                 {/* Lesson Player (Phase 35) — layout riêng (LessonPlayerLayout), KHÔNG lồng trong
-                    StudentLayout/AppShellLayout (sidebar toàn cục ẩn theo UI_SPEC §3.3). */}
+                    StudentLayout/AppShellLayout (sidebar toàn cục ẩn theo UI_SPEC §3.3). Không có
+                    layout Outlet nào bọc sẵn Suspense cho route này nên tự bọc riêng ở đây. */}
                 <Route
                     path="/student/learn/:courseId"
                     element={
                         <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                            <LessonPlayer />
+                            <Suspense fallback={<PageLoadingFallback />}>
+                                <LessonPlayer />
+                            </Suspense>
                         </ProtectedRoute>
                     }
                 />

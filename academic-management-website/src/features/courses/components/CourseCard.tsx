@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { User } from "lucide-react";
 import Card from "@/shared/ui/Card";
 import Badge from "@/shared/ui/Badge";
@@ -28,6 +29,7 @@ type CourseCardProps = {
 };
 
 const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
+    const { t } = useTranslation("courses");
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -52,7 +54,7 @@ const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
 
                     <p className="inline-flex items-center gap-1.5 text-body-sm text-tertiary mb-2">
                         <User size={14} aria-hidden="true" />
-                        Giảng viên: {course.instructor?.fullName || "Đang cập nhật"}
+                        {t("card.instructorLabel")} {course.instructor?.fullName || t("card.instructorUnknown")}
                     </p>
 
                     {course.category?.categoryName && (
@@ -71,12 +73,12 @@ const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
                         <span className="text-h4 text-brand">
                             {course.price && course.price > 0
                                 ? `${course.price.toLocaleString()}₫`
-                                : "Miễn phí"}
+                                : t("card.free")}
                         </span>
 
                         <Link to={`/courses/${course.courseId}`}>
                             <Button variant="primary" size="sm">
-                                Xem chi tiết
+                                {t("card.viewDetail")}
                             </Button>
                         </Link>
                     </div>

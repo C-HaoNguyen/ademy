@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useTeacherLessonQuizQuery, teacherLessonQuizQueryKey } from "@/shared/api/queries/useTeacherQuizQuery";
@@ -17,6 +18,7 @@ interface LessonQuizModalProps {
 }
 
 const LessonQuizModal = ({ open, onClose, courseId, lessonId, lessonTitle }: LessonQuizModalProps) => {
+    const { t } = useTranslation("teacher");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const quizQuery = useTeacherLessonQuizQuery(open ? courseId : undefined, open ? lessonId : undefined);
@@ -35,13 +37,13 @@ const LessonQuizModal = ({ open, onClose, courseId, lessonId, lessonTitle }: Les
             });
             const data = await res.json().catch(() => null);
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Lưu quiz thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("lessonQuizModal.saveFailed") });
                 return;
             }
-            showToast({ tone: "success", message: "Đã lưu quiz" });
+            showToast({ tone: "success", message: t("lessonQuizModal.saved") });
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("lessonQuizModal.connectionError") });
         } finally {
             setSaving(false);
         }
@@ -53,20 +55,20 @@ const LessonQuizModal = ({ open, onClose, courseId, lessonId, lessonTitle }: Les
             const res = await apiClient(API_ENDPOINTS.TEACHER.LESSON_QUIZ(courseId, lessonId), { method: "DELETE" });
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                showToast({ tone: "danger", message: data?.message || "Xóa quiz thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("lessonQuizModal.deleteFailed") });
                 return;
             }
-            showToast({ tone: "success", message: "Đã xóa quiz" });
+            showToast({ tone: "success", message: t("lessonQuizModal.deleted") });
             invalidate();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("lessonQuizModal.connectionError") });
         } finally {
             setDeleting(false);
         }
     };
 
     return (
-        <Modal open={open} onClose={onClose} title={`Quiz cho lesson "${lessonTitle}"`} size="lg">
+        <Modal open={open} onClose={onClose} title={t("lessonQuizModal.title", { lessonTitle })} size="lg">
             {quizQuery.isLoading ? (
                 <SkeletonText lines={4} />
             ) : (

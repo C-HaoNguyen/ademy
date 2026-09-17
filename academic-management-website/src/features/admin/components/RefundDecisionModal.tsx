@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { adminRefundsQueryKey, type AdminRefund } from "@/shared/api/queries/useAdminRefundsQuery";
@@ -34,6 +35,7 @@ interface RefundDecisionModalProps {
 type PendingAction = "REJECT" | "APPROVE" | "COMPLETE" | null;
 
 const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecisionModalProps) => {
+    const { t } = useTranslation(["admin", "common"]);
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const [pendingAction, setPendingAction] = useState<PendingAction>(null);
@@ -62,7 +64,7 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Thao tác thất bại");
+                const message = await readErrorMessage(res, t("refundDecisionModal.actionFailed"));
                 showToast({ tone: "danger", message });
                 return false;
             }
@@ -70,7 +72,7 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
             queryClient.invalidateQueries({ queryKey: adminRefundsQueryKey });
             return true;
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("refundDecisionModal.connectionError") });
             return false;
         } finally {
             setSubmitting(false);
@@ -82,19 +84,19 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
     const handleApprove = async () => {
         const ok = await runAction(API_ENDPOINTS.REFUNDS.APPROVE(refund.id));
         if (ok) {
-            showToast({ tone: "success", message: "Đã duyệt yêu cầu hoàn tiền" });
+            showToast({ tone: "success", message: t("refundDecisionModal.approved") });
             onClose();
         }
     };
 
     const handleReject = async () => {
         if (!reason.trim()) {
-            setReasonError("Vui lòng nhập lý do từ chối");
+            setReasonError(t("refundDecisionModal.reasonRequired"));
             return;
         }
         const ok = await runAction(API_ENDPOINTS.REFUNDS.REJECT(refund.id), { reason });
         if (ok) {
-            showToast({ tone: "success", message: "Đã từ chối yêu cầu hoàn tiền" });
+            showToast({ tone: "success", message: t("refundDecisionModal.rejected") });
             onClose();
         }
     };
@@ -102,7 +104,7 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
     const handleMarkCompleted = async () => {
         const ok = await runAction(API_ENDPOINTS.REFUNDS.MARK_COMPLETED(refund.id));
         if (ok) {
-            showToast({ tone: "success", message: "Đã đánh dấu hoàn tiền thành công" });
+            showToast({ tone: "success", message: t("refundDecisionModal.markedCompleted") });
             onClose();
         }
     };
@@ -115,63 +117,63 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
             open={open}
             onClose={handleClose}
             closeDisabled={submitting}
-            title={`Yêu cầu hoàn tiền #${refund.id}`}
+            title={t("refundDecisionModal.title", { id: refund.id })}
             size="md"
             footer={
                 pendingAction === "REJECT" ? (
                     <>
                         <Button variant="secondary" onClick={() => setPendingAction(null)} disabled={submitting}>
-                            Quay lại
+                            {t("refundDecisionModal.back")}
                         </Button>
                         <Button variant="danger" onClick={handleReject} loading={submitting}>
-                            Xác nhận từ chối
+                            {t("refundDecisionModal.confirmReject")}
                         </Button>
                     </>
                 ) : pendingAction === "APPROVE" ? (
                     <>
                         <Button variant="secondary" onClick={() => setPendingAction(null)} disabled={submitting}>
-                            Quay lại
+                            {t("refundDecisionModal.back")}
                         </Button>
                         <Button variant="primary" onClick={handleApprove} loading={submitting}>
-                            Xác nhận duyệt
+                            {t("refundDecisionModal.confirmApprove")}
                         </Button>
                     </>
                 ) : pendingAction === "COMPLETE" ? (
                     <>
                         <Button variant="secondary" onClick={() => setPendingAction(null)} disabled={submitting}>
-                            Quay lại
+                            {t("refundDecisionModal.back")}
                         </Button>
                         <Button variant="primary" onClick={handleMarkCompleted} loading={submitting}>
-                            Xác nhận đã hoàn tiền
+                            {t("refundDecisionModal.confirmComplete")}
                         </Button>
                     </>
                 ) : canDecide ? (
                     <>
                         <Button variant="secondary" onClick={() => setPendingAction("REJECT")} disabled={submitting}>
-                            Từ chối
+                            {t("refundDecisionModal.reject")}
                         </Button>
                         <Button variant="primary" onClick={() => setPendingAction("APPROVE")} disabled={submitting}>
-                            Duyệt
+                            {t("refundDecisionModal.approve")}
                         </Button>
                     </>
                 ) : canMarkCompleted ? (
                     <>
                         <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-                            Đóng
+                            {t("refundDecisionModal.close")}
                         </Button>
                         <Button variant="primary" onClick={() => setPendingAction("COMPLETE")} disabled={submitting}>
-                            Đánh dấu đã hoàn tiền
+                            {t("refundDecisionModal.markCompleted")}
                         </Button>
                     </>
                 ) : (
                     <Button variant="secondary" onClick={handleClose}>
-                        Đóng
+                        {t("refundDecisionModal.close")}
                     </Button>
                 )
             }
         >
             {pendingAction === "REJECT" ? (
-                <FormField label="Lý do từ chối" required error={reasonError}>
+                <FormField label={t("refundDecisionModal.rejectReasonLabel")} required error={reasonError}>
                     <Textarea
                         rows={3}
                         value={reason}
@@ -179,46 +181,44 @@ const RefundDecisionModal = ({ open, onClose, refund, studentName }: RefundDecis
                             setReason(e.target.value);
                             if (reasonError) setReasonError(undefined);
                         }}
-                        placeholder="Mô tả lý do từ chối yêu cầu hoàn tiền"
+                        placeholder={t("refundDecisionModal.rejectReasonPlaceholder")}
                     />
                 </FormField>
             ) : pendingAction === "APPROVE" ? (
                 <p className="text-body text-secondary">
-                    Duyệt yêu cầu hoàn tiền <span className="font-semibold text-primary">#{refund.id}</span> của{" "}
-                    <span className="font-semibold text-primary">{studentName}</span>? Sau khi duyệt, bạn sẽ cần đánh
-                    dấu đã hoàn tiền thủ công sau khi thực hiện chuyển khoản ngoài hệ thống.
+                    {t("refundDecisionModal.approveConfirmPrefix")} <span className="font-semibold text-primary">#{refund.id}</span> {t("refundDecisionModal.approveConfirmOf")}{" "}
+                    <span className="font-semibold text-primary">{studentName}</span>{t("refundDecisionModal.approveConfirmSuffix")}
                 </p>
             ) : pendingAction === "COMPLETE" ? (
                 <p className="text-body text-secondary">
-                    Xác nhận đã hoàn tiền thủ công{" "}
-                    <span className="font-semibold text-primary">{formatCurrency(refund.amount)}</span> cho{" "}
-                    <span className="font-semibold text-primary">{studentName}</span>? Chỉ xác nhận sau khi đã thực
-                    sự chuyển khoản — hành động này không thể hoàn tác.
+                    {t("refundDecisionModal.completeConfirmPrefix")}{" "}
+                    <span className="font-semibold text-primary">{formatCurrency(refund.amount)}</span> {t("refundDecisionModal.completeConfirmFor")}{" "}
+                    <span className="font-semibold text-primary">{studentName}</span>{t("refundDecisionModal.completeConfirmSuffix")}
                 </p>
             ) : (
                 <div>
-                    <DetailRow label="Học viên" value={studentName} />
-                    <DetailRow label="Khóa học" value={refund.courseTitle} />
-                    <DetailRow label="Số tiền" value={formatCurrency(refund.amount)} />
-                    <DetailRow label="Lý do" value={refund.reason} />
+                    <DetailRow label={t("refundDecisionModal.detailStudent")} value={studentName} />
+                    <DetailRow label={t("refundDecisionModal.detailCourse")} value={refund.courseTitle} />
+                    <DetailRow label={t("refundDecisionModal.detailAmount")} value={formatCurrency(refund.amount)} />
+                    <DetailRow label={t("refundDecisionModal.detailReason")} value={refund.reason} />
                     <DetailRow
-                        label="Trạng thái nghiệp vụ"
+                        label={t("refundDecisionModal.detailBusinessStatus")}
                         value={
                             <Badge variant="status" tone={getBusinessStatusTone(refund.businessStatus)}>
-                                {getBusinessStatusLabel(refund.businessStatus)}
+                                {getBusinessStatusLabel(refund.businessStatus, t)}
                             </Badge>
                         }
                     />
                     <DetailRow
-                        label="Trạng thái xử lý"
+                        label={t("refundDecisionModal.detailExecutionStatus")}
                         value={
                             <Badge variant="status" tone={getExecutionStatusTone(refund.executionStatus)}>
-                                {getExecutionStatusLabel(refund.executionStatus)}
+                                {getExecutionStatusLabel(refund.executionStatus, t)}
                             </Badge>
                         }
                     />
-                    {refund.adminNote && <DetailRow label="Ghi chú Admin" value={refund.adminNote} />}
-                    <DetailRow label="Ngày yêu cầu" value={new Date(refund.requestedAt).toLocaleString("vi-VN")} />
+                    {refund.adminNote && <DetailRow label={t("refundDecisionModal.detailAdminNote")} value={refund.adminNote} />}
+                    <DetailRow label={t("refundDecisionModal.detailRequestedAt")} value={new Date(refund.requestedAt).toLocaleString("vi-VN")} />
                 </div>
             )}
         </Modal>

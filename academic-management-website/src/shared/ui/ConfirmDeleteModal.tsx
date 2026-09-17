@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Modal from "./Modal";
 import Button from "./Button";
 
@@ -11,26 +12,27 @@ interface ConfirmDeleteModalProps {
 }
 
 const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName, loading = false, error }: ConfirmDeleteModalProps) => {
+    const { t } = useTranslation("common");
     return (
         <Modal
             open={open}
             onClose={onClose}
             closeDisabled={loading}
-            title="Xác nhận xóa"
+            title={t("confirmDeleteModal.title")}
             size="sm"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={loading}>
-                        Hủy
+                        {t("confirmDeleteModal.cancel")}
                     </Button>
                     <Button variant="danger" onClick={onConfirm} loading={loading}>
-                        Xóa
+                        {t("confirmDeleteModal.delete")}
                     </Button>
                 </>
             }
         >
             <p className="text-body text-secondary">
-                Xóa <span className="font-semibold text-primary">{itemName}</span>? Hành động này không thể hoàn tác.
+                {t("confirmDeleteModal.confirmPrefix")} <span className="font-semibold text-primary">{itemName}</span>{t("confirmDeleteModal.confirmSuffix")}
             </p>
             {error && <p className="mt-3 text-body-sm text-status-danger-text">{error}</p>}
         </Modal>

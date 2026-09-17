@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import type { TeacherQuiz, TeacherQuizQuestion } from "@/shared/api/queries/useTeacherQuizQuery";
 import Card from "@/shared/ui/Card";
@@ -42,6 +43,7 @@ interface QuizEditorFormProps {
 }
 
 const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: QuizEditorFormProps) => {
+    const { t } = useTranslation("teacher");
     const [title, setTitle] = useState(initialQuiz?.title ?? "");
     const [questions, setQuestions] = useState<EditableQuestion[]>(
         initialQuiz ? toEditable(initialQuiz.questions) : []
@@ -102,28 +104,28 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
 
     const handleSubmit = () => {
         if (!title.trim()) {
-            setError("Tên bài kiểm tra không được để trống");
+            setError(t("quizEditorForm.quizTitleRequired"));
             return;
         }
         if (questions.length === 0) {
-            setError("Cần ít nhất 1 câu hỏi");
+            setError(t("quizEditorForm.atLeastOneQuestion"));
             return;
         }
         for (const q of questions) {
             if (!q.questionText.trim()) {
-                setError("Mỗi câu hỏi cần có nội dung");
+                setError(t("quizEditorForm.questionTextRequired"));
                 return;
             }
             if (q.choices.length < 2) {
-                setError(`Câu hỏi "${q.questionText}" cần ít nhất 2 lựa chọn`);
+                setError(t("quizEditorForm.atLeastTwoChoices", { question: q.questionText }));
                 return;
             }
             if (!q.choices.some((c) => c.isCorrect)) {
-                setError(`Câu hỏi "${q.questionText}" chưa có đáp án đúng`);
+                setError(t("quizEditorForm.noCorrectAnswer", { question: q.questionText }));
                 return;
             }
             if (q.choices.some((c) => !c.choiceText.trim())) {
-                setError(`Câu hỏi "${q.questionText}" có lựa chọn để trống`);
+                setError(t("quizEditorForm.emptyChoice", { question: q.questionText }));
                 return;
             }
         }
@@ -146,8 +148,8 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
     return (
         <div className="space-y-4">
             <Card variant="app">
-                <FormField label="Tên bài kiểm tra" required>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VD: Bài test tổng kết" />
+                <FormField label={t("quizEditorForm.quizTitleLabel")} required>
+                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("quizEditorForm.quizTitlePlaceholder")} />
                 </FormField>
             </Card>
 
@@ -155,19 +157,19 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
                 <Card key={q._key} variant="app">
                     <div className="flex items-start justify-between gap-3 mb-3">
                         <span className="text-body-sm font-medium text-secondary shrink-0 mt-2.5">
-                            Câu {qIndex + 1}
+                            {t("quizEditorForm.questionNumber", { number: qIndex + 1 })}
                         </span>
                         <Input
                             value={q.questionText}
                             onChange={(e) => updateQuestionText(q._key, e.target.value)}
-                            placeholder="Nội dung câu hỏi"
+                            placeholder={t("quizEditorForm.questionPlaceholder")}
                             className="flex-1"
                         />
                         <button
                             type="button"
                             onClick={() => removeQuestion(q._key)}
                             className="cursor-pointer p-2 rounded-radius-md text-status-danger-text hover:bg-status-danger-bg transition-colors shrink-0"
-                            aria-label="Xóa câu hỏi"
+                            aria-label={t("quizEditorForm.removeQuestionAria")}
                         >
                             <Trash2 size={16} aria-hidden="true" />
                         </button>
@@ -181,12 +183,12 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
                                     name={`correct-${q._key}`}
                                     checked={c.isCorrect}
                                     onChange={() => setCorrectChoice(q._key, cIndex)}
-                                    aria-label={`Đánh dấu lựa chọn ${cIndex + 1} là đáp án đúng`}
+                                    aria-label={t("quizEditorForm.markCorrectAria", { number: cIndex + 1 })}
                                 />
                                 <Input
                                     value={c.choiceText}
                                     onChange={(e) => updateChoiceText(q._key, cIndex, e.target.value)}
-                                    placeholder={`Lựa chọn ${cIndex + 1}`}
+                                    placeholder={t("quizEditorForm.choicePlaceholder", { number: cIndex + 1 })}
                                     className="flex-1"
                                 />
                                 <button
@@ -194,21 +196,21 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
                                     onClick={() => removeChoice(q._key, cIndex)}
                                     disabled={q.choices.length <= 2}
                                     className="text-tertiary hover:text-status-danger-text disabled:opacity-30 disabled:cursor-not-allowed"
-                                    aria-label="Xóa lựa chọn"
+                                    aria-label={t("quizEditorForm.removeChoiceAria")}
                                 >
                                     <Trash2 size={14} aria-hidden="true" />
                                 </button>
                             </div>
                         ))}
                         <Button variant="tertiary" size="sm" iconLeft={Plus} onClick={() => addChoice(q._key)}>
-                            Thêm lựa chọn
+                            {t("quizEditorForm.addChoice")}
                         </Button>
                     </div>
                 </Card>
             ))}
 
             <Button variant="secondary" iconLeft={Plus} onClick={addQuestion}>
-                Thêm câu hỏi
+                {t("quizEditorForm.addQuestion")}
             </Button>
 
             {error && <p className="text-body-sm text-status-danger-text">{error}</p>}
@@ -216,13 +218,13 @@ const QuizEditorForm = ({ initialQuiz, saving, onSubmit, onDelete, deleting }: Q
             <div className="flex justify-between">
                 {onDelete ? (
                     <Button variant="danger" loading={deleting} onClick={onDelete}>
-                        Xóa quiz
+                        {t("quizEditorForm.deleteQuiz")}
                     </Button>
                 ) : (
                     <span />
                 )}
                 <Button variant="primary" loading={saving} onClick={handleSubmit}>
-                    Lưu
+                    {t("quizEditorForm.save")}
                 </Button>
             </div>
         </div>

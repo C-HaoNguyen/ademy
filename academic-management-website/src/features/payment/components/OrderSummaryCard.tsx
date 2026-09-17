@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Card from "@/shared/ui/Card";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -39,6 +40,7 @@ const OrderSummaryCard = ({
     onCouponChange,
     onApplyCoupon,
 }: OrderSummaryCardProps) => {
+    const { t } = useTranslation("courses");
     const total = Math.max(price - discount, 0);
 
     if (compact) {
@@ -54,7 +56,7 @@ const OrderSummaryCard = ({
 
     return (
         <Card variant="marketing" className="h-fit">
-            <h3 className="mb-4 text-lg font-semibold text-primary">Chi tiết thanh toán</h3>
+            <h3 className="mb-4 text-lg font-semibold text-primary">{t("orderSummary.title")}</h3>
 
             <div className="mb-4 flex gap-4">
                 <img
@@ -64,7 +66,7 @@ const OrderSummaryCard = ({
                 />
                 <div>
                     <p className="font-semibold text-primary">{title}</p>
-                    <p className="text-body-sm text-tertiary">Giảng viên: {instructor}</p>
+                    <p className="text-body-sm text-tertiary">{t("orderSummary.instructorLabel")} {instructor}</p>
                 </div>
             </div>
 
@@ -80,19 +82,19 @@ const OrderSummaryCard = ({
                             <Input
                                 value={couponCode ?? ""}
                                 onChange={(e) => onCouponChange(e.target.value)}
-                                placeholder="Nhập mã giảm giá"
+                                placeholder={t("orderSummary.couponPlaceholder")}
                                 hasError={Boolean(couponError)}
                                 className="pl-9"
                             />
                         </div>
                         <Button type="button" variant="secondary" loading={couponLoading} onClick={onApplyCoupon}>
-                            Áp dụng
+                            {t("orderSummary.applyCoupon")}
                         </Button>
                     </div>
                     {couponError && <p className="mt-1 text-caption text-status-danger-text">{couponError}</p>}
                     {couponApplied && !couponError && (
                         <Badge variant="status" tone="success">
-                            Đã áp dụng
+                            {t("orderSummary.couponAppliedBadge")}
                         </Badge>
                     )}
                 </div>
@@ -100,13 +102,13 @@ const OrderSummaryCard = ({
 
             <div className="space-y-2 text-body-sm">
                 <div className="flex justify-between text-secondary">
-                    <span>Giá gốc</span>
+                    <span>{t("orderSummary.originalPrice")}</span>
                     <span>{formatPrice(price)}</span>
                 </div>
 
                 {discount > 0 && (
                     <div className="flex justify-between text-status-success-text">
-                        <span>Giảm giá</span>
+                        <span>{t("orderSummary.discount")}</span>
                         <span>-{formatPrice(discount)}</span>
                     </div>
                 )}
@@ -114,7 +116,7 @@ const OrderSummaryCard = ({
                 <hr className="border-default" />
 
                 <div className="flex justify-between text-lg font-semibold text-primary" aria-live="polite">
-                    <span>Tổng cộng</span>
+                    <span>{t("orderSummary.total")}</span>
                     <span>{formatPrice(total)}</span>
                 </div>
             </div>

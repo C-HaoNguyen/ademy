@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "@/shared/ui/Modal";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -29,6 +30,7 @@ const CategoryFormOverlay = ({
     mode = "add",
     submitting = false,
 }: CategoryFormOverlayProps) => {
+    const { t } = useTranslation("admin");
     const [form, setForm] = useState<CategoryPayload>(initialValues ?? emptyForm);
     const [error, setError] = useState<string | undefined>(undefined);
 
@@ -42,7 +44,7 @@ const CategoryFormOverlay = ({
 
     const handleSubmit = () => {
         if (!form.categoryName.trim()) {
-            setError("Tên danh mục không được để trống");
+            setError(t("categoryFormOverlay.nameRequired"));
             return;
         }
         setError(undefined);
@@ -54,36 +56,36 @@ const CategoryFormOverlay = ({
             open={open}
             onClose={onClose}
             closeDisabled={submitting}
-            title={isEdit ? "Sửa danh mục" : "Thêm danh mục"}
+            title={isEdit ? t("categoryFormOverlay.editTitle") : t("categoryFormOverlay.addTitle")}
             size="sm"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={submitting}>
-                        Hủy
+                        {t("categoryFormOverlay.cancel")}
                     </Button>
                     <Button variant="primary" onClick={handleSubmit} loading={submitting}>
-                        {isEdit ? "Lưu thay đổi" : "Thêm danh mục"}
+                        {isEdit ? t("categoryFormOverlay.saveChanges") : t("categoryFormOverlay.addTitle")}
                     </Button>
                 </>
             }
         >
             <div className="space-y-4">
-                <FormField label="Tên danh mục" required error={error}>
+                <FormField label={t("categoryFormOverlay.nameLabel")} required error={error}>
                     <Input
                         value={form.categoryName}
                         onChange={(e) => {
                             setForm({ ...form, categoryName: e.target.value });
                             if (error) setError(undefined);
                         }}
-                        placeholder="VD: Lập trình Web"
+                        placeholder={t("categoryFormOverlay.namePlaceholder")}
                     />
                 </FormField>
-                <FormField label="Mô tả">
+                <FormField label={t("categoryFormOverlay.descriptionLabel")}>
                     <Textarea
                         rows={3}
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        placeholder="Mô tả ngắn gọn về danh mục"
+                        placeholder={t("categoryFormOverlay.descriptionPlaceholder")}
                     />
                 </FormField>
             </div>

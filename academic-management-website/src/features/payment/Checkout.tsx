@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 import { getCheckoutSession, setCheckoutSession } from "./checkoutSession";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
@@ -21,6 +22,7 @@ type CourseDetail = {
 };
 
 const Checkout = () => {
+    const { t } = useTranslation("courses");
     const location = useLocation();
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -74,7 +76,7 @@ const Checkout = () => {
             if (!res.ok) {
                 setCouponApplied(false);
                 setDiscount(0);
-                setCouponError(data.message || "Mã giảm giá không hợp lệ");
+                setCouponError(data.message || t("checkout.invalidCoupon"));
                 return;
             }
 
@@ -84,7 +86,7 @@ const Checkout = () => {
             console.error("Failed to validate coupon", err);
             setCouponApplied(false);
             setDiscount(0);
-            setCouponError("Không thể áp dụng mã giảm giá, vui lòng thử lại");
+            setCouponError(t("checkout.couponApplyFailed"));
         } finally {
             setCouponLoading(false);
         }
@@ -125,11 +127,11 @@ const Checkout = () => {
                 <div className="mx-auto max-w-md px-6 py-20">
                     <EmptyState
                         icon={ShoppingCart}
-                        title="Không có khóa học để thanh toán"
-                        description="Vui lòng chọn một khóa học trước khi tiến hành thanh toán."
+                        title={t("checkout.emptyTitle")}
+                        description={t("checkout.emptyDescription")}
                         action={
                             <Button variant="cta" onClick={() => navigate(ROUTES.COURSES)}>
-                                Xem danh sách khóa học
+                                {t("checkout.viewCourses")}
                             </Button>
                         }
                     />
@@ -141,7 +143,7 @@ const Checkout = () => {
     return (
         <div className="bg-background">
             <div className="mx-auto max-w-3xl px-6 py-16 space-y-6">
-                <h1 className="text-h2 text-primary">Xác nhận đơn hàng</h1>
+                <h1 className="text-h2 text-primary">{t("checkout.title")}</h1>
 
                 <OrderSummaryCard
                     title={course.title}
@@ -161,14 +163,14 @@ const Checkout = () => {
                     }}
                     onApplyCoupon={() => {
                         applyCoupon().catch(() => {
-                            showToast({ tone: "danger", message: "Không thể áp dụng mã giảm giá" });
+                            showToast({ tone: "danger", message: t("checkout.couponApplyFailedToast") });
                         });
                     }}
                 />
 
                 <div className="sticky bottom-0 -mx-6 bg-background/95 px-6 py-4 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
                     <Button variant="cta" size="lg" className="w-full" loading={continuing} onClick={handleContinue}>
-                        Tiếp tục
+                        {t("checkout.continue")}
                     </Button>
                 </div>
             </div>

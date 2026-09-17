@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { BookOpen, CheckCircle, Award } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import { useMyCoursesQuery } from "@/shared/api/queries/useMyCoursesQuery";
 import { useQuizAttemptSummaryQuery } from "@/shared/api/queries/useStudentSummaryQuery";
@@ -10,6 +11,7 @@ import EmptyState from "@/shared/ui/EmptyState";
 import { SkeletonText } from "@/shared/ui/Skeleton";
 
 const LearningProfile = () => {
+    const { t } = useTranslation("student");
     const navigate = useNavigate();
     const quizAttemptSummaryQuery = useQuizAttemptSummaryQuery();
     const myCoursesQuery = useMyCoursesQuery();
@@ -19,42 +21,42 @@ const LearningProfile = () => {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-h1 text-primary">Hồ sơ học tập</h1>
+            <h1 className="text-h1 text-primary">{t("learningProfile.title")}</h1>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
-                    label="Tổng số khóa học"
+                    label={t("learningProfile.statTotalCourses")}
                     value={courses.length}
                     loading={myCoursesQuery.isLoading}
                 />
                 <StatCard
                     icon={<CheckCircle size={22} aria-hidden="true" />}
-                    label="Tổng bài test đã làm"
+                    label={t("learningProfile.statTotalQuizAttempts")}
                     value={quizAttemptSummaryQuery.data?.attemptCount ?? 0}
                     loading={quizAttemptSummaryQuery.isLoading}
                 />
                 <StatCard
                     icon={<Award size={22} aria-hidden="true" />}
-                    label="Điểm trung bình"
+                    label={t("learningProfile.statAverageScore")}
                     value={averageScore != null ? averageScore.toFixed(1) : "—"}
                     loading={quizAttemptSummaryQuery.isLoading}
                 />
             </div>
 
             <Card variant="app">
-                <h3 className="font-semibold text-primary mb-4">Chi tiết theo khóa học</h3>
+                <h3 className="font-semibold text-primary mb-4">{t("learningProfile.detailByCourseTitle")}</h3>
 
                 {myCoursesQuery.isLoading ? (
                     <SkeletonText lines={4} />
                 ) : courses.length === 0 ? (
                     <EmptyState
                         icon={BookOpen}
-                        title="Bạn chưa có khóa học nào"
-                        description="Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn."
+                        title={t("dashboard.emptyTitle")}
+                        description={t("dashboard.emptyDescription")}
                         action={
                             <Button variant="primary" onClick={() => navigate(ROUTES.COURSES)}>
-                                Khám phá khóa học
+                                {t("dashboard.exploreCourses")}
                             </Button>
                         }
                     />

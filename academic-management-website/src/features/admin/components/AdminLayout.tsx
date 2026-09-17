@@ -9,42 +9,44 @@ import {
     ClipboardList,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AppShellLayout from "@/shared/layout/AppShellLayout";
 import type { SidebarNavItem } from "@/shared/ui/SidebarNav";
 import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
 import { useAuth } from "@/shared/auth/useAuth";
 import { ROUTES } from "@/config/constants";
 
-const adminNavItems: SidebarNavItem[] = [
-    { to: ROUTES.ADMIN.DASHBOARD, label: "Dashboard", icon: LayoutDashboard },
-    { to: ROUTES.ADMIN.USERS, label: "Users", icon: Users },
-    { to: ROUTES.ADMIN.COURSES, label: "Courses", icon: BookOpen },
-    { to: ROUTES.ADMIN.CATEGORIES, label: "Categories", icon: Layers },
-    { to: ROUTES.ADMIN.ORDERS, label: "Orders", icon: CreditCard },
-    { to: ROUTES.ADMIN.COUPONS, label: "Coupons", icon: Ticket },
-    { to: ROUTES.ADMIN.REFUNDS, label: "Refunds", icon: RotateCcw },
-    { to: ROUTES.ADMIN.AUDIT_LOG, label: "Audit Log", icon: ClipboardList },
-];
-
 const AdminLayout = () => {
+    const { t } = useTranslation("admin");
     const navigate = useNavigate();
     const { logout } = useAuth();
 
+    const adminNavItems: SidebarNavItem[] = [
+        { to: ROUTES.ADMIN.DASHBOARD, label: t("layout.navDashboard"), icon: LayoutDashboard },
+        { to: ROUTES.ADMIN.USERS, label: t("layout.navUsers"), icon: Users },
+        { to: ROUTES.ADMIN.COURSES, label: t("layout.navCourses"), icon: BookOpen },
+        { to: ROUTES.ADMIN.CATEGORIES, label: t("layout.navCategories"), icon: Layers },
+        { to: ROUTES.ADMIN.ORDERS, label: t("layout.navOrders"), icon: CreditCard },
+        { to: ROUTES.ADMIN.COUPONS, label: t("layout.navCoupons"), icon: Ticket },
+        { to: ROUTES.ADMIN.REFUNDS, label: t("layout.navRefunds"), icon: RotateCcw },
+        { to: ROUTES.ADMIN.AUDIT_LOG, label: t("layout.navAuditLog"), icon: ClipboardList },
+    ];
+
     const menuItems: DropdownMenuItem[] = [
-        { label: "Hồ sơ Admin", onClick: () => navigate(ROUTES.ADMIN.PROFILE) },
-        { label: "Quyền quản trị", onClick: () => {} },
-        { label: "Đăng xuất", onClick: () => logout(), destructive: true },
+        { label: t("layout.profile"), onClick: () => navigate(ROUTES.ADMIN.PROFILE) },
+        { label: t("layout.adminPermissions"), onClick: () => {} },
+        { label: t("layout.logout"), onClick: () => logout(), destructive: true },
     ];
 
     return (
         <AppShellLayout
             navItems={adminNavItems}
-            sidebarTitle="Trang quản lý"
+            sidebarTitle={t("layout.sidebarTitle")}
             logoLabel="Ademy Admin"
             logoIcon="shield"
             homeRoute={ROUTES.ADMIN.DASHBOARD}
             menuItems={menuItems}
-            avatarAlt="admin avatar"
+            avatarAlt={t("layout.avatarAlt")}
         />
     );
 };

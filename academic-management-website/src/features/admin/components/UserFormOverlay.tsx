@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient, readErrorMessage } from "@/shared/api/client";
 import { adminUsersQueryKey } from "@/shared/api/queries/useAdminUsersQuery";
@@ -26,6 +27,7 @@ const emptyForm: InviteTeacherForm = { username: "", fullName: "", email: "", pa
 // UI_SPEC §5.2 — Button "Mời Teacher" chỉ tạo tài khoản Teacher (BR-002), không phải nút "Thêm
 // user" chung cho mọi role như trước.
 const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const [form, setForm] = useState<InviteTeacherForm>(emptyForm);
@@ -40,10 +42,10 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
 
     const validate = (): boolean => {
         const nextErrors: Partial<Record<keyof InviteTeacherForm, string>> = {};
-        if (!form.username.trim()) nextErrors.username = "Vui lòng nhập tên đăng nhập";
-        if (!form.fullName.trim()) nextErrors.fullName = "Vui lòng nhập họ và tên";
-        if (!form.email.trim()) nextErrors.email = "Vui lòng nhập email";
-        if (!form.password.trim()) nextErrors.password = "Vui lòng nhập mật khẩu";
+        if (!form.username.trim()) nextErrors.username = t("userFormOverlay.usernameRequired");
+        if (!form.fullName.trim()) nextErrors.fullName = t("userFormOverlay.fullNameRequired");
+        if (!form.email.trim()) nextErrors.email = t("userFormOverlay.emailRequired");
+        if (!form.password.trim()) nextErrors.password = t("userFormOverlay.passwordRequired");
         setErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
     };
@@ -59,16 +61,16 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
             });
 
             if (!res.ok) {
-                const message = await readErrorMessage(res, "Mời Teacher thất bại");
+                const message = await readErrorMessage(res, t("userFormOverlay.inviteFailed"));
                 showToast({ tone: "danger", message });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã mời Teacher thành công" });
+            showToast({ tone: "success", message: t("userFormOverlay.inviteSuccess") });
             queryClient.invalidateQueries({ queryKey: adminUsersQueryKey });
             onClose();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("userFormOverlay.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -79,43 +81,43 @@ const UserFormOverlay = ({ open, onClose }: UserFormOverlayProps) => {
             open={open}
             onClose={onClose}
             closeDisabled={submitting}
-            title="Mời Teacher"
+            title={t("userFormOverlay.title")}
             size="sm"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={submitting}>
-                        Hủy
+                        {t("userFormOverlay.cancel")}
                     </Button>
                     <Button variant="primary" onClick={handleSubmit} loading={submitting}>
-                        Mời Teacher
+                        {t("userFormOverlay.title")}
                     </Button>
                 </>
             }
         >
             <div className="space-y-4">
-                <FormField label="Tên đăng nhập" required error={errors.username}>
+                <FormField label={t("userFormOverlay.usernameLabel")} required error={errors.username}>
                     <Input
                         value={form.username}
                         onChange={(e) => setForm({ ...form, username: e.target.value })}
-                        placeholder="VD: nguyenvana"
+                        placeholder={t("userFormOverlay.usernamePlaceholder")}
                     />
                 </FormField>
-                <FormField label="Họ và tên" required error={errors.fullName}>
+                <FormField label={t("userFormOverlay.fullNameLabel")} required error={errors.fullName}>
                     <Input
                         value={form.fullName}
                         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                        placeholder="VD: Nguyễn Văn A"
+                        placeholder={t("userFormOverlay.fullNamePlaceholder")}
                     />
                 </FormField>
-                <FormField label="Email" required error={errors.email}>
+                <FormField label={t("userFormOverlay.emailLabel")} required error={errors.email}>
                     <Input
                         type="email"
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="email@example.com"
+                        placeholder={t("userFormOverlay.emailPlaceholder")}
                     />
                 </FormField>
-                <FormField label="Mật khẩu" required error={errors.password}>
+                <FormField label={t("userFormOverlay.passwordLabel")} required error={errors.password}>
                     <Input
                         type="password"
                         value={form.password}

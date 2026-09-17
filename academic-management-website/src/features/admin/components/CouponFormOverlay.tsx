@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "@/shared/ui/Modal";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -47,6 +48,7 @@ const CouponFormOverlay = ({
     submitting = false,
     errorMessage,
 }: CouponFormOverlayProps) => {
+    const { t } = useTranslation("admin");
     const [form, setForm] = useState<CouponPayload>(initialValues ?? emptyForm);
     const [errors, setErrors] = useState<FieldErrors>({});
     // Tách khỏi form.courseId — courseId chỉ được ghi khi admin THỰC SỰ chọn 1 khóa học ở dropdown
@@ -72,15 +74,15 @@ const CouponFormOverlay = ({
 
     const handleSubmit = () => {
         const nextErrors: FieldErrors = {};
-        if (!form.code.trim()) nextErrors.code = "Vui lòng nhập mã coupon";
+        if (!form.code.trim()) nextErrors.code = t("couponFormOverlay.codeRequired");
         if (!form.discountValue.trim() || Number(form.discountValue) <= 0) {
-            nextErrors.discountValue = "Giá trị giảm phải lớn hơn 0";
+            nextErrors.discountValue = t("couponFormOverlay.discountValueInvalid");
         }
         if (isCourseScoped && form.courseId === null) {
-            nextErrors.courseId = "Vui lòng chọn khóa học";
+            nextErrors.courseId = t("couponFormOverlay.courseRequired");
         }
         if (form.maxRedemptions.trim() && Number(form.maxRedemptions) <= 0) {
-            nextErrors.maxRedemptions = "Giới hạn lượt dùng phải lớn hơn 0";
+            nextErrors.maxRedemptions = t("couponFormOverlay.maxRedemptionsInvalid");
         }
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
@@ -92,43 +94,43 @@ const CouponFormOverlay = ({
             open={open}
             onClose={onClose}
             closeDisabled={submitting}
-            title={isEdit ? "Sửa coupon" : "Tạo coupon"}
+            title={isEdit ? t("couponFormOverlay.editTitle") : t("couponFormOverlay.createTitle")}
             size="md"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={submitting}>
-                        Hủy
+                        {t("couponFormOverlay.cancel")}
                     </Button>
                     <Button variant="primary" onClick={handleSubmit} loading={submitting}>
-                        {isEdit ? "Lưu thay đổi" : "Tạo coupon"}
+                        {isEdit ? t("couponFormOverlay.saveChanges") : t("couponFormOverlay.createTitle")}
                     </Button>
                 </>
             }
         >
             <div className="space-y-4">
-                <FormField label="Mã coupon" required error={errors.code}>
+                <FormField label={t("couponFormOverlay.codeLabel")} required error={errors.code}>
                     <Input
                         value={form.code}
                         onChange={(e) => {
                             setForm({ ...form, code: e.target.value });
                             if (errors.code) setErrors({ ...errors, code: undefined });
                         }}
-                        placeholder="VD: SUMMER2026"
+                        placeholder={t("couponFormOverlay.codePlaceholder")}
                     />
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Loại giảm" required>
+                    <FormField label={t("couponFormOverlay.discountTypeLabel")} required>
                         <select
                             value={form.discountType}
                             onChange={(e) => setForm({ ...form, discountType: e.target.value as CouponDiscountType })}
                             className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                         >
-                            <option value="PERCENTAGE">Phần trăm (%)</option>
-                            <option value="FIXED">Số tiền cố định</option>
+                            <option value="PERCENTAGE">{t("couponFormOverlay.discountTypePercentage")}</option>
+                            <option value="FIXED">{t("couponFormOverlay.discountTypeFixed")}</option>
                         </select>
                     </FormField>
-                    <FormField label="Giá trị giảm" required error={errors.discountValue}>
+                    <FormField label={t("couponFormOverlay.discountValueLabel")} required error={errors.discountValue}>
                         <Input
                             type="number"
                             min="0"
@@ -137,12 +139,12 @@ const CouponFormOverlay = ({
                                 setForm({ ...form, discountValue: e.target.value });
                                 if (errors.discountValue) setErrors({ ...errors, discountValue: undefined });
                             }}
-                            placeholder={form.discountType === "PERCENTAGE" ? "VD: 10" : "VD: 50000"}
+                            placeholder={form.discountType === "PERCENTAGE" ? t("couponFormOverlay.discountValuePlaceholderPercentage") : t("couponFormOverlay.discountValuePlaceholderFixed")}
                         />
                     </FormField>
                 </div>
 
-                <FormField label="Phạm vi" required>
+                <FormField label={t("couponFormOverlay.scopeLabel")} required>
                     <select
                         value={scope}
                         onChange={(e) => {
@@ -155,13 +157,13 @@ const CouponFormOverlay = ({
                         }}
                         className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                     >
-                        <option value="PLATFORM">Toàn nền tảng</option>
-                        <option value="COURSE">Khóa học cụ thể</option>
+                        <option value="PLATFORM">{t("couponFormOverlay.scopePlatform")}</option>
+                        <option value="COURSE">{t("couponFormOverlay.scopeCourse")}</option>
                     </select>
                 </FormField>
 
                 {isCourseScoped && (
-                    <FormField label="Khóa học" required error={errors.courseId}>
+                    <FormField label={t("couponFormOverlay.courseLabel")} required error={errors.courseId}>
                         <select
                             value={form.courseId ?? ""}
                             onChange={(e) => {
@@ -170,7 +172,7 @@ const CouponFormOverlay = ({
                             }}
                             className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                         >
-                            <option value="">-- Chọn khóa học --</option>
+                            <option value="">{t("couponFormOverlay.coursePlaceholder")}</option>
                             {courses.map((c) => (
                                 <option key={c.courseId} value={c.courseId}>
                                     {c.title}
@@ -182,9 +184,9 @@ const CouponFormOverlay = ({
 
                 <div className="grid grid-cols-2 gap-4">
                     <FormField
-                        label="Giới hạn lượt dùng"
+                        label={t("couponFormOverlay.maxRedemptionsLabel")}
                         error={errors.maxRedemptions}
-                        helperText={errors.maxRedemptions ? undefined : "Để trống nếu không giới hạn"}
+                        helperText={errors.maxRedemptions ? undefined : t("couponFormOverlay.maxRedemptionsHelper")}
                     >
                         <Input
                             type="number"
@@ -194,10 +196,10 @@ const CouponFormOverlay = ({
                                 setForm({ ...form, maxRedemptions: e.target.value });
                                 if (errors.maxRedemptions) setErrors({ ...errors, maxRedemptions: undefined });
                             }}
-                            placeholder="Không giới hạn"
+                            placeholder={t("couponFormOverlay.maxRedemptionsPlaceholder")}
                         />
                     </FormField>
-                    <FormField label="Hạn dùng" helperText="Để trống nếu không có hạn">
+                    <FormField label={t("couponFormOverlay.expiresAtLabel")} helperText={t("couponFormOverlay.expiresAtHelper")}>
                         <Input
                             type="datetime-local"
                             value={form.expiresAt}

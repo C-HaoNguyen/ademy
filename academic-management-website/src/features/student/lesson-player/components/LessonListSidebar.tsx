@@ -1,4 +1,5 @@
 import { CheckCircle2, FileText, HelpCircle, Video } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { StudentLesson } from "@/shared/api/queries/useLessonPlayerQuery";
 
 const contentTypeIcon = { video: Video, document: FileText, quiz: HelpCircle } as const;
@@ -11,8 +12,9 @@ interface LessonListSidebarProps {
 
 // UI_SPEC §3.3 mục 2 — không bắt buộc tuần tự, Student chọn lesson bất kỳ trong sidebar.
 const LessonListSidebar = ({ lessons, selectedLessonId, onSelect }: LessonListSidebarProps) => {
+    const { t } = useTranslation("student");
     return (
-        <nav className="flex flex-col gap-1 p-3" aria-label="Danh sách bài học">
+        <nav className="flex flex-col gap-1 p-3" aria-label={t("lessonPlayer.lessonListLabel")}>
             {lessons.map((lesson) => {
                 const Icon = contentTypeIcon[lesson.contentType];
                 const isSelected = lesson.lessonId === selectedLessonId;

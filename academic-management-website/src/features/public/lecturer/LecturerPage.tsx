@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { GraduationCap } from "lucide-react";
 import InstructorCard, { type Instructor } from "../components/InstructorCard";
 import Button from "@/shared/ui/Button";
@@ -9,6 +10,7 @@ import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
 import { useCoursesQuery } from "@/shared/api/queries/useCoursesQuery";
 
 const LecturerPage = () => {
+    const { t } = useTranslation("public");
     const navigate = useNavigate();
     const coursesQuery = useCoursesQuery();
 
@@ -44,7 +46,7 @@ const LecturerPage = () => {
                         transition={{ duration: 0.5 }}
                         className="text-h1 text-primary"
                     >
-                        Đội ngũ giảng viên
+                        {t("lecturer.heroTitle")}
                     </motion.h1>
 
                     <motion.p
@@ -53,8 +55,7 @@ const LecturerPage = () => {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="mt-4 text-body-lg text-secondary max-w-2xl mx-auto"
                     >
-                        Những giảng viên đang trực tiếp giảng dạy trên Ademy, đồng hành
-                        cùng bạn trong hành trình học tập và phát triển.
+                        {t("lecturer.heroSubtitle")}
                     </motion.p>
                 </div>
             </section>
@@ -67,19 +68,19 @@ const LecturerPage = () => {
                     ) : coursesQuery.isError ? (
                         <EmptyState
                             icon={GraduationCap}
-                            title="Không thể tải danh sách giảng viên"
-                            description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                            title={t("lecturer.errorTitle")}
+                            description={t("lecturer.errorDescription")}
                             action={
                                 <Button variant="primary" size="sm" onClick={() => coursesQuery.refetch()}>
-                                    Thử lại
+                                    {t("lecturer.retry")}
                                 </Button>
                             }
                         />
                     ) : instructors.length === 0 ? (
                         <EmptyState
                             icon={GraduationCap}
-                            title="Chưa có giảng viên nào"
-                            description="Đội ngũ giảng viên sẽ sớm xuất hiện tại đây."
+                            title={t("lecturer.emptyTitle")}
+                            description={t("lecturer.emptyDescription")}
                         />
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
@@ -106,15 +107,14 @@ const LecturerPage = () => {
                     className="mx-auto max-w-3xl px-6 text-center"
                 >
                     <h2 className="text-h2 text-primary">
-                        Học cùng giảng viên hàng đầu
+                        {t("lecturer.ctaTitle")}
                     </h2>
                     <p className="mt-4 text-secondary">
-                        Khám phá các khóa học được thiết kế bài bản bởi đội ngũ giảng viên
-                        giàu kinh nghiệm của Ademy.
+                        {t("lecturer.ctaSubtitle")}
                     </p>
                     <div className="mt-8">
                         <Button variant="primary" onClick={() => navigate("/courses")}>
-                            Xem khóa học
+                            {t("lecturer.ctaButton")}
                         </Button>
                     </div>
                 </motion.div>

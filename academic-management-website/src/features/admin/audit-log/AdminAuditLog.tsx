@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ClipboardList, SearchX, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAdminAuditLogsQuery, type AdminAuditLog as AuditLogEntry } from "@/shared/api/queries/useAdminAuditLogsQuery";
 import { useAdminUsersQuery } from "@/shared/api/queries/useAdminUsersQuery";
 import Button from "@/shared/ui/Button";
@@ -8,7 +9,7 @@ import FormField from "@/shared/ui/FormField";
 import Table, { type TableColumn } from "@/shared/ui/Table";
 import DateRangeInput from "@/shared/ui/DateRangeInput";
 import AuditLogDetailModal from "@/features/admin/components/AuditLogDetailModal";
-import { AUDIT_ACTIONS, getAuditActionLabel } from "@/features/admin/audit-log/auditActions";
+import { getAuditActions, getAuditActionLabel } from "@/features/admin/audit-log/auditActions";
 
 type DateRange = { from: Date | null; to: Date | null };
 
@@ -28,6 +29,8 @@ const selectClassName =
     "h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand";
 
 const AdminAuditLog = () => {
+    const { t } = useTranslation(["admin", "common"]);
+    const AUDIT_ACTIONS = useMemo(() => getAuditActions(t), [t]);
     const [actorUsername, setActorUsername] = useState("");
     const [action, setAction] = useState("");
     const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
@@ -52,27 +55,27 @@ const AdminAuditLog = () => {
     const columns: TableColumn<AuditLogEntry>[] = [
         {
             key: "createdAt",
-            header: "Thời gian",
+            header: t("auditLog.columnTime"),
             render: (log) => new Date(log.createdAt).toLocaleString("vi-VN"),
         },
         {
             key: "actor",
-            header: "Người thực hiện",
+            header: t("auditLog.columnActor"),
             render: (log) => log.actorUsername ?? "—",
         },
         {
             key: "action",
-            header: "Hành động",
-            render: (log) => getAuditActionLabel(log.action),
+            header: t("auditLog.columnAction"),
+            render: (log) => getAuditActionLabel(log.action, t),
         },
         {
             key: "target",
-            header: "Đối tượng",
+            header: t("auditLog.columnTarget"),
             render: (log) => (log.targetType ? `${log.targetType} #${log.targetId ?? "—"}` : "—"),
         },
         {
             key: "detail",
-            header: "Chi tiết",
+            header: t("auditLog.columnDetail"),
             render: (log) => (
                 <button
                     type="button"
@@ -82,7 +85,7 @@ const AdminAuditLog = () => {
                     }}
                     className="text-action-tertiary-text hover:underline"
                 >
-                    Xem chi tiết
+                    {t("auditLog.viewDetail")}
                 </button>
             ),
         },
@@ -93,17 +96,17 @@ const AdminAuditLog = () => {
             <div>
                 <h2 className="flex items-center gap-3 text-h2 text-primary">
                     <ClipboardList size={24} aria-hidden="true" />
-                    Audit Log
+                    {t("auditLog.title")}
                 </h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Tra cứu lịch sử hành động nhạy cảm trên nền tảng.
+                    {t("auditLog.subtitle")}
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField label="Người thực hiện">
+                <FormField label={t("auditLog.actorLabel")}>
                     <select value={actorUsername} onChange={(e) => setActorUsername(e.target.value)} className={selectClassName}>
-                        <option value="">Tất cả</option>
+                        <option value="">{t("auditLog.filterAll")}</option>
                         {actors.map((u) => (
                             <option key={u.userId} value={u.username}>
                                 {u.fullName} (@{u.username})
@@ -111,9 +114,9 @@ const AdminAuditLog = () => {
                         ))}
                     </select>
                 </FormField>
-                <FormField label="Hành động">
+                <FormField label={t("auditLog.actionLabel")}>
                     <select value={action} onChange={(e) => setAction(e.target.value)} className={selectClassName}>
-                        <option value="">Tất cả</option>
+                        <option value="">{t("auditLog.filterAll")}</option>
                         {AUDIT_ACTIONS.map((a) => (
                             <option key={a.value} value={a.value}>
                                 {a.label}
@@ -121,7 +124,7 @@ const AdminAuditLog = () => {
                         ))}
                     </select>
                 </FormField>
-                <FormField label="Khoảng thời gian">
+                <FormField label={t("auditLog.dateRangeLabel")}>
                     <DateRangeInput value={dateRange} onChange={setDateRange} />
                 </FormField>
             </div>
@@ -129,11 +132,11 @@ const AdminAuditLog = () => {
             {logsQuery.isError ? (
                 <EmptyState
                     icon={AlertTriangle}
-                    title="Không thể tải audit log"
-                    description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                    title={t("auditLog.loadErrorTitle")}
+                    description={t("auditLog.loadErrorDescription")}
                     action={
                         <Button variant="primary" size="sm" onClick={() => logsQuery.refetch()}>
-                            Thử lại
+                            {t("auditLog.retry")}
                         </Button>
                     }
                 />
@@ -144,7 +147,7 @@ const AdminAuditLog = () => {
                     rowKey={(log) => log.id}
                     loading={logsQuery.isLoading}
                     onRowClick={(log) => setSelectedLog(log)}
-                    emptyState={<EmptyState icon={SearchX} title="Không có log nào phù hợp bộ lọc" />}
+                    emptyState={<EmptyState icon={SearchX} title={t("auditLog.emptyTitle")} />}
                 />
             )}
 

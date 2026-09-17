@@ -9,10 +9,10 @@ const BUSINESS_STATUS_TONE: Record<RefundBusinessStatus, "success" | "warning" |
     REJECTED: "danger",
 };
 
-const BUSINESS_STATUS_LABEL: Record<RefundBusinessStatus, string> = {
-    REQUESTED: "Đang chờ",
-    APPROVED: "Đã duyệt",
-    REJECTED: "Đã từ chối",
+const BUSINESS_STATUS_KEY: Record<RefundBusinessStatus, string> = {
+    REQUESTED: "requested",
+    APPROVED: "approved",
+    REJECTED: "rejected",
 };
 
 // executionStatus chỉ có 2 giá trị thật ở backend (RefundExecutionStatus) — không có trạng thái
@@ -22,12 +22,16 @@ const EXECUTION_STATUS_TONE: Record<RefundExecutionStatus, "info" | "success"> =
     MANUAL_COMPLETED: "success",
 };
 
-const EXECUTION_STATUS_LABEL: Record<RefundExecutionStatus, string> = {
-    NOT_STARTED: "Chưa xử lý",
-    MANUAL_COMPLETED: "Đã hoàn tất",
+const EXECUTION_STATUS_KEY: Record<RefundExecutionStatus, string> = {
+    NOT_STARTED: "notStarted",
+    MANUAL_COMPLETED: "manualCompleted",
 };
 
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+
 export const getBusinessStatusTone = (status: RefundBusinessStatus) => BUSINESS_STATUS_TONE[status];
-export const getBusinessStatusLabel = (status: RefundBusinessStatus) => BUSINESS_STATUS_LABEL[status];
+export const getBusinessStatusLabel = (status: RefundBusinessStatus, t: TFunc) =>
+    t(`common:refundBusinessStatus.${BUSINESS_STATUS_KEY[status]}`, { defaultValue: status });
 export const getExecutionStatusTone = (status: RefundExecutionStatus) => EXECUTION_STATUS_TONE[status];
-export const getExecutionStatusLabel = (status: RefundExecutionStatus) => EXECUTION_STATUS_LABEL[status];
+export const getExecutionStatusLabel = (status: RefundExecutionStatus, t: TFunc) =>
+    t(`common:refundExecutionStatus.${EXECUTION_STATUS_KEY[status]}`, { defaultValue: status });

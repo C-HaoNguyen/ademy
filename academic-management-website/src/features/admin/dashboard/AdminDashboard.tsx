@@ -1,5 +1,6 @@
 import { Users, GraduationCap, BookOpen, DollarSign, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import {
     useTotalStudentsQuery,
@@ -18,6 +19,7 @@ import { SkeletonText } from "@/shared/ui/Skeleton";
 const formatCurrency = (amount: number) => Number(amount ?? 0).toLocaleString("vi-VN") + "₫";
 
 const AdminDashboard = () => {
+    const { t } = useTranslation("admin");
     const navigate = useNavigate();
 
     const totalStudentsQuery = useTotalStudentsQuery();
@@ -30,34 +32,34 @@ const AdminDashboard = () => {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-h2 text-primary">Admin Dashboard</h2>
+                <h2 className="text-h2 text-primary">{t("dashboard.title")}</h2>
                 <p className="text-body-sm text-secondary mt-1">
-                    Tổng quan vận hành toàn nền tảng
+                    {t("dashboard.subtitle")}
                 </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     icon={<DollarSign size={22} aria-hidden="true" />}
-                    label="Tổng doanh thu"
+                    label={t("dashboard.statTotalRevenue")}
                     value={totalRevenueQuery.isError ? "—" : formatCurrency(totalRevenueQuery.data ?? 0)}
                     loading={totalRevenueQuery.isLoading}
                 />
                 <StatCard
                     icon={<Users size={22} aria-hidden="true" />}
-                    label="Tổng số học viên"
+                    label={t("dashboard.statTotalStudents")}
                     value={totalStudentsQuery.isError ? "—" : (totalStudentsQuery.data ?? 0)}
                     loading={totalStudentsQuery.isLoading}
                 />
                 <StatCard
                     icon={<BookOpen size={22} aria-hidden="true" />}
-                    label="Tổng số khóa học"
+                    label={t("dashboard.statTotalCourses")}
                     value={totalCoursesQuery.isError ? "—" : (totalCoursesQuery.data ?? 0)}
                     loading={totalCoursesQuery.isLoading}
                 />
                 <StatCard
                     icon={<GraduationCap size={22} aria-hidden="true" />}
-                    label="Tổng số Giảng viên"
+                    label={t("dashboard.statTotalTeachers")}
                     value={totalTeachersQuery.isError ? "—" : (totalTeachersQuery.data ?? 0)}
                     loading={totalTeachersQuery.isLoading}
                 />
@@ -67,7 +69,7 @@ const AdminDashboard = () => {
                 <Card variant="app">
                     <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                         <RefreshCcw size={18} aria-hidden="true" />
-                        Yêu cầu hoàn tiền đang chờ duyệt
+                        {t("dashboard.pendingRefundsTitle")}
                     </h3>
 
                     {recentPendingRefundsQuery.isLoading ? (
@@ -75,7 +77,7 @@ const AdminDashboard = () => {
                     ) : recentPendingRefundsQuery.isError ? (
                         <p className="text-body-sm text-secondary">—</p>
                     ) : (recentPendingRefundsQuery.data ?? []).length === 0 ? (
-                        <EmptyState icon={RefreshCcw} title="Không có yêu cầu nào đang chờ" />
+                        <EmptyState icon={RefreshCcw} title={t("dashboard.noPendingRefunds")} />
                     ) : (
                         <ul className="space-y-3">
                             {(recentPendingRefundsQuery.data ?? []).map((refund) => (
@@ -104,10 +106,10 @@ const AdminDashboard = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-primary flex items-center gap-2">
                             <BookOpen size={18} aria-hidden="true" />
-                            Khóa học mới publish gần đây
+                            {t("dashboard.recentlyPublishedTitle")}
                         </h3>
                         <Button variant="tertiary" size="sm" onClick={() => navigate(ROUTES.ADMIN.COURSES)}>
-                            Xem tất cả
+                            {t("dashboard.viewAll")}
                         </Button>
                     </div>
 
@@ -116,7 +118,7 @@ const AdminDashboard = () => {
                     ) : recentlyPublishedCoursesQuery.isError ? (
                         <p className="text-body-sm text-secondary">—</p>
                     ) : (recentlyPublishedCoursesQuery.data ?? []).length === 0 ? (
-                        <EmptyState icon={BookOpen} title="Chưa có khóa học nào được publish" />
+                        <EmptyState icon={BookOpen} title={t("dashboard.noRecentlyPublished")} />
                     ) : (
                         <ul className="space-y-3">
                             {(recentlyPublishedCoursesQuery.data ?? []).map((course) => (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import {
@@ -14,7 +15,7 @@ import Badge from "@/shared/ui/Badge";
 import Button from "@/shared/ui/Button";
 import Tabs, { type TabItem } from "@/shared/ui/Tabs";
 import { SkeletonText } from "@/shared/ui/Skeleton";
-import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
+import { COURSE_STATUS_TONE, getCourseStatusLabel } from "@/shared/ui/courseStatus";
 import OverviewTab from "./tabs/OverviewTab";
 import CurriculumTab from "./tabs/CurriculumTab";
 import QuizTab from "./tabs/QuizTab";
@@ -23,13 +24,13 @@ import SettingsTab from "./tabs/SettingsTab";
 
 type CourseStatus = "draft" | "published" | "archived";
 
-const nextQuickStatus: Record<string, { status: CourseStatus; label: string }> = {
-    draft: { status: "published", label: "Publish" },
-    published: { status: "archived", label: "Archive" },
-    archived: { status: "published", label: "Xuất bản lại" },
-};
-
 const CourseEditor = () => {
+    const { t } = useTranslation(["teacher", "common"]);
+    const nextQuickStatus: Record<string, { status: CourseStatus; label: string }> = {
+        draft: { status: "published", label: t("editor.quickActionPublish") },
+        published: { status: "archived", label: t("editor.quickActionArchive") },
+        archived: { status: "published", label: t("editor.quickActionRepublish") },
+    };
     const { courseId: courseIdParam } = useParams();
     const isNew = courseIdParam === undefined;
     const courseId = isNew ? undefined : Number(courseIdParam);
@@ -80,17 +81,17 @@ const CourseEditor = () => {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Đổi trạng thái thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("editor.statusChangeFailed") });
                 return;
             }
 
             showToast({
                 tone: "success",
-                message: status === "published" ? "Khóa học đã được xuất bản" : "Đã cập nhật trạng thái",
+                message: status === "published" ? t("editor.coursePublished") : t("editor.statusUpdated"),
             });
             invalidateCourse();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("editor.connectionError") });
         } finally {
             setChangingStatus(false);
         }
@@ -105,15 +106,15 @@ const CourseEditor = () => {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                showToast({ tone: "danger", message: data?.message || "Xóa khóa học thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("editor.deleteFailed") });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã xóa khóa học" });
+            showToast({ tone: "success", message: t("editor.courseDeleted") });
             queryClient.invalidateQueries({ queryKey: teacherCoursesQueryKey });
             navigate(ROUTES.TEACHER.COURSES);
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("editor.connectionError") });
         } finally {
             setDeleting(false);
         }
@@ -123,11 +124,11 @@ const CourseEditor = () => {
     // đều nhận courseId trong path) — không chỉ riêng tab Học viên như UI_SPEC §4.3 nêu, vì chưa lưu
     // Tổng quan thì chưa có courseId để các tab này gọi API.
     const tabs: TabItem[] = [
-        { key: "overview", label: "Tổng quan" },
-        { key: "curriculum", label: "Curriculum", disabled: isNew },
-        { key: "quiz", label: "Quiz (test tổng)", disabled: isNew },
-        { key: "students", label: "Học viên", disabled: isNew },
-        { key: "settings", label: "Cài đặt", disabled: isNew },
+        { key: "overview", label: t("editor.tabOverview") },
+        { key: "curriculum", label: t("editor.tabCurriculum"), disabled: isNew },
+        { key: "quiz", label: t("editor.tabQuiz"), disabled: isNew },
+        { key: "students", label: t("editor.tabStudents"), disabled: isNew },
+        { key: "settings", label: t("editor.tabSettings"), disabled: isNew },
     ];
 
     if (!isNew && courseQuery.isLoading) {
@@ -135,7 +136,7 @@ const CourseEditor = () => {
     }
 
     if (!isNew && courseQuery.isError) {
-        return <p className="text-body text-secondary">Không tải được khóa học.</p>;
+        return <p className="text-body text-secondary">{t("editor.loadFailed")}</p>;
     }
 
     const quickAction = course ? nextQuickStatus[course.status] : undefined;
@@ -144,10 +145,10 @@ const CourseEditor = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-h2 text-primary">{course ? course.title : "Tạo khóa học mới"}</h2>
+                    <h2 className="text-h2 text-primary">{course ? course.title : t("editor.createNewCourse")}</h2>
                     {course && (
                         <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
-                            {COURSE_STATUS_LABEL[course.status] ?? course.status}
+                            {getCourseStatusLabel(course.status, t)}
                         </Badge>
                     )}
                 </div>

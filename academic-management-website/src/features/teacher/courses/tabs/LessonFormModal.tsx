@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { UploadCloud } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import type { TeacherLesson, TeacherLessonContentType } from "@/shared/api/queries/useTeacherLessonsQuery";
@@ -47,6 +48,7 @@ interface LessonFormModalProps {
 }
 
 const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSaved }: LessonFormModalProps) => {
+    const { t } = useTranslation("teacher");
     const { showToast } = useToast();
     const [form, setForm] = useState<LessonForm>(lesson ? fromLesson(lesson) : emptyForm);
     const [error, setError] = useState<string | null>(null);
@@ -75,7 +77,7 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
 
             const presignData = await presignRes.json().catch(() => null);
             if (!presignRes.ok) {
-                showToast({ tone: "danger", message: presignData?.message || "Không thể tạo link tải video" });
+                showToast({ tone: "danger", message: presignData?.message || t("lessonFormModal.presignFailed") });
                 return;
             }
 
@@ -86,14 +88,14 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
             });
 
             if (!uploadRes.ok) {
-                showToast({ tone: "danger", message: "Tải video lên thất bại" });
+                showToast({ tone: "danger", message: t("lessonFormModal.uploadFailed") });
                 return;
             }
 
             setForm((prev) => ({ ...prev, videoUrl: presignData.publicUrl }));
-            showToast({ tone: "success", message: "Đã tải video lên" });
+            showToast({ tone: "success", message: t("lessonFormModal.videoUploaded") });
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối khi tải video" });
+            showToast({ tone: "danger", message: t("lessonFormModal.uploadConnectionError") });
         } finally {
             setUploading(false);
         }
@@ -101,11 +103,11 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
 
     const handleSubmit = async () => {
         if (!form.title.trim()) {
-            setError("Tên lesson không được để trống");
+            setError(t("lessonFormModal.titleRequired"));
             return;
         }
         if (form.contentType === "video" && !form.videoUrl.trim()) {
-            setError("Lesson loại video phải có Video URL (dán link embed hoặc tải file lên)");
+            setError(t("lessonFormModal.videoUrlRequired"));
             return;
         }
         setError(null);
@@ -135,15 +137,15 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Lưu lesson thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("lessonFormModal.saveFailed") });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã lưu lesson" });
+            showToast({ tone: "success", message: t("lessonFormModal.saved") });
             onSaved();
             onClose();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("lessonFormModal.connectionError") });
         } finally {
             setSaving(false);
         }
@@ -153,25 +155,25 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
         <Modal
             open={open}
             onClose={onClose}
-            title={lesson ? "Sửa lesson" : "Thêm lesson"}
+            title={lesson ? t("lessonFormModal.editTitle") : t("lessonFormModal.addTitle")}
             size="lg"
             footer={
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={saving}>
-                        Hủy
+                        {t("lessonFormModal.cancel")}
                     </Button>
                     <Button variant="primary" loading={saving} onClick={handleSubmit}>
-                        Lưu
+                        {t("lessonFormModal.save")}
                     </Button>
                 </>
             }
         >
             <div className="space-y-4">
-                <FormField label="Tên lesson" required error={error && !form.title.trim() ? error : undefined}>
+                <FormField label={t("lessonFormModal.lessonTitleLabel")} required error={error && !form.title.trim() ? error : undefined}>
                     <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
                 </FormField>
 
-                <FormField label="Loại nội dung" required>
+                <FormField label={t("lessonFormModal.contentTypeLabel")} required>
                     <select
                         value={form.contentType}
                         onChange={(e) =>
@@ -179,14 +181,14 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
                         }
                         className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                     >
-                        <option value="document">Tài liệu/Text</option>
-                        <option value="video">Video</option>
-                        <option value="quiz">Quiz</option>
+                        <option value="document">{t("lessonFormModal.contentTypeDocument")}</option>
+                        <option value="video">{t("lessonFormModal.contentTypeVideo")}</option>
+                        <option value="quiz">{t("lessonFormModal.contentTypeQuiz")}</option>
                     </select>
                 </FormField>
 
                 {form.contentType === "document" && (
-                    <FormField label="Nội dung">
+                    <FormField label={t("lessonFormModal.contentLabel")}>
                         <Textarea
                             rows={4}
                             value={form.content}
@@ -197,9 +199,9 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
 
                 {form.contentType === "video" && (
                     <FormField
-                        label="Video URL"
+                        label={t("lessonFormModal.videoUrlLabel")}
                         required
-                        helperText="Dán link embed (VD: YouTube), hoặc lưu lesson trước rồi Sửa để tải file video lên trực tiếp"
+                        helperText={t("lessonFormModal.videoUrlHelper")}
                         error={error && form.contentType === "video" && !form.videoUrl.trim() ? error : undefined}
                     >
                         <div className="flex gap-2">
@@ -221,8 +223,8 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
                                         }}
                                     />
                                     <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-radius-md border border-action-secondary-border text-action-secondary-text hover:bg-action-secondary-bg-hover text-sm cursor-pointer">
-                                        {uploading ? "Đang tải..." : <UploadCloud size={16} aria-hidden="true" />}
-                                        Tải file lên
+                                        {uploading ? t("lessonFormModal.uploading") : <UploadCloud size={16} aria-hidden="true" />}
+                                        {t("lessonFormModal.uploadFile")}
                                     </span>
                                 </label>
                             )}
@@ -232,11 +234,11 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
 
                 {form.contentType === "quiz" && (
                     <p className="text-body-sm text-secondary">
-                        Sau khi lưu, quản lý câu hỏi cho lesson này ở tab "Quiz".
+                        {t("lessonFormModal.quizHint")}
                     </p>
                 )}
 
-                <FormField label="Thời lượng (phút)">
+                <FormField label={t("lessonFormModal.durationLabel")}>
                     <Input
                         type="number"
                         value={form.duration}
@@ -250,7 +252,7 @@ const LessonFormModal = ({ open, onClose, courseId, lesson, nextOrderIndex, onSa
                         checked={form.isPreview}
                         onChange={(e) => setForm({ ...form, isPreview: e.target.checked })}
                     />
-                    Lesson xem thử (hiển thị công khai trước khi mua)
+                    {t("lessonFormModal.previewCheckbox")}
                 </label>
             </div>
         </Modal>

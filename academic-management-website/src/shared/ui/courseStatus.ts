@@ -8,8 +8,6 @@ export const COURSE_STATUS_TONE: Record<string, "success" | "warning" | "danger"
     archived: "danger",
 };
 
-export const COURSE_STATUS_LABEL: Record<string, string> = {
-    published: "Published",
-    draft: "Draft",
-    archived: "Archived",
-};
+// Label đi qua i18n (namespace "common") thay vì map string tĩnh — nhãn hiển thị (Phase 38).
+export const getCourseStatusLabel = (status: string, t: (key: string, opts?: Record<string, unknown>) => string) =>
+    t(`common:courseStatus.${status}`, { defaultValue: status });

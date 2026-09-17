@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import { useMyCoursesQuery } from "@/shared/api/queries/useMyCoursesQuery";
 import { SkeletonCardGrid } from "@/shared/ui/Skeleton";
@@ -8,6 +9,7 @@ import Button from "@/shared/ui/Button";
 import { BookOpen } from "lucide-react";
 
 const MyCourses = () => {
+    const { t } = useTranslation("student");
     const navigate = useNavigate();
     const { data: courses = [], isLoading } = useMyCoursesQuery();
 
@@ -19,11 +21,11 @@ const MyCourses = () => {
         return (
             <EmptyState
                 icon={BookOpen}
-                title="Bạn chưa mua khóa học nào"
-                description="Khám phá thư viện khóa học và bắt đầu hành trình học tập của bạn."
+                title={t("myCourses.emptyTitle")}
+                description={t("myCourses.emptyDescription")}
                 action={
                     <Button variant="primary" onClick={() => navigate(ROUTES.COURSES)}>
-                        Khám phá khóa học
+                        {t("myCourses.exploreCourses")}
                     </Button>
                 }
             />
@@ -44,7 +46,7 @@ const MyCourses = () => {
                         <p className="text-body-sm text-secondary">{course.instructorName}</p>
                     )}
                     <p className="text-caption text-tertiary mt-1">
-                        Ngày mua: {new Date(course.enrolledAt).toLocaleDateString("vi-VN")}
+                        {t("myCourses.purchasedDate")} {new Date(course.enrolledAt).toLocaleDateString("vi-VN")}
                     </p>
                     <Button
                         variant="primary"
@@ -52,7 +54,7 @@ const MyCourses = () => {
                         className="mt-4 w-full"
                         onClick={() => navigate(ROUTES.STUDENT.LEARN(course.courseId))}
                     >
-                        Vào học
+                        {t("myCourses.goToLearning")}
                     </Button>
                 </Card>
             ))}

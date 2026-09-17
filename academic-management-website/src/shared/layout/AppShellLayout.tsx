@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import type { ReactNode } from "react";
 import SidebarNav, { type SidebarNavItem } from "@/shared/ui/SidebarNav";
 import AppHeader from "@/shared/layout/AppHeader";
+import PageLoadingFallback from "@/shared/ui/PageLoadingFallback";
 import type { DropdownMenuItem } from "@/shared/ui/DropdownMenu";
 
 interface AppShellLayoutProps {
@@ -43,7 +45,9 @@ const AppShellLayout = ({
                 </div>
 
                 <main className="ml-sidebar flex-1 p-6 min-h-[calc(100vh-64px)]">
-                    <Outlet />
+                    <Suspense fallback={<PageLoadingFallback />}>
+                        <Outlet />
+                    </Suspense>
                 </main>
             </div>
         </div>

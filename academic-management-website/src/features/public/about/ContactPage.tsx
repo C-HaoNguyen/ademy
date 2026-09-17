@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Card from "@/shared/ui/Card";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -21,6 +22,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const initialValues: FormValues = { fullName: "", email: "", message: "" };
 
 const ContactPage = () => {
+    const { t } = useTranslation("public");
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [values, setValues] = useState<FormValues>(initialValues);
@@ -29,10 +31,10 @@ const ContactPage = () => {
 
     const validate = (): FormErrors => {
         const next: FormErrors = {};
-        if (!values.fullName.trim()) next.fullName = "Vui lòng nhập họ và tên";
-        if (!values.email.trim()) next.email = "Vui lòng nhập email";
-        else if (!EMAIL_PATTERN.test(values.email.trim())) next.email = "Email không hợp lệ";
-        if (!values.message.trim()) next.message = "Vui lòng nhập nội dung liên hệ";
+        if (!values.fullName.trim()) next.fullName = t("contact.validation.fullNameRequired");
+        if (!values.email.trim()) next.email = t("contact.validation.emailRequired");
+        else if (!EMAIL_PATTERN.test(values.email.trim())) next.email = t("contact.validation.emailInvalid");
+        if (!values.message.trim()) next.message = t("contact.validation.messageRequired");
         return next;
     };
 
@@ -51,7 +53,7 @@ const ContactPage = () => {
         await new Promise((resolve) => setTimeout(resolve, 600));
         setSubmitting(false);
 
-        showToast({ tone: "success", message: "Đã gửi liên hệ thành công" });
+        showToast({ tone: "success", message: t("contact.submitSuccess") });
         setValues(initialValues);
         setErrors({});
     };
@@ -67,7 +69,7 @@ const ContactPage = () => {
                         transition={{ duration: 0.5 }}
                         className="text-h1 text-primary"
                     >
-                        Liên hệ với chúng tôi
+                        {t("contact.heroTitle")}
                     </motion.h1>
 
                     <motion.p
@@ -76,8 +78,7 @@ const ContactPage = () => {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="mt-4 text-body-lg text-secondary max-w-2xl mx-auto"
                     >
-                        Có câu hỏi hoặc cần hỗ trợ? Đội ngũ Ademy luôn sẵn sàng
-                        lắng nghe và đồng hành cùng bạn.
+                        {t("contact.heroSubtitle")}
                     </motion.p>
                 </div>
             </section>
@@ -94,27 +95,25 @@ const ContactPage = () => {
                     >
                         <Card variant="marketing">
                             <h2 className="text-h3 text-primary">
-                                Thông tin liên hệ
+                                {t("contact.infoTitle")}
                             </h2>
 
                             <p className="mt-3 text-secondary">
-                                Nếu bạn cần tư vấn khóa học, hỗ trợ kỹ thuật
-                                hoặc hợp tác, hãy liên hệ với chúng tôi qua
-                                các kênh sau.
+                                {t("contact.infoDescription")}
                             </p>
 
                             <div className="mt-6 space-y-2 text-body text-primary">
                                 <div>
-                                    <span className="font-medium">Địa chỉ:</span>{" "}
-                                    123 Nguyễn Văn Cừ, TP. Hồ Chí Minh
+                                    <span className="font-medium">{t("contact.addressLabel")}</span>{" "}
+                                    {t("contact.addressValue")}
                                 </div>
                                 <div>
-                                    <span className="font-medium">Email:</span>{" "}
+                                    <span className="font-medium">{t("contact.emailLabel")}</span>{" "}
                                     support@ademy.edu.vn
                                 </div>
                                 <div>
-                                    <span className="font-medium">Hotline:</span>{" "}
-                                    0123 456 789
+                                    <span className="font-medium">{t("contact.hotlineLabel")}</span>{" "}
+                                    {t("contact.hotlineValue")}
                                 </div>
                             </div>
                         </Card>
@@ -129,11 +128,11 @@ const ContactPage = () => {
                     >
                         <Card variant="marketing">
                             <h3 className="text-h3 text-primary mb-6">
-                                Gửi tin nhắn cho chúng tôi
+                                {t("contact.formTitle")}
                             </h3>
 
                             <form onSubmit={handleSubmit} noValidate className="space-y-4">
-                                <FormField label="Họ và tên" required error={errors.fullName}>
+                                <FormField label={t("contact.fullNameLabel")} required error={errors.fullName}>
                                     <Input
                                         value={values.fullName}
                                         onChange={(e) => setValues((v) => ({ ...v, fullName: e.target.value }))}
@@ -141,7 +140,7 @@ const ContactPage = () => {
                                     />
                                 </FormField>
 
-                                <FormField label="Email" required error={errors.email}>
+                                <FormField label={t("contact.emailFieldLabel")} required error={errors.email}>
                                     <Input
                                         type="email"
                                         value={values.email}
@@ -150,7 +149,7 @@ const ContactPage = () => {
                                     />
                                 </FormField>
 
-                                <FormField label="Nội dung liên hệ" required error={errors.message}>
+                                <FormField label={t("contact.messageLabel")} required error={errors.message}>
                                     <Textarea
                                         rows={4}
                                         value={values.message}
@@ -159,7 +158,7 @@ const ContactPage = () => {
                                 </FormField>
 
                                 <Button type="submit" variant="primary" loading={submitting} className="w-full">
-                                    Gửi liên hệ
+                                    {t("contact.submit")}
                                 </Button>
                             </form>
                         </Card>
@@ -177,15 +176,14 @@ const ContactPage = () => {
                     className="mx-auto max-w-3xl px-6 text-center"
                 >
                     <h2 className="text-h2 text-primary">
-                        Sẵn sàng bắt đầu học tập cùng Ademy?
+                        {t("contact.ctaTitle")}
                     </h2>
                     <p className="mt-4 text-secondary">
-                        Đăng ký tài khoản để trải nghiệm hệ thống học tập
-                        và quản lý khóa học toàn diện.
+                        {t("contact.ctaSubtitle")}
                     </p>
                     <div className="mt-8">
                         <Button variant="primary" onClick={() => navigate("/signup")}>
-                            Đăng ký ngay
+                            {t("contact.ctaButton")}
                         </Button>
                     </div>
                 </motion.div>

@@ -13,10 +13,10 @@ const PAYMENT_STATUS_TONE: Record<string, "success" | "warning" | "danger"> = {
     FAILED: "danger",
 };
 
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-    SUCCESS: "Thành công",
-    PENDING: "Đang xử lý",
-    FAILED: "Thất bại",
+const PAYMENT_STATUS_KEY: Record<string, string> = {
+    SUCCESS: "success",
+    PENDING: "pending",
+    FAILED: "failed",
 };
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -28,8 +28,13 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 export const getPaymentStatusTone = (status: string | null | undefined): "success" | "warning" | "danger" | "info" =>
     PAYMENT_STATUS_TONE[status?.toUpperCase() ?? ""] ?? "info";
 
-export const getPaymentStatusLabel = (status: string | null | undefined): string =>
-    PAYMENT_STATUS_LABEL[status?.toUpperCase() ?? ""] ?? status ?? "—";
+export const getPaymentStatusLabel = (
+    status: string | null | undefined,
+    t: (key: string, opts?: Record<string, unknown>) => string
+): string => {
+    const key = PAYMENT_STATUS_KEY[status?.toUpperCase() ?? ""];
+    return key ? t(`common:paymentStatus.${key}`) : status ?? "—";
+};
 
 export const getPaymentMethodLabel = (method: string | null | undefined): string =>
     PAYMENT_METHOD_LABEL[method?.toUpperCase() ?? ""] ?? method ?? "—";

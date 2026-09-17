@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import CourseCard from "./components/CourseCard";
 import { useCoursesQuery, type RawCourse } from "@/shared/api/queries/useCoursesQuery";
 import { useCategoriesQuery } from "@/shared/api/queries/useCategoriesQuery";
@@ -21,14 +22,6 @@ const toggleValue = (
             ? prev.filter((item) => item !== value)
             : [...prev, value]
     );
-};
-
-// Backend trả level dạng lowercase enum (CourseLevel.toValue()); map sang nhãn hiển thị
-// tiếng Việt cho nhất quán với phần còn lại của UI.
-const LEVEL_LABELS: Record<string, string> = {
-    beginner: "Cơ bản",
-    intermediate: "Trung cấp",
-    advanced: "Nâng cao",
 };
 
 type Course = {
@@ -70,6 +63,10 @@ function mapCourse(item: RawCourse): Course {
 }
 
 const CourseList = () => {
+    const { t } = useTranslation("courses");
+    // Backend trả level dạng lowercase enum (CourseLevel.toValue()); map sang nhãn hiển thị
+    // qua translation key cho nhất quán với phần còn lại của UI.
+    const getLevelLabel = (level: string) => t(`level.${level}`, { defaultValue: level });
     const [searchParams] = useSearchParams();
     const instructorParam = searchParams.get("instructor");
 
@@ -195,10 +192,10 @@ const CourseList = () => {
                 className="max-w-6xl mx-auto mb-10"
             >
                 <h1 className="text-h1 text-brand mb-3">
-                    Khám phá khóa học của chúng tôi!
+                    {t("list.heroTitle")}
                 </h1>
                 <p className="text-body-lg text-secondary">
-                    Học hỏi kỹ năng mới, nâng cấp bản thân và phát triển sự nghiệp
+                    {t("list.heroSubtitle")}
                 </p>
             </motion.div>
 
@@ -212,7 +209,7 @@ const CourseList = () => {
                 {/* ===== Search (LEFT) ===== */}
                 <div className="w-full md:max-w-md relative">
                     <label htmlFor="course-search" className="sr-only">
-                        Tìm kiếm khóa học
+                        {t("list.searchLabel")}
                     </label>
                     <Search
                         className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-placeholder"
@@ -222,7 +219,7 @@ const CourseList = () => {
                     <Input
                         id="course-search"
                         type="text"
-                        placeholder="Tìm kiếm khóa học..."
+                        placeholder={t("list.searchPlaceholder")}
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         className="pl-11"
@@ -232,7 +229,7 @@ const CourseList = () => {
                 <div className="flex flex-wrap items-center gap-4 justify-end">
                     {/* Label */}
                     <div className="flex items-center text-body-sm text-secondary">
-                        Lọc:
+                        {t("list.filterLabel")}
                     </div>
 
                     {/* ===== Category Multi Select ===== */}
@@ -250,7 +247,7 @@ const CourseList = () => {
                                     hover:bg-surface-muted transition-colors duration-200"
                         >
                             {categories.length === 0 ? (
-                                <span className="text-placeholder">Phân loại</span>
+                                <span className="text-placeholder">{t("list.categoryPlaceholder")}</span>
                             ) : (
                                 categories.map((item) => (
                                     <span
@@ -268,7 +265,7 @@ const CourseList = () => {
                         {activeDropdown === "category" && (
                             <ul className="absolute z-dropdown mt-2 w-full rounded-radius-md border border-default bg-surface shadow-elevated overflow-hidden">
                                 {categoryOptions.length === 0 ? (
-                                    <li className="px-4 py-2 text-body-sm text-placeholder">Không có danh mục</li>
+                                    <li className="px-4 py-2 text-body-sm text-placeholder">{t("list.noCategoryOption")}</li>
                                 ) : (
                                     categoryOptions.map((item) => {
                                         const active = categories.includes(item);
@@ -310,7 +307,7 @@ const CourseList = () => {
                                     hover:bg-surface-muted transition-colors duration-200"
                         >
                             {levels.length === 0 ? (
-                                <span className="text-placeholder">Trình độ</span>
+                                <span className="text-placeholder">{t("list.levelPlaceholder")}</span>
                             ) : (
                                 levels.map((item) => (
                                     <span
@@ -318,7 +315,7 @@ const CourseList = () => {
                                         className="rounded-radius-full bg-surface-brand-muted px-2 py-1
                                    text-xs text-brand"
                                     >
-                                        {LEVEL_LABELS[item] ?? item}
+                                        {getLevelLabel(item)}
                                     </span>
                                 ))
                             )}
@@ -328,7 +325,7 @@ const CourseList = () => {
                         {activeDropdown === "level" && (
                             <ul className="absolute z-dropdown mt-2 w-full rounded-radius-md border border-default bg-surface shadow-elevated overflow-hidden">
                                 {levelOptions.length === 0 ? (
-                                    <li className="px-4 py-2 text-body-sm text-placeholder">Không có trình độ</li>
+                                    <li className="px-4 py-2 text-body-sm text-placeholder">{t("list.noLevelOption")}</li>
                                 ) : (
                                     levelOptions.map((item) => {
                                         const active = levels.includes(item);
@@ -345,7 +342,7 @@ const CourseList = () => {
                                                         : "text-secondary hover:bg-surface-muted"
                                                     }`}
                                             >
-                                                {LEVEL_LABELS[item] ?? item}
+                                                {getLevelLabel(item)}
                                                 {active && <Check size={14} aria-hidden="true" />}
                                             </li>
                                         );
@@ -364,10 +361,10 @@ const CourseList = () => {
                                         px-3 py-2 pr-10 text-body-sm text-secondary focus:border-brand focus:ring-2 focus:ring-focus
                                         hover:bg-surface-muted transition-colors duration-200"
                         >
-                            <option value="popular">Phổ biến nhất</option>
-                            <option value="newest">Mới nhất</option>
-                            <option value="price-asc">Giá tăng dần</option>
-                            <option value="price-desc">Giá giảm dần</option>
+                            <option value="popular">{t("list.sortPopular")}</option>
+                            <option value="newest">{t("list.sortNewest")}</option>
+                            <option value="price-asc">{t("list.sortPriceAsc")}</option>
+                            <option value="price-desc">{t("list.sortPriceDesc")}</option>
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-placeholder" size={16} aria-hidden="true" />
                     </div>
@@ -381,23 +378,23 @@ const CourseList = () => {
                 ) : loadError ? (
                     <EmptyState
                         icon={SearchX}
-                        title="Không thể tải danh sách khóa học"
-                        description="Đã có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại."
+                        title={t("list.loadErrorTitle")}
+                        description={t("list.loadErrorDescription")}
                         action={
                             <Button variant="primary" size="sm" onClick={() => coursesQuery.refetch()}>
-                                Thử lại
+                                {t("list.retry")}
                             </Button>
                         }
                     />
                 ) : filteredCourses.length === 0 ? (
                     <EmptyState
                         icon={SearchX}
-                        title="Không tìm thấy khóa học phù hợp"
-                        description="Hãy thử điều chỉnh từ khóa hoặc bộ lọc để xem thêm kết quả."
+                        title={t("list.emptyTitle")}
+                        description={t("list.emptyDescription")}
                         action={
                             hasActiveFilters ? (
                                 <Button variant="primary" size="sm" onClick={clearFilters}>
-                                    Xóa bộ lọc
+                                    {t("list.clearFilters")}
                                 </Button>
                             ) : undefined
                         }
@@ -421,7 +418,7 @@ const CourseList = () => {
                     {/* Prev */}
                     <button
                         type="button"
-                        aria-label="Trang trước"
+                        aria-label={t("list.prevPage")}
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}
                         className={`rounded-radius-md px-3 py-2 text-body-sm font-medium transition-colors duration-200
@@ -457,7 +454,7 @@ const CourseList = () => {
                     {/* Next */}
                     <button
                         type="button"
-                        aria-label="Trang sau"
+                        aria-label={t("list.nextPage")}
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => p + 1)}
                         className={`rounded-radius-md px-3 py-2 text-body-sm font-medium transition-colors duration-200

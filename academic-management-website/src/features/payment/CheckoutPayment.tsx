@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 import { getCheckoutSession, setCheckoutSession, type CheckoutSession } from "./checkoutSession";
 import { API_ENDPOINTS, ROUTES } from "@/config/constants";
@@ -16,6 +17,7 @@ const GATEWAY_OPTIONS: RadioCardOption[] = [
 ];
 
 const CheckoutPayment = () => {
+    const { t } = useTranslation("courses");
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [session, setSession] = useState<CheckoutSession | null>(null);
@@ -64,7 +66,7 @@ const CheckoutPayment = () => {
             if (!res.ok && (!data || typeof data.success !== "boolean")) {
                 showToast({
                     tone: "danger",
-                    message: data?.message ?? "Không thể khởi tạo giao dịch, vui lòng thử lại",
+                    message: data?.message ?? t("checkoutPayment.initFailed"),
                 });
                 return;
             }
@@ -81,7 +83,7 @@ const CheckoutPayment = () => {
             navigate(ROUTES.CHECKOUT_RESULT);
         } catch (err) {
             console.error("Checkout failed", err);
-            showToast({ tone: "danger", message: "Không thể khởi tạo giao dịch, vui lòng thử lại" });
+            showToast({ tone: "danger", message: t("checkoutPayment.initFailed") });
         } finally {
             setSubmitting(false);
         }
@@ -94,7 +96,7 @@ const CheckoutPayment = () => {
     return (
         <div className="bg-background">
             <div className="mx-auto max-w-3xl px-6 py-16 space-y-6">
-                <h1 className="text-h2 text-primary">Chọn phương thức thanh toán</h1>
+                <h1 className="text-h2 text-primary">{t("checkoutPayment.title")}</h1>
 
                 <OrderSummaryCard
                     compact
@@ -114,10 +116,10 @@ const CheckoutPayment = () => {
 
                 <div className="flex flex-col gap-3">
                     <Button variant="cta" size="lg" loading={submitting} onClick={handleConfirm}>
-                        Xác nhận thanh toán
+                        {t("checkoutPayment.confirm")}
                     </Button>
                     <Link to={ROUTES.CHECKOUT} className="text-center text-body-sm text-tertiary hover:text-primary">
-                        Quay lại
+                        {t("checkoutPayment.back")}
                     </Link>
                 </div>
             </div>

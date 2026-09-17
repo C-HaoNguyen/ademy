@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { adminCoursesQueryKey } from "@/shared/api/queries/useAdminCoursesQuery";
@@ -18,6 +19,7 @@ interface ForceUnpublishModalProps {
 // UI_SPEC §5.3 — Force-unpublish chỉ ẩn khỏi catalog (course chuyển ARCHIVED), KHÔNG thu hồi quyền
 // truy cập của học viên đã mua (BR-005) — đó là action "Thu hồi quyền truy cập" riêng biệt.
 const ForceUnpublishModal = ({ open, onClose, course }: ForceUnpublishModalProps) => {
+    const { t } = useTranslation("admin");
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const [reason, setReason] = useState("");
@@ -33,7 +35,7 @@ const ForceUnpublishModal = ({ open, onClose, course }: ForceUnpublishModalProps
     const handleConfirm = async () => {
         if (!course) return;
         if (!reason.trim()) {
-            setError("Vui lòng nhập lý do vi phạm");
+            setError(t("forceUnpublishModal.reasonRequired"));
             return;
         }
 
@@ -46,15 +48,15 @@ const ForceUnpublishModal = ({ open, onClose, course }: ForceUnpublishModalProps
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Force-unpublish thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("forceUnpublishModal.failed") });
                 return;
             }
 
-            showToast({ tone: "success", message: "Đã force-unpublish khóa học" });
+            showToast({ tone: "success", message: t("forceUnpublishModal.success") });
             queryClient.invalidateQueries({ queryKey: adminCoursesQueryKey });
             handleClose();
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("forceUnpublishModal.connectionError") });
         } finally {
             setSubmitting(false);
         }
@@ -64,24 +66,23 @@ const ForceUnpublishModal = ({ open, onClose, course }: ForceUnpublishModalProps
         <Modal
             open={open}
             onClose={handleClose}
-            title="Force-unpublish khóa học"
+            title={t("forceUnpublishModal.title")}
             size="sm"
             footer={
                 <>
                     <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-                        Hủy
+                        {t("forceUnpublishModal.cancel")}
                     </Button>
                     <Button variant="danger" onClick={handleConfirm} loading={submitting}>
-                        Force-unpublish
+                        {t("forceUnpublishModal.confirm")}
                     </Button>
                 </>
             }
         >
             <p className="text-body text-secondary mb-4">
-                Ẩn <span className="font-semibold text-primary">{course?.title}</span> khỏi catalog công khai.
-                Học viên đã mua không bị ảnh hưởng, vẫn giữ quyền truy cập.
+                {t("forceUnpublishModal.descriptionPrefix")} <span className="font-semibold text-primary">{course?.title}</span> {t("forceUnpublishModal.descriptionSuffix")}
             </p>
-            <FormField label="Lý do vi phạm" required error={error}>
+            <FormField label={t("forceUnpublishModal.reasonLabel")} required error={error}>
                 <Textarea
                     rows={3}
                     value={reason}
@@ -89,7 +90,7 @@ const ForceUnpublishModal = ({ open, onClose, course }: ForceUnpublishModalProps
                         setReason(e.target.value);
                         if (error) setError(undefined);
                     }}
-                    placeholder="Mô tả lý do vi phạm dẫn tới force-unpublish"
+                    placeholder={t("forceUnpublishModal.reasonPlaceholder")}
                 />
             </FormField>
         </Modal>

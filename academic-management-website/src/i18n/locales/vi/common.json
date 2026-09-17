@@ -1,0 +1,49 @@
+{
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
+    "courseStatus": {
+        "published": "Published",
+        "draft": "Draft",
+        "archived": "Archived"
+    },
+    "paymentStatus": {
+        "success": "Thành công",
+        "pending": "Đang xử lý",
+        "failed": "Thất bại"
+    },
+    "refundBusinessStatus": {
+        "requested": "Đang chờ",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối"
+    },
+    "refundExecutionStatus": {
+        "notStarted": "Chưa xử lý",
+        "manualCompleted": "Đã hoàn tất"
+    },
+    "confirmDeleteModal": {
+        "title": "Xác nhận xóa",
+        "cancel": "Hủy",
+        "delete": "Xóa",
+        "confirmPrefix": "Xóa",
+        "confirmSuffix": "? Hành động này không thể hoàn tác."
+    },
+    "toast": {
+        "closeAria": "Đóng thông báo"
+    },
+    "modal": {
+        "closeAria": "Đóng"
+    },
+    "dateRangeInput": {
+        "weekdayMon": "T2",
+        "weekdayTue": "T3",
+        "weekdayWed": "T4",
+        "weekdayThu": "T5",
+        "weekdayFri": "T6",
+        "weekdaySat": "T7",
+        "weekdaySun": "CN",
+        "defaultPlaceholder": "Chọn khoảng thời gian",
+        "dialogAria": "Chọn khoảng ngày",
+        "prevMonth": "Tháng trước",
+        "nextMonth": "Tháng sau"
+    }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 import { useCategoriesQuery } from "@/shared/api/queries/useCategoriesQuery";
@@ -44,6 +45,7 @@ interface OverviewTabProps {
 }
 
 const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
+    const { t } = useTranslation("teacher");
     const { showToast } = useToast();
     const categoriesQuery = useCategoriesQuery();
     const [form, setForm] = useState<OverviewForm>(course ? fromCourse(course) : emptyForm);
@@ -56,9 +58,9 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
 
     const validate = (): boolean => {
         const nextErrors: Record<string, string> = {};
-        if (!form.title.trim()) nextErrors.title = "Tên khóa học không được để trống";
-        if (!form.categoryId) nextErrors.categoryId = "Vui lòng chọn danh mục";
-        if (!form.price || Number(form.price) < 0) nextErrors.price = "Giá không hợp lệ";
+        if (!form.title.trim()) nextErrors.title = t("overviewTab.titleRequired");
+        if (!form.categoryId) nextErrors.categoryId = t("overviewTab.categoryRequired");
+        if (!form.price || Number(form.price) < 0) nextErrors.price = t("overviewTab.priceInvalid");
         setErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
     };
@@ -90,14 +92,14 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                showToast({ tone: "danger", message: data?.message || "Lưu khóa học thất bại" });
+                showToast({ tone: "danger", message: data?.message || t("overviewTab.saveFailed") });
                 return;
             }
 
-            showToast({ tone: "success", message: courseId ? "Đã lưu thay đổi" : "Đã tạo khóa học" });
+            showToast({ tone: "success", message: courseId ? t("overviewTab.savedChanges") : t("overviewTab.courseCreated") });
             onSaved(data as TeacherCourse);
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("overviewTab.connectionError") });
         } finally {
             setSaving(false);
         }
@@ -109,27 +111,27 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
         <Card variant="app">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                    <FormField label="Tên khóa học" required error={errors.title}>
+                    <FormField label={t("overviewTab.courseTitleLabel")} required error={errors.title}>
                         <Input
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
-                            placeholder="VD: Lập trình React từ cơ bản"
+                            placeholder={t("overviewTab.courseTitlePlaceholder")}
                         />
                     </FormField>
                 </div>
 
                 <div className="md:col-span-2">
-                    <FormField label="Mô tả khóa học" helperText="Hiển thị ở trang chi tiết khóa học">
+                    <FormField label={t("overviewTab.descriptionLabel")} helperText={t("overviewTab.descriptionHelper")}>
                         <Textarea
                             rows={4}
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            placeholder="Mô tả ngắn gọn nội dung khóa học"
+                            placeholder={t("overviewTab.descriptionPlaceholder")}
                         />
                     </FormField>
                 </div>
 
-                <FormField label="Danh mục" required error={errors.categoryId}>
+                <FormField label={t("overviewTab.categoryLabel")} required error={errors.categoryId}>
                     <select
                         value={form.categoryId ?? ""}
                         onChange={(e) =>
@@ -137,7 +139,7 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
                         }
                         className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                     >
-                        <option value="">-- Chọn danh mục --</option>
+                        <option value="">{t("overviewTab.categoryPlaceholder")}</option>
                         {categories.map((c) => (
                             <option key={c.categoryId} value={c.categoryId}>
                                 {c.categoryName}
@@ -146,28 +148,28 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
                     </select>
                 </FormField>
 
-                <FormField label="Trình độ">
+                <FormField label={t("overviewTab.levelLabel")}>
                     <select
                         value={form.level}
                         onChange={(e) => setForm({ ...form, level: e.target.value as OverviewForm["level"] })}
                         className="h-10 w-full rounded-radius-md border border-transparent bg-surface-muted px-3 text-body text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus:border-brand"
                     >
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
+                        <option value="beginner">{t("overviewTab.levelBeginner")}</option>
+                        <option value="intermediate">{t("overviewTab.levelIntermediate")}</option>
+                        <option value="advanced">{t("overviewTab.levelAdvanced")}</option>
                     </select>
                 </FormField>
 
-                <FormField label="Giá khóa học (VNĐ)" required error={errors.price}>
+                <FormField label={t("overviewTab.priceLabel")} required error={errors.price}>
                     <Input
                         type="number"
                         value={form.price}
                         onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        placeholder="VD: 499000"
+                        placeholder={t("overviewTab.pricePlaceholder")}
                     />
                 </FormField>
 
-                <FormField label="Thumbnail URL" helperText="Ảnh đại diện cho khóa học">
+                <FormField label={t("overviewTab.thumbnailLabel")} helperText={t("overviewTab.thumbnailHelper")}>
                     <Input
                         value={form.thumbnail}
                         onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
@@ -178,7 +180,7 @@ const OverviewTab = ({ course, courseId, onSaved }: OverviewTabProps) => {
 
             <div className="mt-6 flex justify-end">
                 <Button variant="primary" loading={saving} onClick={handleSubmit}>
-                    Lưu
+                    {t("overviewTab.save")}
                 </Button>
             </div>
         </Card>

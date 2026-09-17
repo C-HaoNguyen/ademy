@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type UserProfile } from "../../../types/User";
 import Badge from "../../../shared/ui/Badge";
 import Card from "../../../shared/ui/Card";
@@ -11,6 +12,7 @@ import { API_ENDPOINTS } from "@/config/constants";
 import { apiClient } from "@/shared/api/client";
 
 const Profile = () => {
+    const { t } = useTranslation("student");
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ const Profile = () => {
         );
     }
 
-    if (!user) return <div className="text-body text-secondary">Không có dữ liệu</div>;
+    if (!user) return <div className="text-body text-secondary">{t("profile.noData")}</div>;
 
     const handleSave = async () => {
         if (!user) return;
@@ -66,16 +68,16 @@ const Profile = () => {
 
             if (!res.ok) {
                 // backend throw RuntimeException → message nằm ở đây
-                showToast({ tone: "danger", message: data.message || "Cập nhật thất bại" });
+                showToast({ tone: "danger", message: data.message || t("profile.updateFailed") });
                 return;
             }
 
             setUser(data);
             setOriginalUser(data);
             setIsEditing(false);
-            showToast({ tone: "success", message: "Đã lưu thay đổi" });
+            showToast({ tone: "success", message: t("profile.saveSuccess") });
         } catch {
-            showToast({ tone: "danger", message: "Lỗi kết nối server" });
+            showToast({ tone: "danger", message: t("profile.connectionError") });
         } finally {
             setSaving(false);
         }
@@ -86,7 +88,7 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center gap-8">
                 <img
                     src={user.avatarUrl || "https://cdn-icons-png.flaticon.com/512/8188/8188362.png"}
-                    alt={`Ảnh đại diện của ${user.fullName}`}
+                    alt={t("profile.avatarAlt", { fullName: user.fullName })}
                     className="w-32 h-32 rounded-full ring-4 ring-focus object-cover"
                 />
 
@@ -104,7 +106,7 @@ const Profile = () => {
 
                 {!isEditing ? (
                     <Button variant="primary" onClick={() => setIsEditing(true)}>
-                        Chỉnh sửa
+                        {t("profile.edit")}
                     </Button>
                 ) : (
                     <div className="flex gap-3">
@@ -115,11 +117,11 @@ const Profile = () => {
                                 setIsEditing(false);
                             }}
                         >
-                            Hủy
+                            {t("profile.cancel")}
                         </Button>
 
                         <Button variant="primary" loading={saving} onClick={handleSave}>
-                            Lưu thay đổi
+                            {t("profile.saveChanges")}
                         </Button>
                     </div>
                 )}
@@ -128,21 +130,21 @@ const Profile = () => {
             <div className="my-8 border-t border-default" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Email">
+                <FormField label={t("profile.emailLabel")}>
                     <Input
                         value={user.email}
                         disabled={!isEditing}
                         onChange={(e) => setUser({ ...user, email: e.target.value })}
                     />
                 </FormField>
-                <FormField label="Họ và tên">
+                <FormField label={t("profile.fullNameLabel")}>
                     <Input
                         value={user.fullName}
                         disabled={!isEditing}
                         onChange={(e) => setUser({ ...user, fullName: e.target.value })}
                     />
                 </FormField>
-                <FormField label="Username">
+                <FormField label={t("profile.usernameLabel")}>
                     <Input
                         value={user.username}
                         disabled={!isEditing}

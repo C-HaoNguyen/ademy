@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Plus, Pencil, Eye, BookOpen } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import {
@@ -11,19 +12,20 @@ import Button from "@/shared/ui/Button";
 import Badge from "@/shared/ui/Badge";
 import EmptyState from "@/shared/ui/EmptyState";
 import Table, { type TableColumn, type TableSort } from "@/shared/ui/Table";
-import { COURSE_STATUS_TONE, COURSE_STATUS_LABEL } from "@/shared/ui/courseStatus";
+import { COURSE_STATUS_TONE, getCourseStatusLabel } from "@/shared/ui/courseStatus";
 
 type StatusFilter = "all" | "draft" | "published" | "archived";
 
-const statusFilters: { key: StatusFilter; label: string }[] = [
-    { key: "all", label: "Tất cả" },
-    { key: "draft", label: "Draft" },
-    { key: "published", label: "Published" },
-    { key: "archived", label: "Archived" },
-];
-
 const TeacherCoursesList = () => {
+    const { t } = useTranslation(["teacher", "common"]);
     const navigate = useNavigate();
+
+    const statusFilters: { key: StatusFilter; label: string }[] = [
+        { key: "all", label: t("coursesList.filterAll") },
+        { key: "draft", label: t("common:courseStatus.draft") },
+        { key: "published", label: t("common:courseStatus.published") },
+        { key: "archived", label: t("common:courseStatus.archived") },
+    ];
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [sortBy, setSortBy] = useState<TableSort | undefined>(undefined);
 
@@ -61,34 +63,34 @@ const TeacherCoursesList = () => {
     const columns: TableColumn<TeacherCourse>[] = [
         {
             key: "title",
-            header: "Tên khóa học",
+            header: t("coursesList.columnTitle"),
             sortable: true,
             render: (course) => <span className="font-medium text-primary">{course.title}</span>,
         },
         {
             key: "status",
-            header: "Trạng thái",
+            header: t("coursesList.columnStatus"),
             sortable: true,
             render: (course) => (
                 <Badge variant="status" tone={COURSE_STATUS_TONE[course.status] ?? "info"}>
-                    {COURSE_STATUS_LABEL[course.status] ?? course.status}
+                    {getCourseStatusLabel(course.status, t)}
                 </Badge>
             ),
         },
         {
             key: "studentCount",
-            header: "Số học viên",
+            header: t("coursesList.columnStudentCount"),
             render: (course) => studentCountByCourseId.get(course.courseId) ?? 0,
         },
         {
             key: "updatedAt",
-            header: "Ngày cập nhật",
+            header: t("coursesList.columnUpdatedAt"),
             sortable: true,
             render: (course) => new Date(course.updatedAt).toLocaleDateString("vi-VN"),
         },
         {
             key: "actions",
-            header: "Action",
+            header: t("coursesList.columnActions"),
             render: (course) => (
                 <div className="flex items-center gap-1">
                     <button
@@ -98,8 +100,8 @@ const TeacherCoursesList = () => {
                             navigate(ROUTES.TEACHER.COURSE_EDIT(course.courseId));
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-brand hover:bg-surface-brand-muted transition-colors"
-                        title="Sửa"
-                        aria-label={`Sửa khóa học ${course.title}`}
+                        title={t("coursesList.edit")}
+                        aria-label={t("coursesList.editAria", { title: course.title })}
                     >
                         <Pencil size={16} aria-hidden="true" />
                     </button>
@@ -110,8 +112,8 @@ const TeacherCoursesList = () => {
                             navigate(ROUTES.COURSE_DETAIL(String(course.courseId)));
                         }}
                         className="cursor-pointer p-2 rounded-radius-md text-secondary hover:bg-surface-muted transition-colors"
-                        title="Xem"
-                        aria-label={`Xem khóa học ${course.title}`}
+                        title={t("coursesList.view")}
+                        aria-label={t("coursesList.viewAria", { title: course.title })}
                     >
                         <Eye size={16} aria-hidden="true" />
                     </button>
@@ -124,13 +126,13 @@ const TeacherCoursesList = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-h2 text-primary">Khóa học của tôi</h2>
+                    <h2 className="text-h2 text-primary">{t("coursesList.title")}</h2>
                     <p className="text-body-sm text-secondary mt-1">
-                        Quản lý toàn bộ khóa học bạn đang giảng dạy
+                        {t("coursesList.subtitle")}
                     </p>
                 </div>
                 <Button variant="primary" iconLeft={Plus} onClick={() => navigate(ROUTES.TEACHER.COURSE_NEW)}>
-                    Tạo khóa học mới
+                    {t("coursesList.createCourse")}
                 </Button>
             </div>
 
@@ -162,11 +164,11 @@ const TeacherCoursesList = () => {
                 emptyState={
                     <EmptyState
                         icon={BookOpen}
-                        title="Bạn chưa có khóa học nào"
-                        description="Tạo khóa học mới để bắt đầu xây dựng nội dung."
+                        title={t("coursesList.emptyTitle")}
+                        description={t("coursesList.emptyDescription")}
                         action={
                             <Button variant="primary" iconLeft={Plus} onClick={() => navigate(ROUTES.TEACHER.COURSE_NEW)}>
-                                Tạo khóa học mới
+                                {t("coursesList.createCourse")}
                             </Button>
                         }
                     />

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Menu } from "lucide-react";
 import ProgressBar from "@/shared/ui/ProgressBar";
 import Modal from "@/shared/ui/Modal";
@@ -15,6 +16,7 @@ interface LessonPlayerLayoutProps {
 // header 64px) theo quyết định đã chốt ở COMPONENT_SYSTEM.md §5. Topbar 56px theo Design System §6
 // (khác Header 64px của AppShellLayout — 2 ngữ cảnh khác nhau, không dùng chung).
 const LessonPlayerLayout = ({ courseTitle, progressPercent, onExit, sidebar, children }: LessonPlayerLayoutProps) => {
+    const { t } = useTranslation("student");
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     return (
@@ -26,7 +28,7 @@ const LessonPlayerLayout = ({ courseTitle, progressPercent, onExit, sidebar, chi
                     className="flex items-center gap-1.5 text-body-sm font-medium text-secondary hover:text-primary transition-colors cursor-pointer shrink-0"
                 >
                     <ArrowLeft size={18} aria-hidden="true" />
-                    Thoát
+                    {t("lessonPlayer.exit")}
                 </button>
 
                 <div className="flex-1 min-w-0">
@@ -37,7 +39,7 @@ const LessonPlayerLayout = ({ courseTitle, progressPercent, onExit, sidebar, chi
                 <button
                     type="button"
                     onClick={() => setMobileSidebarOpen(true)}
-                    aria-label="Danh sách bài học"
+                    aria-label={t("lessonPlayer.lessonListLabel")}
                     className="lg:hidden p-2 rounded-radius-md hover:bg-surface-muted text-secondary shrink-0"
                 >
                     <Menu size={20} aria-hidden="true" />
@@ -57,7 +59,7 @@ const LessonPlayerLayout = ({ courseTitle, progressPercent, onExit, sidebar, chi
             <Modal
                 open={mobileSidebarOpen}
                 onClose={() => setMobileSidebarOpen(false)}
-                title="Danh sách bài học"
+                title={t("lessonPlayer.lessonListLabel")}
                 size="sm"
             >
                 <div onClick={() => setMobileSidebarOpen(false)}>{sidebar}</div>

@@ -1,4 +1,5 @@
 import { Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useTeacherStudentsQuery } from "@/shared/api/queries/useTeacherStudentsQuery";
 import type { EnrolledStudent } from "@/shared/api/queries/useTeacherStudentsQuery";
 import Table, { type TableColumn } from "@/shared/ui/Table";
@@ -9,13 +10,14 @@ interface StudentsTabProps {
 }
 
 const StudentsTab = ({ courseId }: StudentsTabProps) => {
+    const { t } = useTranslation("teacher");
     const studentsQuery = useTeacherStudentsQuery(courseId);
     const students = studentsQuery.data ?? [];
 
     const columns: TableColumn<EnrolledStudent>[] = [
         {
             key: "studentFullName",
-            header: "Học viên",
+            header: t("studentsTab.columnStudent"),
             render: (s) => (
                 <div>
                     <p className="font-medium text-primary">{s.studentFullName}</p>
@@ -25,12 +27,12 @@ const StudentsTab = ({ courseId }: StudentsTabProps) => {
         },
         {
             key: "progress",
-            header: "Tiến độ",
+            header: t("studentsTab.columnProgress"),
             render: (s) => `${s.progressPercent}%`,
         },
         {
             key: "enrolledAt",
-            header: "Ngày đăng ký",
+            header: t("studentsTab.columnEnrolledAt"),
             render: (s) => new Date(s.enrolledAt).toLocaleDateString("vi-VN"),
         },
     ];
@@ -41,7 +43,7 @@ const StudentsTab = ({ courseId }: StudentsTabProps) => {
             data={students}
             rowKey={(s) => s.enrollmentId}
             loading={studentsQuery.isLoading}
-            emptyState={<EmptyState icon={Users} title="Chưa có học viên đăng ký" />}
+            emptyState={<EmptyState icon={Users} title={t("studentsTab.emptyTitle")} />}
         />
     );
 };
